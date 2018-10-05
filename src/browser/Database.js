@@ -1,5 +1,6 @@
 
 
+
 var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
@@ -46,6 +47,50 @@ Database.prototype.endAt = function(onSuccess, onError, args) {
 
   var ref = this.get(options.refId);
   var query = ref.endAt(options.value, options.key);
+  this.set(options.queryId, query);
+
+  onSuccess();
+};
+
+Database.prototype.startAt = function(onSuccess, onError, args) {
+  var options = args[0];
+  console.log('[broswer] reference.startAt()', options);
+
+  var ref = this.get(options.refId);
+  var query = ref.startAt(options.value, options.key);
+  this.set(options.queryId, query);
+
+  onSuccess();
+};
+
+Database.prototype.equalTo = function(onSuccess, onError, args) {
+  var options = args[0];
+  console.log('[broswer] reference.equalTo()', options);
+
+  var ref = this.get(options.refId);
+  var query = ref.equalTo(options.value, options.key);
+  this.set(options.queryId, query);
+
+  onSuccess();
+};
+
+Database.prototype.limitToFirst = function(onSuccess, onError, args) {
+  var options = args[0];
+  console.log('[broswer] reference.limitToFirst()', options);
+
+  var ref = this.get(options.refId);
+  var query = ref.limitToFirst(options.limit);
+  this.set(options.queryId, query);
+
+  onSuccess();
+};
+
+Database.prototype.limitToLast = function(onSuccess, onError, args) {
+  var options = args[0];
+  console.log('[broswer] reference.limitToLast()', options);
+
+  var ref = this.get(options.refId);
+  var query = ref.limitToLast(options.limit);
   this.set(options.queryId, query);
 
   onSuccess();

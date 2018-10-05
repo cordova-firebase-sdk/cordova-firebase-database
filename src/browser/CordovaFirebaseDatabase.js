@@ -72,9 +72,11 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
       firebase.initializeApp(options.browserConfigs || {});
     }
     console.log('--->[browser] CordovaFirebaseDatabase.newInstance() : ' + options.id);
+    var database = firebase.database();
+    //console.log(database.app);
 
     // Create firebase reference
-    var instance = new Database(options.id, firebase.database());
+    var instance = new Database(options.id, database);
     var dummyObj = {};
     var keys = Object.getOwnPropertyNames(Database.prototype).filter(function (p) {
       return typeof Database.prototype[p] === 'function';

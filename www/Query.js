@@ -1,5 +1,6 @@
 
 
+
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
 var utils = require('cordova/utils'),
@@ -15,8 +16,6 @@ function Query(pluginName, ref, key) {
   var self = this,
     cmdQueue = new BaseArrayClass();
   BaseClass.apply(this);
-
-  console.log('query', this.hashCode);
 
   window.plugin.firebase.database._DBs[pluginName].set(this.hashCode, this);
 
@@ -89,7 +88,7 @@ Query.prototype.endAt = function(value, key) {
     } else {
       throw new Error(error);
     }
-  }, this.getPluginName(), 'endAt', [{
+  }, this.pluginName, 'endAt', [{
     value: value,
     key: key,
     targetId: this.id,
@@ -97,7 +96,97 @@ Query.prototype.endAt = function(value, key) {
   }]);
 
 
-  return reference;
+  return query;
+};
+
+Query.prototype.equalTo = function(value, key) {
+  var self = this;
+
+  var query = new Query(this, value, key);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'equalTo', [{
+    value: value,
+    key: key,
+    targetId: this.id,
+    queryId: query.id
+  }]);
+
+
+  return query;
+};
+
+Query.prototype.isEqual = function(other) {
+  var thisRefPath = [];
+  var target = this;
+  while(target !== null && target.ref) {
+    thisRefPath.unshift(target.key);
+    target = target.ref;
+  }
+
+  var otherRefPath = [];
+  target = other;
+  while(target !== null && target.ref) {
+    otherRefPath.unshift(target.key);
+    target = target.ref;
+  }
+
+  var thisRefPathStr = thisRefPath.join('/');
+  var otherRefPathStr = otherRefPath.join('/');
+  console.log(thisRefPathStr, otherRefPathStr);
+  return thisRefPath === otherRefPathStr;
+};
+
+Query.prototype.limitToFirst = function(limit) {
+  var self = this;
+  limit = Math.min(limit, 100);
+
+  var query = new Query(this, value, key);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'limitToFirst', [{
+    limit: limit,
+    targetId: this.id,
+    queryId: query.id
+  }]);
+
+
+  return query;
+};
+
+Query.prototype.limitToLast = function(limit) {
+  var self = this;
+  limit = Math.min(limit, 100);
+
+  var query = new Query(this, value, key);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'limitToLast', [{
+    limit: limit,
+    targetId: this.id,
+    queryId: query.id
+  }]);
+
+
+  return query;
 };
 
 Query.prototype.set = function(values) {
@@ -300,4 +389,28 @@ Query.prototype.off = function(eventType, callback) {
   this._off(eventType, callback);
 
 };
+
+Query.prototype.startAt = function(value, key) {
+  var self = this;
+
+  var query = new Query(this, value, key);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'startAt', [{
+    value: value,
+    key: key,
+    targetId: this.id,
+    queryId: query.id
+  }]);
+
+
+  return query;
+};
+
 module.exports = Query;

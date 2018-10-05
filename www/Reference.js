@@ -17,7 +17,7 @@ function Reference(database, key, path, parentId) {
   var self = this,
     pluginName = database.id;
 
-  Query.call(this, pluginName, this, key);
+  Query.call(this, pluginName, database, key);
 
   Object.defineProperty(self, 'key', {
     value: key
