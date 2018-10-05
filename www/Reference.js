@@ -44,6 +44,23 @@ Reference.prototype.child = function(path) {
   return reference;
 };
 
+Reference.prototype.update = function(values, onComplete) {
+  var self = this;
+  return new Promise(function(resolve, reject) {
+    self._exec(function() {
+      resolve();
+      if (typeof onComplete === 'function') {
+        onComplete.call(self);
+      }
+    }, function(error) {
+      reject(error);
+    }, self.pluginName, 'updateKey', [{
+      targetId: self.id,
+      data: values
+    }]);
+  });
+};
+
 Reference.prototype.remove = function(onComplete) {
   var self = this;
   return new Promise(function(resolve, reject) {

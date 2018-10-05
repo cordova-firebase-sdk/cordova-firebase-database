@@ -7,7 +7,7 @@ var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() 
 var utils = require('cordova/utils'),
     BaseClass = require('cordova-firebase-database.BaseClass');
 
-/*******************************************************************************
+/****************************************************************************** *
  * @name Database
  ******************************************************************************/
 function Database(id, database) {
@@ -103,6 +103,15 @@ Database.prototype.ref = function(onSuccess, onError, args) {
   var ref = this.database.ref(options.key);
   this.set(options.id, ref);
   onSuccess();
+};
+
+Database.prototype.updateKey = function(onSuccess, onError, args) {
+  var options = args[0],
+    self = this;
+  console.log('[broswer] reference.remove()', options);
+
+  var ref = this.get(options.targetId);
+  ref.update(options.data).then(onSuccess).catch(onError);
 };
 
 Database.prototype.removeKey = function(onSuccess, onError, args) {
