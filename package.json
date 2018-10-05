@@ -1,0 +1,21 @@
+{
+  "name": "cordova-firebase-database",
+  "version": "0.0.1",
+  "description": "",
+  "cordova": {
+    "id": "cordova-firebase-database",
+    "platforms": [
+      "android",
+      "ios",
+      "browser"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios",
+    "cordova-browser"
+  ],
+  "author": "",
+  "license": "Apache License 2"
+}
