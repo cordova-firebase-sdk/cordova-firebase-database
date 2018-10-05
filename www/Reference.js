@@ -37,11 +37,27 @@ Reference.prototype.child = function(path) {
     throw new Error(error);
   }, this.pluginName, 'child', [{
     path: path,
-    refId: reference.refId,
+    targetId: reference.id,
     parentId: this.refId
   }]);
 
   return reference;
+};
+
+Reference.prototype.remove = function(onComplete) {
+  var self = this;
+  return new Promise(function(resolve, reject) {
+    self._exec(function() {
+      resolve();
+      if (typeof onComplete === 'function') {
+        onComplete.call(self);
+      }
+    }, function(error) {
+      reject(error);
+    }, self.pluginName, 'removeKey', [{
+      targetId: self.id
+    }]);
+  });
 };
 
 module.exports = Reference;

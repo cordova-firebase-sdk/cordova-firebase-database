@@ -32,17 +32,17 @@ utils.extend(Database, BaseClass);
 
 Database.prototype.child = function(onSuccess, onError, args) {
   var options = args[0];
-  console.log('[broswer] database->child', options);
+  console.log('[broswer] reference.child()', options);
 
   var ref = this.get(options.parentId);
   var childRef = ref.child(options.path);
-  this.set(options.refId, childRef);
+  this.set(options.targetId, childRef);
   onSuccess();
 };
 
 Database.prototype.endAt = function(onSuccess, onError, args) {
   var options = args[0];
-  console.log('[broswer] database->endAt', options);
+  console.log('[broswer] reference.endAt()', options);
 
   var ref = this.get(options.refId);
   var query = ref.endAt(options.value, options.key);
@@ -53,17 +53,29 @@ Database.prototype.endAt = function(onSuccess, onError, args) {
 
 Database.prototype.ref = function(onSuccess, onError, args) {
   var options = args[0];
-  console.log('[broswer] database->ref', options);
+  console.log('[broswer] reference.ref()', options);
 
   var ref = this.database.ref(options.key);
   this.set(options.id, ref);
   onSuccess();
 };
 
+Database.prototype.removeKey = function(onSuccess, onError, args) {
+  var options = args[0],
+    self = this;
+  console.log('[broswer] reference.remove()', options);
+
+  var ref = this.get(options.targetId);
+  ref.remove().then(function() {
+    self.delete(options.targetId);
+    onSuccess();
+  }).catch(onError);
+};
+
 Database.prototype.setValue = function(onSuccess, onError, args) {
   var options = args[0];
-  console.log('[broswer] database->set', args);
-  var ref = this.get(options.refId);
+  console.log('[broswer] reference.set()', args);
+  var ref = this.get(options.targetId);
   ref.set(options.data).then(onSuccess).catch(onError);
 };
 
@@ -86,9 +98,114 @@ Database.prototype.once = function(onSuccess, onError, args) {
     .catch(onError);
 };
 
-Database.prototype._callbackFromNative = function(eventName) {
-  console.log(eventName);
+Database.prototype.orderByChild = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.orderByChild()', args);
+
+  var referenceOrQuery = this.get(options.targetId);
+  try {
+    var newQuery = referenceOrQuery.orderByChild(options.path);
+    self.set(options.newId, referenceOrQuery);
+    onSuccess();
+  } catch (e) {
+    onError(e);
+  }
 };
 
+Database.prototype.orderByKey = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.orderByKey()', args);
 
+  var referenceOrQuery = this.get(options.targetId);
+  try {
+    var newQuery = referenceOrQuery.orderByKey();
+    self.set(options.newId, referenceOrQuery);
+    onSuccess();
+  } catch (e) {
+    onError(e);
+  }
+};
+
+Database.prototype.orderByPriority = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.orderByKey()', args);
+
+  var referenceOrQuery = this.get(options.targetId);
+  try {
+    var newQuery = referenceOrQuery.orderByPriority();
+    self.set(options.newId, referenceOrQuery);
+    onSuccess();
+  } catch (e) {
+    onError(e);
+  }
+};
+
+Database.prototype.orderByPriority = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.orderByKey()', args);
+
+  var referenceOrQuery = this.get(options.targetId);
+  try {
+    var newQuery = referenceOrQuery.orderByValue();
+    self.set(options.newId, referenceOrQuery);
+    onSuccess();
+  } catch (e) {
+    onError(e);
+  }
+};
+
+Database.prototype.on = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.on()', args);
+
+  var referenceOrQuery = this.get(options.targetId);
+  var listener = referenceOrQuery.on(options.eventType, function(snapshot, key) {
+
+    var dbInstance = window.plugin.firebase.database._DBs[self.id];
+
+    if (dbInstance) {
+      var target = dbInstance.get(options.targetId);
+      if (target) {
+        var args = [options.eventType];
+        args.push({
+          key: snapshot.key,
+          exists: snapshot.exists(),
+          exportVal: JSON.stringify(snapshot.exportVal()),
+          getPriority: snapshot.getPriority(),
+          numChildren: snapshot.numChildren()
+        });
+        if (key) {
+          args.push(key);
+        }
+        target._trigger.apply(target, args);
+      }
+    }
+
+  });
+
+  this.set(options.listenerId, listener);
+
+};
+
+Database.prototype.off = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.off()', args);
+
+  var referenceOrQuery = this.get(options.targetId);
+  var listener;
+  if (options.listenerId) {
+    listener = this.get(options.listenerId);
+  }
+
+  referenceOrQuery.off(options.eventType, listener);
+
+  this.delete(options.listenerId);
+
+};
 module.exports = Database;

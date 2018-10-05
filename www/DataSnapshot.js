@@ -28,7 +28,8 @@ function DataSnapshot(ref, nativeResults) {
 
 DataSnapshot.prototype.forEach = function(action) {
   var values = JSON.parse(this._nativeResults.exportVal);
-
+  var keys = Object.keys(values);
+  keys = this.sortFunc(keys);
 };
 
 

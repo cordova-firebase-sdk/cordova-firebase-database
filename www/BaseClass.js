@@ -1,11 +1,11 @@
 
+
 var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
 function BaseClass() {
   this[VARS_FIELD] = {};
   this[SUBSCRIPTIONS_FIELD] = {};
-  this.errorHandler = this.errorHandler.bind(this);
 
   Object.defineProperty(this, 'hashCode', {
     value: Math.floor(Date.now() * Math.random())
@@ -22,6 +22,10 @@ BaseClass.prototype = {
     });
   },
 
+  delete: function (key) {
+    return delete this[VARS_FIELD][key];
+  },
+
   get: function (key) {
     return this[VARS_FIELD].hasOwnProperty(key) ? this[VARS_FIELD][key] : undefined;
   },
@@ -32,7 +36,7 @@ BaseClass.prototype = {
     this[VARS_FIELD][key] = value;
 
     if (!noNotify && prev !== value) {
-      this.trigger(key + '_changed', prev, value, key);
+      this._trigger(key + '_changed', prev, value, key);
     }
 
     return this;
@@ -51,7 +55,7 @@ BaseClass.prototype = {
     });
   },
 
-  trigger: function (eventName) {
+  _trigger: function (eventName) {
     if (!eventName) {
       return this;
     }
@@ -86,18 +90,49 @@ BaseClass.prototype = {
   },
 
   _off: function (eventName, listener) {
+    var self = this;
     if (!eventName && !listener) {
-      this[SUBSCRIPTIONS_FIELD] = {};
+      var eventFields = self[SUBSCRIPTIONS_FIELD];
+      var eventNames = Object.keys(eventFields);
+      eventNames.forEach(function(eventName) {
+        if (self[SUBSCRIPTIONS_FIELD][eventName]) {
+          var listeners = self[SUBSCRIPTIONS_FIELD][eventName];
+          var keys = Object.keys(listeners);
+          keys.forEach(function(key) {
+            if (self[SUBSCRIPTIONS_FIELD][key]) {
+              var hashCode = self[SUBSCRIPTIONS_FIELD][key]._hashCode;
+              if (hashCode) {
+                self.delete(hashCode);
+              }
+            }
+            delete self[SUBSCRIPTIONS_FIELD][key];
+          });
+        }
+      });
       return this;
     }
 
     if (eventName && !listener) {
-      this[SUBSCRIPTIONS_FIELD][eventName] = null;
+      var listeners = self[SUBSCRIPTIONS_FIELD][eventName];
+      var keys = Object.keys(listeners);
+      keys.forEach(function(key) {
+        if (self[SUBSCRIPTIONS_FIELD][key]) {
+          var hashCode = self[SUBSCRIPTIONS_FIELD][key]._hashCode;
+          if (hashCode) {
+            self.delete(hashCode);
+          }
+          delete self[SUBSCRIPTIONS_FIELD][key];
+        }
+      });
+      delete this[SUBSCRIPTIONS_FIELD][eventName];
     } else if (this[SUBSCRIPTIONS_FIELD][eventName]) {
       var index = this[SUBSCRIPTIONS_FIELD][eventName].indexOf(listener);
 
       if (index !== -1) {
-        this[SUBSCRIPTIONS_FIELD][eventName].splice(index, 1);
+        var registered = this[SUBSCRIPTIONS_FIELD][eventName].splice(index, 1);
+        if (registered && registered._hashCode) {
+          self.delete(registered._hashCode);
+        }
       }
     }
 
@@ -119,38 +154,8 @@ BaseClass.prototype = {
     this._on(eventName, callback);
 
     return this;
-  },
-
-  destroy: function () {
-    this.off();
-    this.empty();
-  },
-
-  errorHandler: function (error) {
-    if (error) {
-      if (typeof console.error === "function") {
-        if (this.id) {
-          console.error(this.id, error);
-        } else {
-          console.error(error);
-        }
-      } else {
-        if (this.id) {
-          console.log(this.id, error);
-        } else {
-          console.log(error);
-        }
-      }
-      this.trigger('error', error instanceof Error ? error : createError(error));
-    }
-
-    return false;
   }
 };
-
-BaseClass.prototype.addEventListener = BaseClass.prototype.on;
-BaseClass.prototype.addEventListenerOnce = BaseClass.prototype.one;
-BaseClass.prototype.removeEventListener = BaseClass.prototype.off;
 
 function createError(message, methodName, args) {
   var error = new Error(methodName ? [

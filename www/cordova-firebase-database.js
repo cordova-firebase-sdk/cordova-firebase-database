@@ -1,11 +1,13 @@
 
-var exec = require('cordova/exec'),
+var utils = require('cordova/utils'),
+  exec = require('cordova/exec'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
   Reference = require('./Reference'),
   execCmd = require('./commandQueueExecutor');
 
 function CordovaFirebaseDatabase(firebaseInitOptions) {
+  BaseClass.apply(this);
 
   var self = this,
     cmdQueue = new BaseArrayClass();
@@ -40,12 +42,6 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
     enumerable: false
   });
 
-  Object.defineProperty(self, 'hashCode', {
-    value: Math.floor(Date.now() * Math.random()),
-    writable: false,
-    enumerable: false
-  });
-
   Object.defineProperty(self, 'id', {
     value: 'firedb_' + self.hashCode,
     writable: false,
@@ -63,9 +59,13 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
   },
   function() {
     self._isReady = true;
-    self._cmdQueue.trigger('insert_at');
+    self._cmdQueue._trigger('insert_at');
   }, function(error) {
-    throw new Error(error);
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
   }, 'CordovaFirebaseDatabase', 'newInstance', [{
     'id': self.id,
     'refPath': firebaseInitOptions.refPath || '',
@@ -75,9 +75,7 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
   });
 }
 
-CordovaFirebaseDatabase.prototype.getPluginName = function() {
-  return this.id;
-};
+utils.extend(CordovaFirebaseDatabase, BaseClass);
 
 CordovaFirebaseDatabase.prototype._exec = function() {
   this._cmdQueue.push.call(this._cmdQueue, {
@@ -87,14 +85,18 @@ CordovaFirebaseDatabase.prototype._exec = function() {
 };
 
 CordovaFirebaseDatabase.prototype.ref = function(key) {
-  console.log('--->[js]CordovaFirebaseDatabase.ref()', this.getPluginName());
+  console.log('--->[js]CordovaFirebaseDatabase.ref()', this.id);
 
   var reference = new Reference(this, key);
   this._exec(function() {
     reference._privateInit();
   }, function(error) {
-    throw new Error(error);
-  }, this.getPluginName(), 'ref', [{
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.id, 'ref', [{
     key: key,
     id: reference.id
   }]);
@@ -112,10 +114,12 @@ cordova.addConstructor(function() {
   window.plugin = window.plugin || {};
   window.plugin.firebase = window.plugin.firebase || {};
   window.plugin.firebase.database = function(options) {
-    return new CordovaFirebaseDatabase(options);
+    var db = new CordovaFirebaseDatabase(options);
+    window.plugin.firebase.database._DBs[db.id] = db;
+    return db;
   };
 
-  Object.defineProperty(window.plugin.firebase, '_DBs', {
+  Object.defineProperty(window.plugin.firebase.database, '_DBs', {
     value: {},
     enumerable: false
   });

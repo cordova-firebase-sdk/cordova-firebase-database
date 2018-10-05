@@ -1,6 +1,5 @@
 
 
-var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
 var utils = require('cordova/utils'),
@@ -17,6 +16,10 @@ function Query(pluginName, ref, key) {
     cmdQueue = new BaseArrayClass();
   BaseClass.apply(this);
 
+  console.log('query', this.hashCode);
+
+  window.plugin.firebase.database._DBs[pluginName].set(this.hashCode, this);
+
   Object.defineProperty(self, 'pluginName', {
     value: pluginName
   });
@@ -29,6 +32,10 @@ function Query(pluginName, ref, key) {
     value: this.hashCode
   });
 
+  Object.defineProperty(self, '_isReady', {
+    value: false,
+    writable: true
+  });
   Object.defineProperty(self, '_isReady', {
     value: false,
     writable: true
@@ -58,7 +65,7 @@ utils.extend(Query, BaseClass);
 
 Query.prototype._privateInit = function() {
   this._isReady = true;
-  this._cmdQueue.trigger('insert_at');
+  this._cmdQueue._trigger('insert_at');
 };
 
 Query.prototype._exec = function() {
@@ -77,11 +84,15 @@ Query.prototype.endAt = function(value, key) {
   this._exec(function() {
     query._privateInit();
   }, function(error) {
-    throw new Error(error);
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
   }, this.getPluginName(), 'endAt', [{
     value: value,
     key: key,
-    refId: this.id,
+    targetId: this.id,
     queryId: query.id
   }]);
 
@@ -94,10 +105,91 @@ Query.prototype.set = function(values) {
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(resolve.bind(self), reject.bind(self), self.pluginName, 'setValue', [{
-      refId: self.id,
+      targetId: self.id,
       data: values
     }]);
   });
+};
+
+Query.prototype.orderByChild = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'orderByChild', [{
+    targetId: this.id,
+    newId: query.id,
+    path: path
+  }]);
+
+  return query;
+};
+
+Query.prototype.orderByKey = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'orderByKey', [{
+    targetId: this.id,
+    newId: query.id
+  }]);
+
+  return query;
+};
+
+Query.prototype.orderByPriority = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'orderByPriority', [{
+    targetId: this.id,
+    newId: query.id
+  }]);
+
+  return query;
+};
+
+Query.prototype.orderByValue = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'orderByValue', [{
+    targetId: this.id,
+    newId: query.id
+  }]);
+
+  return query;
 };
 
 
@@ -136,4 +228,76 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
 
 };
 
+Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, context) {
+  var self = this;
+  var context_ = this;
+  if (arguments.length === 4) {
+    context_ = context;
+  } else if (arguments.length === 3) {
+    context_ = failureCallbackOrContext;
+  }
+
+  var listener = function(result, key) {
+
+    var snapshot = new DataSnapshot(self, result);
+    if (typeof callback === 'function') {
+      var args = [snapshot];
+      if (key) {
+        args.push(key);
+      }
+      callback.apply(context_, args);
+    }
+  };
+  var listenerId = this.id + '_on' + Math.floor(Date.now() * Math.random());
+  Object.defineProperty(listener, '_hashCode', {
+    value: listenerId,
+    enumerable: false
+  });
+
+  this._on(eventType, listener);
+
+  this._exec(null, function(error) {
+    if (typeof failureCallbackOrContext === 'function') {
+      failureCallbackOrContext.call(context_, new Error(error));
+    } else {
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error(error);
+      }
+    }
+  }, this.pluginName, 'on', [{
+    targetId: this.id,
+    listenerId: listenerId,
+    eventType: eventType
+  }]);
+
+  return listener;
+
+
+};
+
+Query.prototype.off = function(eventType, callback) {
+  var self = this;
+
+  var listenerId;
+  if (callback) {
+    listenerId = callback._hashCode;
+    if (!listenerId) {
+      throw new Error('Specified callback is not registered.');
+    }
+  }
+
+
+  this._exec(null, function(error) {
+    throw new Error(error);
+  }, this.pluginName, 'off', [{
+    targetId: this.id,
+    listenerId: listenerId,
+    eventType: eventType
+  }]);
+
+  this._off(eventType, callback);
+
+};
 module.exports = Query;

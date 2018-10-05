@@ -231,7 +231,7 @@ BaseArrayClass.prototype.push = function(value, noNotify) {
   var self = this;
   self[ARRAY_FIELD].push(value);
   if (noNotify !== true) {
-    self.trigger("insert_at", self[ARRAY_FIELD].length - 1);
+    self._trigger("insert_at", self[ARRAY_FIELD].length - 1);
   }
   return self[ARRAY_FIELD].length;
 };
@@ -245,7 +245,7 @@ BaseArrayClass.prototype.insertAt = function(index, value, noNotify) {
   }
   self[ARRAY_FIELD][index] = value;
   if (noNotify !== true) {
-    self.trigger("insert_at", index);
+    self._trigger("insert_at", index);
   }
 };
 
@@ -263,7 +263,7 @@ BaseArrayClass.prototype.setAt = function(index, value, noNotify) {
   var prev = self[ARRAY_FIELD][index];
   self[ARRAY_FIELD][index] = value;
   if (noNotify !== true) {
-    self.trigger("set_at", index, prev);
+    self._trigger("set_at", index, prev);
   }
 };
 
@@ -272,7 +272,7 @@ BaseArrayClass.prototype.removeAt = function(index, noNotify) {
   var value = self[ARRAY_FIELD][index];
   self[ARRAY_FIELD].splice(index, 1);
   if (noNotify !== true) {
-    self.trigger("remove_at", index, value);
+    self._trigger("remove_at", index, value);
   }
   return value;
 };
@@ -282,7 +282,7 @@ BaseArrayClass.prototype.pop = function(noNotify) {
   var index = self[ARRAY_FIELD].length - 1;
   var value = self[ARRAY_FIELD].pop();
   if (noNotify !== true) {
-    self.trigger("remove_at", index, value);
+    self._trigger("remove_at", index, value);
   }
   return value;
 };
