@@ -1,5 +1,4 @@
 
-
 var exec = require('cordova/exec'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
@@ -47,7 +46,7 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
     enumerable: false
   });
 
-  Object.defineProperty(self, 'refId', {
+  Object.defineProperty(self, 'id', {
     value: 'firedb_' + self.hashCode,
     writable: false,
     enumerable: false
@@ -68,7 +67,7 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
   }, function(error) {
     throw new Error(error);
   }, 'CordovaFirebaseDatabase', 'newInstance', [{
-    'id': self.refId,
+    'id': self.id,
     'refPath': firebaseInitOptions.refPath || '',
     'browserConfigs': firebaseInitOptions.browserConfigs || {}
   }], {
@@ -77,7 +76,7 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
 }
 
 CordovaFirebaseDatabase.prototype.getPluginName = function() {
-  return this.refId;
+  return this.id;
 };
 
 CordovaFirebaseDatabase.prototype._exec = function() {
@@ -87,18 +86,17 @@ CordovaFirebaseDatabase.prototype._exec = function() {
   });
 };
 
-CordovaFirebaseDatabase.prototype.ref = function(path) {
+CordovaFirebaseDatabase.prototype.ref = function(key) {
   console.log('--->[js]CordovaFirebaseDatabase.ref()', this.getPluginName());
 
-  var reference = new Reference(this, path || null, path || null, parent);
+  var reference = new Reference(this, key);
   this._exec(function() {
     reference._privateInit();
   }, function(error) {
     throw new Error(error);
   }, this.getPluginName(), 'ref', [{
-    path: path,
-    refId: reference.refId,
-    parent: null
+    key: key,
+    id: reference.id
   }]);
 
   return reference;

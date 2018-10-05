@@ -9,6 +9,7 @@
   <js-module name="BaseArrayClass" src="www/BaseArrayClass.js" />
   <js-module name="Reference" src="www/Reference.js" />
   <js-module name="Query" src="www/Query.js" />
+  <js-module name="DataSnapshot" src="www/DataSnapshot.js" />
   <js-module name="commandQueueExecutor" src="www/commandQueueExecutor.js" />
 
   <platform name="android">

@@ -55,8 +55,8 @@ Database.prototype.ref = function(onSuccess, onError, args) {
   var options = args[0];
   console.log('[broswer] database->ref', options);
 
-  var ref = this.database.ref(options.path);
-  this.set(options.refId, ref);
+  var ref = this.database.ref(options.key);
+  this.set(options.id, ref);
   onSuccess();
 };
 
@@ -65,6 +65,25 @@ Database.prototype.setValue = function(onSuccess, onError, args) {
   console.log('[broswer] database->set', args);
   var ref = this.get(options.refId);
   ref.set(options.data).then(onSuccess).catch(onError);
+};
+
+Database.prototype.once = function(onSuccess, onError, args) {
+  var self = this,
+    options = args[0];
+  console.log('[broswer] query.once()', args);
+
+  var referenceOrQuery = this.get(options.targetId);
+  referenceOrQuery.once(options.eventType)
+    .then(function(snapshot) {
+      onSuccess({
+        key: snapshot.key,
+        exists: snapshot.exists(),
+        exportVal: JSON.stringify(snapshot.exportVal()),
+        getPriority: snapshot.getPriority(),
+        numChildren: snapshot.numChildren()
+      });
+    })
+    .catch(onError);
 };
 
 Database.prototype._callbackFromNative = function(eventName) {

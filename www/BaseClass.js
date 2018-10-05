@@ -1,3 +1,4 @@
+
 var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
@@ -73,7 +74,7 @@ BaseClass.prototype = {
     return this;
   },
 
-  on: function (eventName, listener) {
+  _on: function (eventName, listener) {
     if (!listener || typeof listener !== "function") {
       throw Error('Listener for on()/addEventListener() method is not a function');
     }
@@ -84,7 +85,7 @@ BaseClass.prototype = {
     return this;
   },
 
-  off: function (eventName, listener) {
+  _off: function (eventName, listener) {
     if (!eventName && !listener) {
       this[SUBSCRIPTIONS_FIELD] = {};
       return this;
@@ -103,7 +104,7 @@ BaseClass.prototype = {
     return this;
   },
 
-  one: function (eventName, listener) {
+  _one: function (eventName, listener) {
     if (!listener || typeof listener !== "function") {
       throw Error('Listener for one()/addEventListenerOnce() method is not a function');
     }
@@ -115,7 +116,7 @@ BaseClass.prototype = {
       listener.apply(self, arguments);
       callback = undefined;
     };
-    this.on(eventName, callback);
+    this._on(eventName, callback);
 
     return this;
   },
