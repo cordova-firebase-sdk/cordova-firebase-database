@@ -8,43 +8,6 @@ var BaseClass = require('cordova-firebase-database.BaseClass'),
   utils = require('cordova/utils'),
   common = require('cordova-firebase-database.Common');
 
-var isInitialized = function(packageName) {
-  var parent = window;
-  var steps = packageName.split(/\./);
-  var results = steps.filter(function(step) {
-    if (step in parent) {
-      parent = parent[step];
-      return true;
-    } else {
-      return false;
-    }
-  });
-
-  return results.length === steps.length;
-};
-
-var loadJsPromise = function(options) {
-  return new Promise(function(resolve, reject) {
-
-    if (isInitialized(options.package)) {
-      resolve();
-    } else {
-      var scriptTag = document.createElement('script');
-      scriptTag.src = options.url;
-      scriptTag.onload = function() {
-        var timer = setInterval(function() {
-          if (isInitialized(options.package)) {
-            clearInterval(timer);
-            resolve();
-          }
-        }, 10);
-      };
-      scriptTag.onerror = reject;
-      document.body.appendChild(scriptTag);
-    }
-  });
-};
-
 
 function CordovaFirebaseDatabase() {
   BaseClass.apply(this);
@@ -54,11 +17,11 @@ utils.extend(CordovaFirebaseDatabase, BaseClass);
 CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) {
   var self = this;
 
-  loadJsPromise({
+  common.loadJsPromise({
     'url': 'https://www.gstatic.com/firebasejs/5.5.0/firebase-app.js',
     'package': 'firebase.app'
   }).then(function() {
-    return loadJsPromise({
+    return common.loadJsPromise({
       'url': 'https://www.gstatic.com/firebasejs/5.5.0/firebase-database.js',
       'package': 'firebase.database'
     });

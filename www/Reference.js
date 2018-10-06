@@ -1,6 +1,7 @@
 
 
 
+
 var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
@@ -38,7 +39,7 @@ Reference.prototype.child = function(path) {
   }, this.pluginName, 'child', [{
     path: path,
     targetId: reference.id,
-    parentId: this.refId
+    parentId: this.id
   }]);
 
   return reference;
