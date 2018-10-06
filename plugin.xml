@@ -11,6 +11,7 @@
   <js-module name="Query" src="www/Query.js" />
   <js-module name="DataSnapshot" src="www/DataSnapshot.js" />
   <js-module name="commandQueueExecutor" src="www/commandQueueExecutor.js" />
+  <js-module name="LZString" src="www/lz-string.js" />
 
   <platform name="android">
     <config-file parent="/*" target="res/xml/config.xml">

@@ -7,7 +7,8 @@ var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() 
 var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
-  execCmd = require('./commandQueueExecutor');
+  execCmd = require('./commandQueueExecutor'),
+  LZString = require('./LZString');
 
 /*******************************************************************************
  * @name DataSnapshot
@@ -58,13 +59,13 @@ DataSnapshot.prototype.numChildren = function() {
   return this._nativeResults.numChildren;
 };
 DataSnapshot.prototype.exportVal = function() {
-  return JSON.parse(this._nativeResults.exportVal);
+  return JSON.parse(LZString.decompress(this._nativeResults.exportVal));
 };
 DataSnapshot.prototype.val = function() {
-  return JSON.parse(this._nativeResults.exportVal);
+  return JSON.parse(LZString.decompress(this._nativeResults.val));
 };
 DataSnapshot.prototype.toJson = function() {
-  return JSON.parse(this._nativeResults.exportVal);
+  return JSON.parse(LZString.decompress(this._nativeResults.toJSON));
 };
 
 

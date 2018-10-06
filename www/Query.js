@@ -295,10 +295,13 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
     context_ = failureCallbackOrContext;
   }
 
+  console.log('[js] Query.once');
+
   return new Promise(function(resolve, reject) {
     self._exec(function(result) {
 
       var snapshot = new DataSnapshot(self, result);
+      console.log(result);
       resolve.call(context_, snapshot);
       if (typeof successCallback === 'function') {
         successCallback.call(context_, snapshot);

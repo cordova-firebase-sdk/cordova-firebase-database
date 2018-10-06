@@ -5,7 +5,8 @@ var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol(
 var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
 
 var utils = require('cordova/utils'),
-    BaseClass = require('cordova-firebase-database.BaseClass');
+    BaseClass = require('cordova-firebase-database.BaseClass'),
+    LZString = require('cordova-firebase-database.LZString');
 
 /****************************************************************************** *
  * @name Database
@@ -128,7 +129,7 @@ Database.prototype.removeKey = function(onSuccess, onError, args) {
 
 Database.prototype.setValue = function(onSuccess, onError, args) {
   var options = args[0];
-  console.log('[broswer] reference.set()', args);
+  console.log('[broswer] reference.set()', options);
   var ref = this.get(options.targetId);
   ref.set(options.data).then(onSuccess).catch(onError);
 };
@@ -136,7 +137,7 @@ Database.prototype.setValue = function(onSuccess, onError, args) {
 Database.prototype.once = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.once()', args);
+  console.log('[broswer] query.once()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   referenceOrQuery.once(options.eventType)
@@ -144,9 +145,11 @@ Database.prototype.once = function(onSuccess, onError, args) {
       onSuccess({
         key: snapshot.key,
         exists: snapshot.exists(),
-        exportVal: JSON.stringify(snapshot.exportVal()),
+        exportVal: LZString.compress(JSON.stringify(snapshot.exportVal())),
         getPriority: snapshot.getPriority(),
-        numChildren: snapshot.numChildren()
+        numChildren: snapshot.numChildren(),
+        val: LZString.compress(JSON.stringify(snapshot.val())),
+        toJSON: LZString.compress(JSON.stringify(snapshot.toJSON()))
       });
     })
     .catch(onError);
@@ -155,7 +158,7 @@ Database.prototype.once = function(onSuccess, onError, args) {
 Database.prototype.orderByChild = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.orderByChild()', args);
+  console.log('[broswer] query.orderByChild()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   try {
@@ -170,7 +173,7 @@ Database.prototype.orderByChild = function(onSuccess, onError, args) {
 Database.prototype.orderByKey = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.orderByKey()', args);
+  console.log('[broswer] query.orderByKey()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   try {
@@ -185,7 +188,7 @@ Database.prototype.orderByKey = function(onSuccess, onError, args) {
 Database.prototype.orderByPriority = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.orderByKey()', args);
+  console.log('[broswer] query.orderByKey()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   try {
@@ -200,7 +203,7 @@ Database.prototype.orderByPriority = function(onSuccess, onError, args) {
 Database.prototype.orderByPriority = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.orderByKey()', args);
+  console.log('[broswer] query.orderByKey()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   try {
@@ -215,7 +218,7 @@ Database.prototype.orderByPriority = function(onSuccess, onError, args) {
 Database.prototype.on = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.on()', args);
+  console.log('[broswer] query.on()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   var listener = referenceOrQuery.on(options.eventType, function(snapshot, key) {
@@ -229,10 +232,13 @@ Database.prototype.on = function(onSuccess, onError, args) {
         args.push({
           key: snapshot.key,
           exists: snapshot.exists(),
-          exportVal: JSON.stringify(snapshot.exportVal()),
+          exportVal: LZString.compress(JSON.stringify(snapshot.exportVal())),
           getPriority: snapshot.getPriority(),
-          numChildren: snapshot.numChildren()
+          numChildren: snapshot.numChildren(),
+          val: LZString.compress(JSON.stringify(snapshot.val())),
+          toJSON: LZString.compress(JSON.stringify(snapshot.toJSON()))
         });
+
         if (key) {
           args.push(key);
         }
@@ -249,7 +255,7 @@ Database.prototype.on = function(onSuccess, onError, args) {
 Database.prototype.off = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.off()', args);
+  console.log('[broswer] query.off()', options);
 
   var referenceOrQuery = this.get(options.targetId);
   var listener;
