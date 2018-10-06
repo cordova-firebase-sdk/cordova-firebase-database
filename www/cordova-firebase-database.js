@@ -5,7 +5,7 @@ var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
   Reference = require('./Reference'),
-  execCmd = require('./commandQueueExecutor');
+  execCmd = require('./FirebaseDatabaseCommandQueue');
 
 function CordovaFirebaseDatabase(firebaseInitOptions) {
   BaseClass.apply(this);

@@ -7,7 +7,7 @@ var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() 
 var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
-  execCmd = require('./commandQueueExecutor'),
+  execCmd = require('./FirebaseDatabaseCommandQueue'),
   LZString = require('./LZString');
 
 /*******************************************************************************

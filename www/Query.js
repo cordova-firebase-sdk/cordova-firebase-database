@@ -7,7 +7,7 @@ var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
   DataSnapshot = require('./DataSnapshot'),
-  execCmd = require('./commandQueueExecutor');
+  execCmd = require('./FirebaseDatabaseCommandQueue');
 
 /*******************************************************************************
  * @name Query
