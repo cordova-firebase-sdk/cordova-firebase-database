@@ -4,6 +4,10 @@ env:
   global:
   - TRAVIS_NODE_VERSION="5.5"
 
+branches:
+  only:
+  - master
+
 matrix:
   include:
   - env: PLATFORM=browser-chrome
@@ -29,15 +33,14 @@ before_install:
     install $TRAVIS_NODE_VERSION
   - node --version
   - git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
-    && npm install && popd
+    && npm install
   - npm install -g cordova
+
 
 install:
   - npm cache clean
   - npm install
-  - npm install -g cordova
 
 script:
   - npm test
-  - node /tmp/paramedic/main.js --config pr/$PLATFORM --plugin $(pwd) --shouldUseSauce
-    --buildName travis-plugin-device-$TRAVIS_JOB_NUMBER
+  - cordova-paramedic --platform browser --plugin .
