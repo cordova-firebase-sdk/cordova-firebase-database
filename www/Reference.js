@@ -7,8 +7,8 @@ var utils = require('cordova/utils'),
   BaseArrayClass = require('./BaseArrayClass'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
-  ThenableReference = require('./ThenableReference'),
   cordova_exec = require('cordova/exec'),
+  LZString = require('./LZString'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
 /*******************************************************************************
@@ -161,7 +161,7 @@ Reference.prototype.remove = function(onComplete) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#set
 //---------------------------------------------------------------------------------
 Reference.prototype.set = function(value, onComplete) {
-  console.log('[js]reference.set()', values, this.refId);
+  console.log('[js]reference.set()', value, this.refId);
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
