@@ -3,13 +3,10 @@
 
 
 var utils = require('cordova/utils'),
-  BaseClass = require('./BaseClass'),
-  BaseArrayClass = require('./BaseArrayClass'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
   cordova_exec = require('cordova/exec'),
-  LZString = require('./LZString'),
-  execCmd = require('./FirebaseDatabaseCommandQueue');
+  LZString = require('./LZString');
 
 /*******************************************************************************
  * @name Reference
@@ -40,15 +37,15 @@ utils.extend(Reference, Query);
 Reference.prototype.child = function(path) {
   var self = this;
 
-  var reference = new Reference(this.ref, path, this.key + '/' + path, this.id);
-  this._exec(function() {
+  var reference = new Reference(self.ref, path, self.key + '/' + path, self.id);
+  self._exec(function() {
     reference._privateInit();
   }, function(error) {
     throw new Error(error);
-  }, this.pluginName, 'reference_child', [{
+  }, self.pluginName, 'reference_child', [{
     path: path,
     childId: reference.id,
-    targetId: this.id
+    targetId: self.id
   }]);
 
   return reference;
@@ -63,13 +60,13 @@ Reference.prototype.child = function(path) {
 Reference.prototype.onDisconnect = function() {
   var self = this;
 
-  var onDisconnect = new OnDisconnect(this.pluginName, this.ref);
-  this._exec(function() {
+  var onDisconnect = new OnDisconnect(self.pluginName, self.ref);
+  self._exec(function() {
     onDisconnect._privateInit();
   }, function(error) {
     throw new Error(error);
-  }, this.pluginName, 'reference_onDisconnect', [{
-    targetId: reference.id,
+  }, self.pluginName, 'reference_onDisconnect', [{
+    targetId: self.id,
     onDisconnectId: onDisconnect.id
   }]);
 
@@ -86,7 +83,7 @@ Reference.prototype.push = function(value, onComplete) {
   var self = this;
 
 
-  var reference = new Reference(this.ref, path, this.key + '/' + path, this.id);
+  var reference = self.ref.child(self.path);
   reference.then = function(callback) {
     reference._onSuccess = callback;
   };
@@ -94,7 +91,7 @@ Reference.prototype.push = function(value, onComplete) {
     reference._onError = callback;
   };
 
-  this._exec(function() {
+  self._exec(function() {
     reference._privateInit();
 
     reference.set(value).then(function() {
@@ -120,10 +117,10 @@ Reference.prototype.push = function(value, onComplete) {
     if (typeof onComplete === 'function') {
       onComplete.call(self, error);
     }
-  }, this.pluginName, 'reference_child', [{
+  }, self.pluginName, 'reference_child', [{
     path: path,
     childId: reference.id,
-    targetId: this.id
+    targetId: self.id
   }]);
 
   return reference;
@@ -161,7 +158,6 @@ Reference.prototype.remove = function(onComplete) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#set
 //---------------------------------------------------------------------------------
 Reference.prototype.set = function(value, onComplete) {
-  console.log('[js]reference.set()', value, this.refId);
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -188,7 +184,6 @@ Reference.prototype.set = function(value, onComplete) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#setPriority
 //---------------------------------------------------------------------------------
 Reference.prototype.setPriority = function(priority, onComplete) {
-  console.log('[js]reference.setWithPriority()', values, this.refId);
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -215,7 +210,6 @@ Reference.prototype.setPriority = function(priority, onComplete) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#setWithPriority
 //---------------------------------------------------------------------------------
 Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) {
-  console.log('[js]reference.setWithPriority()', values, this.refId);
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -245,7 +239,7 @@ Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) 
 Reference.prototype.transaction = function(transactionUpdate, onComplete, applyLocally) {
   var self = this;
   var transactionId = Math.floor(Date.now() * Math.random());
-  var eventName = self.pluginName + "-" + self.id + "-transaction";
+  var eventName = self.pluginName + '-' + self.id + '-transaction';
 
   var onNativeCallback = function(currentValue) {
     var newValue = transactionUpdate.call(self, JSON.parse(LZString.decompress(currentValue)));

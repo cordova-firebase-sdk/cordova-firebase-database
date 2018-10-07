@@ -58,7 +58,12 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
   execCmd.call({
     '_isReady': true
   },
-  function() {
+  function(result) {
+    Object.defineProperty(self, 'databaseURL', {
+      value: result.databaseURL,
+      enumerable: false
+    });
+
     self._isReady = true;
     self._cmdQueue._trigger('insert_at');
   }, function(error) {

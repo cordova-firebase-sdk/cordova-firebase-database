@@ -1,0 +1,36 @@
+{
+    "env": {
+        "browser": true
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+        "indent": [
+            "error",
+            2
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "no-console": "off"
+    },
+    "excludedFiles": [
+      "www/lz-string.js"
+    ],
+    "globals": {
+      "require": false,
+      "Symbol": false,
+      "window": false,
+      "cordova": false,
+      "Promise": false,
+      "module": false
+    }
+}
