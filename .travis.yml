@@ -1,0 +1,43 @@
+sudo: false
+
+env:
+  global:
+  - TRAVIS_NODE_VERSION="5.5"
+
+matrix:
+  include:
+  - env: PLATFORM=browser-chrome
+    os: linux
+    language: node_js
+    node_js: '5.5'
+  - env: PLATFORM=browser-firefox
+    os: linux
+    language: node_js
+    node_js: '5.5'
+  - env: PLATFORM=browser-safari
+    os: linux
+    language: node_js
+    node_js: '5.5'
+  - env: PLATFORM=browser-edge
+    os: linux
+    language: node_js
+    node_js: '5.5'
+
+before_install:
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+    && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+    install $TRAVIS_NODE_VERSION
+  - node --version
+  - git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
+    && npm install && popd
+  - npm install -g cordova
+
+install:
+  - npm cache clean
+  - npm install
+  - npm install -g cordova
+
+script:
+  - npm test
+  - node /tmp/paramedic/main.js --config pr/$PLATFORM --plugin $(pwd) --shouldUseSauce
+    --buildName travis-plugin-device-$TRAVIS_JOB_NUMBER
