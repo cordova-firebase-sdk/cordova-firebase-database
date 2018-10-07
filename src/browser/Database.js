@@ -213,8 +213,7 @@ Database.prototype.reference_push = function(onSuccess, onError, args) {
     thenableRef = ref.push();
   }
   this.set(options.newId, thenableRef);
-  thenableRef.then(function(res) {
-    // console.log(res);
+  thenableRef.then(function() {
     onSuccess({
       key: thenableRef.key,
       url: thenableRef.toString()
