@@ -25,9 +25,7 @@ before_install:
     && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
     install $TRAVIS_NODE_VERSION
   - node --version
-  - git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
-    && npm install && popd
-  - npm install -g cordova
+  - npm install -g cordova@${CORDOVA_VERSION} cordova-paramedic
 
 
 install:
@@ -36,4 +34,4 @@ install:
 
 script:
   - npm test
-  - cordova-paramedic --platform browser --plugin .
+  - cordova-paramedic --platform ${CORDOVA_PLATFORM}@${CORDOVA_PLATFORM_VERSION} --plugin .
