@@ -4,6 +4,9 @@ env:
   global:
   - TRAVIS_NODE_VERSION="5.5"
 
+notifications:
+  email: false
+
 branches:
   only:
   - master
