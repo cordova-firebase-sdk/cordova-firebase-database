@@ -11,13 +11,13 @@ branches:
 matrix:
   include:
   - os: linux
-    env: CORDOVA_VERSION="6.5.0" CORDOVA_PLATFORM="browser" CORDOVA_PLATFORM_VERSION="5.0.3"
+    env: CORDOVA_VERSION="6.5.0" CORDOVA_PLATFORM="browser"
 
   - os: linux
-    env: CORDOVA_VERSION="7.1.0" CORDOVA_PLATFORM="browser" CORDOVA_PLATFORM_VERSION="5.0.3"
+    env: CORDOVA_VERSION="7.1.0" CORDOVA_PLATFORM="browser"
 
   - os: linux
-    env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser" CORDOVA_PLATFORM_VERSION="5.0.3"
+    env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser"
 
 
 before_install:
@@ -26,6 +26,7 @@ before_install:
     install $TRAVIS_NODE_VERSION
   - node --version
   - npm install -g cordova@${CORDOVA_VERSION} cordova-paramedic
+  - cordova --version
 
 
 install:
@@ -34,4 +35,4 @@ install:
 
 script:
   - npm test
-  - cordova-paramedic --platform ${CORDOVA_PLATFORM}@${CORDOVA_PLATFORM_VERSION} --plugin .
+  - cordova-paramedic --platform ${CORDOVA_PLATFORM} --plugin .
