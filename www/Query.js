@@ -33,6 +33,11 @@ function Query(params) {
     writable: true
   });
 
+  Object.defineProperty(self, 'url', {
+    value: params.url,
+    writable: true
+  });
+
   cmdQueue._on('insert_at', function() {
     if (!self._isReady) return;
 
@@ -55,12 +60,7 @@ function Query(params) {
 
 utils.extend(Query, BaseClass);
 
-Query.prototype._privateInit = function(nativeInfo) {
-
-  Object.defineProperty(this, 'url', {
-    value: nativeInfo.url,
-    enumerable: false
-  });
+Query.prototype._privateInit = function() {
 
   this._isReady = true;
   this._cmdQueue._trigger('insert_at');
@@ -84,7 +84,8 @@ Query.prototype.endAt = function(value, key) {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -118,7 +119,8 @@ Query.prototype.equalTo = function(value, key) {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -161,7 +163,8 @@ Query.prototype.limitToFirst = function(limit) {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -194,7 +197,8 @@ Query.prototype.limitToLast = function(limit) {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -349,7 +353,8 @@ Query.prototype.orderByChild = function(path) {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -379,7 +384,8 @@ Query.prototype.orderByKey = function() {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -408,7 +414,8 @@ Query.prototype.orderByPriority = function() {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -437,7 +444,8 @@ Query.prototype.orderByValue = function() {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -467,7 +475,8 @@ Query.prototype.startAt = function(value, key) {
 
   var query = new Query({
     pluginName: self.pluginName,
-    ref: self
+    ref: self,
+    url: self.url
   });
   self._exec(function(results) {
     query._privateInit(results);

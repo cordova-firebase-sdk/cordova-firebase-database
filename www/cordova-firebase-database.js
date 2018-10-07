@@ -58,8 +58,8 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
     '_isReady': true
   },
   function(result) {
-    Object.defineProperty(self, 'databaseURL', {
-      value: result.databaseURL,
+    Object.defineProperty(self, 'url', {
+      value: result.url,
       enumerable: false
     });
 
@@ -144,7 +144,8 @@ CordovaFirebaseDatabase.prototype.ref = function(path) {
   var reference = new Reference({
     pluginName: this.id,
     parent: null,
-    key: key
+    key: key,
+    url: this.url
   });
   this._exec(function(results) {
     reference._privateInit(results);

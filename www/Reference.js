@@ -47,10 +47,11 @@ Reference.prototype.child = function(path) {
   var reference = new Reference({
     pluginName: self.pluginName,
     parent: self,
-    key: key
+    key: key,
+    url: self.url + '/' + path
   });
-  self._exec(function(results) {
-    reference._privateInit(results);
+  self._exec(function() {
+    reference._privateInit();
   }, function(error) {
     throw new Error(error);
   }, self.pluginName, 'reference_child', [{
@@ -101,8 +102,8 @@ Reference.prototype.push = function(value, onComplete) {
 
   (new Promise(function(resolve, reject) {
 
-    self._exec(function(results) {
-      reference._privateInit(results);
+    self._exec(function() {
+      reference._privateInit();
       resolve.call(reference);
     }, function(error) {
       reject.call(reference, error);

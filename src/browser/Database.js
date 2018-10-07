@@ -73,10 +73,7 @@ Database.prototype.database_ref = function(onSuccess, onError, args) {
 
   var ref = this.database.ref(options.path);
   this.set(options.id, ref);
-  onSuccess({
-    key: ref.key,
-    url: ref.toString()
-  });
+  onSuccess();
 };
 
 

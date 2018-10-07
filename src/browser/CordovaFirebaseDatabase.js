@@ -50,7 +50,7 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
     require('cordova/exec/proxy').add(options.id, dummyObj);
 
     resolve({
-      'databaseURL': database.ref().toString()
+      'url': database.ref().toString()
     });
   })
   .catch(reject);
