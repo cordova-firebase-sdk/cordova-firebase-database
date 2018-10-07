@@ -85,8 +85,51 @@ CordovaFirebaseDatabase.prototype._exec = function() {
   });
 };
 
+
+
+//---------------------------------------------------------------------------------
+// Database.goOffline
+// https://firebase.google.com/docs/reference/js/firebase.database.Database#goOffline
+//---------------------------------------------------------------------------------
+CordovaFirebaseDatabase.prototype.goOffline = function() {
+
+  this._exec(null, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.id, 'database_goOffline', [], {
+    sync: true
+  });
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Database.goOnline
+// https://firebase.google.com/docs/reference/js/firebase.database.Database#goOnline
+//---------------------------------------------------------------------------------
+CordovaFirebaseDatabase.prototype.goOnline = function() {
+
+  this._exec(null, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.id, 'database_goOnline', [], {
+    sync: true
+  });
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Database.ref
+// https://firebase.google.com/docs/reference/js/firebase.database.Database#ref
+//---------------------------------------------------------------------------------
 CordovaFirebaseDatabase.prototype.ref = function(key) {
-  console.log('--->[js]CordovaFirebaseDatabase.ref()', this.id);
 
   var reference = new Reference(this, key);
   this._exec(function() {
@@ -97,7 +140,7 @@ CordovaFirebaseDatabase.prototype.ref = function(key) {
     } else {
       throw new Error(error);
     }
-  }, this.id, 'ref', [{
+  }, this.id, 'database_ref', [{
     key: key,
     id: reference.id
   }]);

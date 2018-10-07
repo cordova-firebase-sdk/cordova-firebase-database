@@ -1,8 +1,6 @@
 
 
 
-var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
-
 var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
@@ -28,13 +26,9 @@ function Query(pluginName, ref, key) {
   });
 
   Object.defineProperty(self, 'id', {
-    value: this.hashCode
+    value: this.hashCode + '_queryOrReference'
   });
 
-  Object.defineProperty(self, '_isReady', {
-    value: false,
-    writable: true
-  });
   Object.defineProperty(self, '_isReady', {
     value: false,
     writable: true
@@ -76,6 +70,10 @@ Query.prototype._exec = function() {
 
 
 
+//---------------------------------------------------------------------------------
+// Query.endAt
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#endAt
+//---------------------------------------------------------------------------------
 Query.prototype.endAt = function(value, key) {
   var self = this;
 
@@ -88,7 +86,7 @@ Query.prototype.endAt = function(value, key) {
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'endAt', [{
+  }, this.pluginName, 'query_endAt', [{
     value: value,
     key: key,
     targetId: this.id,
@@ -99,6 +97,14 @@ Query.prototype.endAt = function(value, key) {
   return query;
 };
 
+
+
+
+
+//---------------------------------------------------------------------------------
+// Query.equalTo
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToFirst
+//---------------------------------------------------------------------------------
 Query.prototype.equalTo = function(value, key) {
   var self = this;
 
@@ -111,7 +117,7 @@ Query.prototype.equalTo = function(value, key) {
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'equalTo', [{
+  }, this.pluginName, 'query_equalTo', [{
     value: value,
     key: key,
     targetId: this.id,
@@ -122,6 +128,12 @@ Query.prototype.equalTo = function(value, key) {
   return query;
 };
 
+
+
+//---------------------------------------------------------------------------------
+// Query.isEqual
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#isEqual
+//---------------------------------------------------------------------------------
 Query.prototype.isEqual = function(other) {
   var thisRefPath = [];
   var target = this;
@@ -139,10 +151,15 @@ Query.prototype.isEqual = function(other) {
 
   var thisRefPathStr = thisRefPath.join('/');
   var otherRefPathStr = otherRefPath.join('/');
-  console.log(thisRefPathStr, otherRefPathStr);
   return thisRefPath === otherRefPathStr;
 };
 
+
+
+//---------------------------------------------------------------------------------
+// Query.limitToFirst
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToFirst
+//---------------------------------------------------------------------------------
 Query.prototype.limitToFirst = function(limit) {
   var self = this;
   limit = Math.min(limit, 100);
@@ -156,7 +173,7 @@ Query.prototype.limitToFirst = function(limit) {
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'limitToFirst', [{
+  }, this.pluginName, 'query_limitToFirst', [{
     limit: limit,
     targetId: this.id,
     queryId: query.id
@@ -166,6 +183,13 @@ Query.prototype.limitToFirst = function(limit) {
   return query;
 };
 
+
+
+
+//---------------------------------------------------------------------------------
+// Query.limitToLast
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToLast
+//---------------------------------------------------------------------------------
 Query.prototype.limitToLast = function(limit) {
   var self = this;
   limit = Math.min(limit, 100);
@@ -179,7 +203,7 @@ Query.prototype.limitToLast = function(limit) {
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'limitToLast', [{
+  }, this.pluginName, 'query_limitToLast', [{
     limit: limit,
     targetId: this.id,
     queryId: query.id
@@ -189,137 +213,42 @@ Query.prototype.limitToLast = function(limit) {
   return query;
 };
 
-Query.prototype.set = function(values) {
-  console.log('[js]reference.set()', values, this.refId);
-  var self = this;
-  return new Promise(function(resolve, reject) {
-    self._exec(resolve.bind(self), reject.bind(self), self.pluginName, 'setValue', [{
-      targetId: self.id,
-      data: values
-    }]);
-  });
-};
 
-Query.prototype.orderByChild = function(path) {
+
+//---------------------------------------------------------------------------------
+// Query.off
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#on
+//---------------------------------------------------------------------------------
+Query.prototype.off = function(eventType, callback) {
   var self = this;
 
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
-  }, function(error) {
-    if (error instanceof Error) {
-      throw error;
-    } else {
-      throw new Error(error);
+  var listenerId;
+  if (callback) {
+    listenerId = callback._hashCode;
+    if (!listenerId) {
+      throw new Error('Specified callback is not registered.');
     }
-  }, this.pluginName, 'orderByChild', [{
-    targetId: this.id,
-    newId: query.id,
-    path: path
-  }]);
-
-  return query;
-};
-
-Query.prototype.orderByKey = function(path) {
-  var self = this;
-
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
-  }, function(error) {
-    if (error instanceof Error) {
-      throw error;
-    } else {
-      throw new Error(error);
-    }
-  }, this.pluginName, 'orderByKey', [{
-    targetId: this.id,
-    newId: query.id
-  }]);
-
-  return query;
-};
-
-Query.prototype.orderByPriority = function(path) {
-  var self = this;
-
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
-  }, function(error) {
-    if (error instanceof Error) {
-      throw error;
-    } else {
-      throw new Error(error);
-    }
-  }, this.pluginName, 'orderByPriority', [{
-    targetId: this.id,
-    newId: query.id
-  }]);
-
-  return query;
-};
-
-Query.prototype.orderByValue = function(path) {
-  var self = this;
-
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
-  }, function(error) {
-    if (error instanceof Error) {
-      throw error;
-    } else {
-      throw new Error(error);
-    }
-  }, this.pluginName, 'orderByValue', [{
-    targetId: this.id,
-    newId: query.id
-  }]);
-
-  return query;
-};
-
-
-Query.prototype.toString = function() {
-  return this.path;
-};
-
-Query.prototype.once = function(eventType, successCallback, failureCallbackOrContext, context) {
-  var self = this;
-  var context_ = this;
-  if (arguments.length === 4) {
-    context_ = context;
-  } else if (arguments.length === 3) {
-    context_ = failureCallbackOrContext;
   }
 
-  console.log('[js] Query.once');
 
-  return new Promise(function(resolve, reject) {
-    self._exec(function(result) {
+  this._exec(null, function(error) {
+    throw new Error(error);
+  }, this.pluginName, 'query_off', [{
+    targetId: this.id,
+    listenerId: listenerId,
+    eventType: eventType
+  }]);
 
-      var snapshot = new DataSnapshot(self, result);
-      console.log(result);
-      resolve.call(context_, snapshot);
-      if (typeof successCallback === 'function') {
-        successCallback.call(context_, snapshot);
-      }
-
-    }, function(error) {
-      reject.call(context_, error);
-      if (typeof failureCallbackOrContext === 'function') {
-        failureCallbackOrContext.call(context_, error);
-      }
-    }, self.pluginName, 'once', [{
-      'targetId': self.id,
-      'eventType': eventType
-    }]);
-  });
+  this._off(eventType, callback);
 
 };
 
+
+
+//---------------------------------------------------------------------------------
+// Query.on
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#on
+//---------------------------------------------------------------------------------
 Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, context) {
   var self = this;
   var context_ = this;
@@ -358,7 +287,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
         throw new Error(error);
       }
     }
-  }, this.pluginName, 'on', [{
+  }, this.pluginName, 'query_on', [{
     targetId: this.id,
     listenerId: listenerId,
     eventType: eventType
@@ -369,30 +298,157 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
 
 };
 
-Query.prototype.off = function(eventType, callback) {
-  var self = this;
 
-  var listenerId;
-  if (callback) {
-    listenerId = callback._hashCode;
-    if (!listenerId) {
-      throw new Error('Specified callback is not registered.');
-    }
+
+//---------------------------------------------------------------------------------
+// Query.once
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#once
+//---------------------------------------------------------------------------------
+Query.prototype.once = function(eventType, successCallback, failureCallbackOrContext, context) {
+  var self = this;
+  var context_ = this;
+  if (arguments.length === 4) {
+    context_ = context;
+  } else if (arguments.length === 3) {
+    context_ = failureCallbackOrContext;
   }
 
+  console.log('[js] Query.once');
 
-  this._exec(null, function(error) {
-    throw new Error(error);
-  }, this.pluginName, 'off', [{
-    targetId: this.id,
-    listenerId: listenerId,
-    eventType: eventType
-  }]);
+  return new Promise(function(resolve, reject) {
+    self._exec(function(result) {
 
-  this._off(eventType, callback);
+      var snapshot = new DataSnapshot(self, result);
+      resolve.call(context_, snapshot);
+      if (typeof successCallback === 'function') {
+        successCallback.call(context_, snapshot);
+      }
+
+    }, function(error) {
+      reject.call(context_, error);
+      if (typeof failureCallbackOrContext === 'function') {
+        failureCallbackOrContext.call(context_, error);
+      }
+    }, self.pluginName, 'query_once', [{
+      'targetId': self.id,
+      'eventType': eventType
+    }]);
+  });
 
 };
 
+
+
+//---------------------------------------------------------------------------------
+// Query.orderByChild
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByChild
+//---------------------------------------------------------------------------------
+Query.prototype.orderByChild = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'query_orderByChild', [{
+    targetId: this.id,
+    newId: query.id,
+    path: path
+  }]);
+
+  return query;
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Query.orderByKey
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByKey
+//---------------------------------------------------------------------------------
+Query.prototype.orderByKey = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'query_orderByKey', [{
+    targetId: this.id,
+    newId: query.id
+  }]);
+
+  return query;
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Query.orderByPriority
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByPriority
+//---------------------------------------------------------------------------------
+Query.prototype.orderByPriority = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'query_orderByPriority', [{
+    targetId: this.id,
+    newId: query.id
+  }]);
+
+  return query;
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Query.orderByValue
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByValue
+//---------------------------------------------------------------------------------
+Query.prototype.orderByValue = function(path) {
+  var self = this;
+
+  var query = new Query(this.pluginName, path);
+  this._exec(function() {
+    query._privateInit();
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.pluginName, 'query_orderByValue', [{
+    targetId: this.id,
+    newId: query.id
+  }]);
+
+  return query;
+};
+
+
+
+
+//---------------------------------------------------------------------------------
+// Query.startAt
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#startAt
+//---------------------------------------------------------------------------------
 Query.prototype.startAt = function(value, key) {
   var self = this;
 
@@ -405,7 +461,7 @@ Query.prototype.startAt = function(value, key) {
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'startAt', [{
+  }, this.pluginName, 'query_startAt', [{
     value: value,
     key: key,
     targetId: this.id,
@@ -414,6 +470,25 @@ Query.prototype.startAt = function(value, key) {
 
 
   return query;
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Query.toJSON
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#toJSON
+//---------------------------------------------------------------------------------
+Query.prototype.toJSON = function() {
+  throw new Error('not implemented');
+};
+
+
+//---------------------------------------------------------------------------------
+// Query.toString
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#toString
+//---------------------------------------------------------------------------------
+Query.prototype.toString = function() {
+  return this.path;
 };
 
 module.exports = Query;

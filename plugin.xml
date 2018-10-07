@@ -12,6 +12,7 @@
   <js-module name="DataSnapshot" src="www/DataSnapshot.js" />
   <js-module name="FirebaseDatabaseCommandQueue" src="www/firebase-database-command-queue.js" />
   <js-module name="LZString" src="www/lz-string.js" />
+  <js-module name="OnDisconnect" src="www/OnDisconnect.js" />
 
   <platform name="android">
     <config-file parent="/*" target="res/xml/config.xml">
