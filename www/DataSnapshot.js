@@ -1,14 +1,7 @@
 
 
 
-var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
-var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
-
-var utils = require('cordova/utils'),
-  BaseClass = require('./BaseClass'),
-  BaseArrayClass = require('./BaseArrayClass'),
-  execCmd = require('./FirebaseDatabaseCommandQueue'),
-  LZString = require('./LZString');
+var LZString = require('./LZString');
 
 /*******************************************************************************
  * @name DataSnapshot
@@ -32,6 +25,10 @@ DataSnapshot.prototype.forEach = function(action) {
   var values = JSON.parse(this._nativeResults.exportVal);
   var keys = Object.keys(values);
   keys = this.sortFunc(keys);
+  var sortedValues = keys.map(function(key) {
+    return values[key];
+  });
+  sortedValues.forEach(action);
 };
 
 
@@ -47,7 +44,9 @@ DataSnapshot.prototype.hasChild = function(path) {
 DataSnapshot.prototype.hasChildren = function() {
   var values = JSON.parse(this._nativeResults.exportVal);
   var keys = Object.keys(values);
+  var key;
   for (var i = 0; i < keys.length; i++) {
+    key = keys[i];
     if (typeof values[key] === 'object') {
       return true;
     }

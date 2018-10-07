@@ -10,19 +10,18 @@ var utils = require('cordova/utils'),
 /*******************************************************************************
  * @name Query
  ******************************************************************************/
-function Query(pluginName, ref, key) {
+function Query(params) {
   var self = this,
     cmdQueue = new BaseArrayClass();
   BaseClass.apply(this);
-
-  window.plugin.firebase.database._DBs[pluginName].set(this.hashCode, this);
+  window.plugin.firebase.database._DBs[params.pluginName].set(this.hashCode, this);
 
   Object.defineProperty(self, 'pluginName', {
-    value: pluginName
+    value: params.pluginName
   });
 
   Object.defineProperty(self, 'ref', {
-    value: ref
+    value: params.ref
   });
 
   Object.defineProperty(self, 'id', {
@@ -56,7 +55,13 @@ function Query(pluginName, ref, key) {
 
 utils.extend(Query, BaseClass);
 
-Query.prototype._privateInit = function() {
+Query.prototype._privateInit = function(nativeInfo) {
+
+  Object.defineProperty(this, 'url', {
+    value: nativeInfo.url,
+    enumerable: false
+  });
+
   this._isReady = true;
   this._cmdQueue._trigger('insert_at');
 };
@@ -77,19 +82,22 @@ Query.prototype._exec = function() {
 Query.prototype.endAt = function(value, key) {
   var self = this;
 
-  var query = new Query(this, value, key);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_endAt', [{
+  }, self.pluginName, 'query_endAt', [{
     value: value,
     key: key,
-    targetId: this.id,
+    targetId: self.id,
     queryId: query.id
   }]);
 
@@ -108,19 +116,22 @@ Query.prototype.endAt = function(value, key) {
 Query.prototype.equalTo = function(value, key) {
   var self = this;
 
-  var query = new Query(this, value, key);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_equalTo', [{
+  }, self.pluginName, 'query_equalTo', [{
     value: value,
     key: key,
-    targetId: this.id,
+    targetId: self.id,
     queryId: query.id
   }]);
 
@@ -135,23 +146,7 @@ Query.prototype.equalTo = function(value, key) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#isEqual
 //---------------------------------------------------------------------------------
 Query.prototype.isEqual = function(other) {
-  var thisRefPath = [];
-  var target = this;
-  while(target !== null && target.ref) {
-    thisRefPath.unshift(target.key);
-    target = target.ref;
-  }
-
-  var otherRefPath = [];
-  target = other;
-  while(target !== null && target.ref) {
-    otherRefPath.unshift(target.key);
-    target = target.ref;
-  }
-
-  var thisRefPathStr = thisRefPath.join('/');
-  var otherRefPathStr = otherRefPath.join('/');
-  return thisRefPath === otherRefPathStr;
+  return this.toString() === other.toString();
 };
 
 
@@ -164,18 +159,21 @@ Query.prototype.limitToFirst = function(limit) {
   var self = this;
   limit = Math.min(limit, 100);
 
-  var query = new Query(this, value, key);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_limitToFirst', [{
+  }, self.pluginName, 'query_limitToFirst', [{
     limit: limit,
-    targetId: this.id,
+    targetId: self.id,
     queryId: query.id
   }]);
 
@@ -194,18 +192,21 @@ Query.prototype.limitToLast = function(limit) {
   var self = this;
   limit = Math.min(limit, 100);
 
-  var query = new Query(this, value, key);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_limitToLast', [{
+  }, self.pluginName, 'query_limitToLast', [{
     limit: limit,
-    targetId: this.id,
+    targetId: self.id,
     queryId: query.id
   }]);
 
@@ -231,10 +232,10 @@ Query.prototype.off = function(eventType, callback) {
   }
 
 
-  this._exec(null, function(error) {
+  self._exec(null, function(error) {
     throw new Error(error);
-  }, this.pluginName, 'query_off', [{
-    targetId: this.id,
+  }, self.pluginName, 'query_off', [{
+    targetId: self.id,
     listenerId: listenerId,
     eventType: eventType
   }]);
@@ -255,7 +256,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
   if (arguments.length === 4) {
     context_ = context;
   } else if (arguments.length === 3) {
-    context_ = failureCallbackOrContext;
+    context_ = cancelCallbackOrContext;
   }
 
   var listener = function(result, key) {
@@ -269,7 +270,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
       callback.apply(context_, args);
     }
   };
-  var listenerId = this.id + '_on' + Math.floor(Date.now() * Math.random());
+  var listenerId = self.id + '_on' + Math.floor(Date.now() * Math.random());
   Object.defineProperty(listener, '_hashCode', {
     value: listenerId,
     enumerable: false
@@ -277,9 +278,9 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
 
   this._on(eventType, listener);
 
-  this._exec(null, function(error) {
-    if (typeof failureCallbackOrContext === 'function') {
-      failureCallbackOrContext.call(context_, new Error(error));
+  self._exec(null, function(error) {
+    if (typeof cancelCallbackOrContext === 'function') {
+      cancelCallbackOrContext.call(context_, new Error(error));
     } else {
       if (error instanceof Error) {
         throw error;
@@ -287,8 +288,8 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
         throw new Error(error);
       }
     }
-  }, this.pluginName, 'query_on', [{
-    targetId: this.id,
+  }, self.pluginName, 'query_on', [{
+    targetId: self.id,
     listenerId: listenerId,
     eventType: eventType
   }]);
@@ -346,17 +347,20 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
 Query.prototype.orderByChild = function(path) {
   var self = this;
 
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_orderByChild', [{
-    targetId: this.id,
+  }, self.pluginName, 'query_orderByChild', [{
+    targetId: self.id,
     newId: query.id,
     path: path
   }]);
@@ -370,20 +374,23 @@ Query.prototype.orderByChild = function(path) {
 // Query.orderByKey
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByKey
 //---------------------------------------------------------------------------------
-Query.prototype.orderByKey = function(path) {
+Query.prototype.orderByKey = function() {
   var self = this;
 
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_orderByKey', [{
-    targetId: this.id,
+  }, self.pluginName, 'query_orderByKey', [{
+    targetId: self.id,
     newId: query.id
   }]);
 
@@ -396,20 +403,23 @@ Query.prototype.orderByKey = function(path) {
 // Query.orderByPriority
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByPriority
 //---------------------------------------------------------------------------------
-Query.prototype.orderByPriority = function(path) {
+Query.prototype.orderByPriority = function() {
   var self = this;
 
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_orderByPriority', [{
-    targetId: this.id,
+  }, self.pluginName, 'query_orderByPriority', [{
+    targetId: self.id,
     newId: query.id
   }]);
 
@@ -422,20 +432,23 @@ Query.prototype.orderByPriority = function(path) {
 // Query.orderByValue
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByValue
 //---------------------------------------------------------------------------------
-Query.prototype.orderByValue = function(path) {
+Query.prototype.orderByValue = function() {
   var self = this;
 
-  var query = new Query(this.pluginName, path);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_orderByValue', [{
-    targetId: this.id,
+  }, self.pluginName, 'query_orderByValue', [{
+    targetId: self.id,
     newId: query.id
   }]);
 
@@ -452,19 +465,22 @@ Query.prototype.orderByValue = function(path) {
 Query.prototype.startAt = function(value, key) {
   var self = this;
 
-  var query = new Query(this, value, key);
-  this._exec(function() {
-    query._privateInit();
+  var query = new Query({
+    pluginName: self.pluginName,
+    ref: self
+  });
+  self._exec(function(results) {
+    query._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error);
     }
-  }, this.pluginName, 'query_startAt', [{
+  }, self.pluginName, 'query_startAt', [{
     value: value,
     key: key,
-    targetId: this.id,
+    targetId: self.id,
     queryId: query.id
   }]);
 
@@ -488,7 +504,7 @@ Query.prototype.toJSON = function() {
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#toString
 //---------------------------------------------------------------------------------
 Query.prototype.toString = function() {
-  return this.path;
+  return this.url;
 };
 
 module.exports = Query;

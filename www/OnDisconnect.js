@@ -1,19 +1,14 @@
 
 
 
-var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
-
-var utils = require('cordova/utils'),
-  BaseClass = require('./BaseClass'),
-  BaseArrayClass = require('./BaseArrayClass'),
-  DataSnapshot = require('./DataSnapshot'),
+var BaseArrayClass = require('./BaseArrayClass'),
   execCmd = require('./FirebaseDatabaseCommandQueue'),
   LZString = require('./LZString');
 
 /*******************************************************************************
  * @name OnDisconnect
  ******************************************************************************/
-function OnDisconnect(pluginName, ref) {
+function OnDisconnect(pluginName) {
   var self = this,
     cmdQueue = new BaseArrayClass();
 
@@ -75,9 +70,9 @@ OnDisconnect.prototype.cancel = function(onComplete) {
         onComplete.call(self);
       }
     }, function(error) {
-      reject.call(self);
+      reject.call(self, error);
       if (typeof onComplete === 'function') {
-        onComplete.call(self);
+        onComplete.call(self, error);
       }
     }, self.pluginName, 'onDisconnect_cancel', [{
       targetId: self.id
@@ -101,9 +96,9 @@ OnDisconnect.prototype.remove = function(onComplete) {
         onComplete.call(self);
       }
     }, function(error) {
-      reject.call(self);
+      reject.call(self, error);
       if (typeof onComplete === 'function') {
-        onComplete.call(self);
+        onComplete.call(self, error);
       }
     }, self.pluginName, 'onDisconnect_remove', [{
       targetId: self.id
@@ -126,9 +121,9 @@ OnDisconnect.prototype.set = function(value, onComplete) {
         onComplete.call(self);
       }
     }, function(error) {
-      reject.call(self);
+      reject.call(self, error);
       if (typeof onComplete === 'function') {
-        onComplete.call(self);
+        onComplete.call(self, error);
       }
     }, self.pluginName, 'onDisconnect_set', [{
       targetId: self.id,
@@ -153,9 +148,9 @@ OnDisconnect.prototype.setWithPriority = function(value, priority, onComplete) {
         onComplete.call(self);
       }
     }, function(error) {
-      reject.call(self);
+      reject.call(self, error);
       if (typeof onComplete === 'function') {
-        onComplete.call(self);
+        onComplete.call(self, error);
       }
     }, self.pluginName, 'onDisconnect_setWithPriority', [{
       targetId: self.id,
@@ -181,9 +176,9 @@ OnDisconnect.prototype.update = function(values, onComplete) {
         onComplete.call(self);
       }
     }, function(error) {
-      reject.call(self);
+      reject.call(self, error);
       if (typeof onComplete === 'function') {
-        onComplete.call(self);
+        onComplete.call(self, error);
       }
     }, self.pluginName, 'onDisconnect_update', [{
       targetId: self.id,

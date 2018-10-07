@@ -27,22 +27,22 @@ function execCmd(success, error, pluginName, methodName, args, execOptions) {
   // If the overlay has been already removed from map,
   // do not execute any methods on it.
   if (instance._isRemoved && !execOptions.remove) {
-    console.error("[ignore]" + pluginName + "." + methodName + ", because removed.");
+    console.error('[ignore]' + pluginName + '.' + methodName + ', because removed.');
     return true;
   }
 
   // If the overlay is not ready in native side,
   // do not execute any methods except remove on it.
   // This code works for map class especially.
-  if (!this._isReady && methodName !== "remove") {
-    console.error("[ignore]" + pluginName + "." + methodName + ", because it's not ready.");
+  if (!this._isReady && methodName !== 'remove') {
+    console.error('[ignore]' + pluginName + '.' + methodName + ', because it\'s not ready.');
     return true;
   }
 
   // Push the method into the commandQueue(FIFO) at once.
   commandQueue.push({
-    "execOptions": execOptions,
-    "args": [
+    'execOptions': execOptions,
+    'args': [
       function() {
         //-------------------------------
         // success callback
@@ -127,7 +127,7 @@ function _exec() {
 
     // If the `_stopRequested` flag is true,
     // do not execute any statements except `remove()` or `clear()` methods.
-    if (_stopRequested && (!commandParams.execOptions.remove || methodName !== "clear")) {
+    if (_stopRequested && (!commandParams.execOptions.remove || methodName !== 'clear')) {
       _executingCnt--;
       continue;
     }
@@ -155,6 +155,6 @@ function stopExecution() {
   // Request stop all tasks.
   _stopRequested = true;
 }
-window.addEventListener("unload", stopExecution);
+window.addEventListener('unload', stopExecution);
 
 module.exports = execCmd;

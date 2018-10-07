@@ -1,7 +1,6 @@
 
 
 var utils = require('cordova/utils'),
-  exec = require('cordova/exec'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
   Reference = require('./Reference'),
@@ -134,11 +133,21 @@ CordovaFirebaseDatabase.prototype.goOnline = function() {
 // Database.ref
 // https://firebase.google.com/docs/reference/js/firebase.database.Database#ref
 //---------------------------------------------------------------------------------
-CordovaFirebaseDatabase.prototype.ref = function(key) {
+CordovaFirebaseDatabase.prototype.ref = function(path) {
 
-  var reference = new Reference(this, key);
-  this._exec(function() {
-    reference._privateInit();
+  var key = null;
+  if (path) {
+    path = path.replace(/\/$/, '');
+    key = path.replace(/^.*\//, '') || null;
+  }
+
+  var reference = new Reference({
+    pluginName: this.id,
+    parent: null,
+    key: key
+  });
+  this._exec(function(results) {
+    reference._privateInit(results);
   }, function(error) {
     if (error instanceof Error) {
       throw error;
@@ -146,7 +155,7 @@ CordovaFirebaseDatabase.prototype.ref = function(key) {
       throw new Error(error);
     }
   }, this.id, 'database_ref', [{
-    key: key,
+    path: path,
     id: reference.id
   }]);
 
@@ -158,7 +167,7 @@ CordovaFirebaseDatabase.prototype.ref = function(key) {
 
 cordova.addConstructor(function() {
   if (!window.Cordova) {
-      window.Cordova = cordova;
+    window.Cordova = cordova;
   }
   window.plugin = window.plugin || {};
   window.plugin.firebase = window.plugin.firebase || {};

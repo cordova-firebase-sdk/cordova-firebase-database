@@ -71,9 +71,12 @@ Database.prototype.database_ref = function(onSuccess, onError, args) {
   var options = args[0];
   console.log('[broswer] database.ref()', options);
 
-  var ref = this.database.ref(options.key);
+  var ref = this.database.ref(options.path);
   this.set(options.id, ref);
-  onSuccess();
+  onSuccess({
+    key: ref.key,
+    url: ref.toString()
+  });
 };
 
 
@@ -168,7 +171,10 @@ Database.prototype.reference_child = function(onSuccess, onError, args) {
   var ref = this.get(options.targetId);
   var childRef = ref.child(options.path);
   this.set(options.childId, childRef);
-  onSuccess();
+  onSuccess({
+    key: childRef.key,
+    url: childRef.toString()
+  });
 };
 
 
@@ -185,6 +191,33 @@ Database.prototype.reference_onDisconnect = function(onSuccess, onError, args) {
   var onDisconnect = ref.onDisconnect();
   this.set(options.onDisconnectId, onDisconnect);
   onSuccess();
+};
+
+
+
+//---------------------------------------------------------------------------------
+// Reference.push
+// https://firebase.google.com/docs/reference/js/firebase.database.Reference#push
+//---------------------------------------------------------------------------------
+Database.prototype.reference_push = function(onSuccess, onError, args) {
+  var options = args[0];
+  console.log('[broswer] reference.push()', options);
+
+  var ref = this.get(options.targetId);
+  var thenableRef;
+  if (options.value) {
+   thenableRef = ref.push(JSON.parse(LZString.decompress(options.value)));
+  } else {
+   thenableRef = ref.push();
+  }
+  this.set(options.newId, thenableRef);
+  thenableRef.then(function(res) {
+    console.log(res);
+    onSuccess({
+      key: thenableRef.key,
+      url: thenableRef.toString()
+    });
+  }).catch(onError);
 };
 
 

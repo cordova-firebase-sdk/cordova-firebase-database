@@ -79,7 +79,7 @@ BaseClass.prototype = {
   },
 
   _on: function (eventName, listener) {
-    if (!listener || typeof listener !== "function") {
+    if (!listener || typeof listener !== 'function') {
       throw Error('Listener for on()/addEventListener() method is not a function');
     }
     var topic;
@@ -140,7 +140,7 @@ BaseClass.prototype = {
   },
 
   _one: function (eventName, listener) {
-    if (!listener || typeof listener !== "function") {
+    if (!listener || typeof listener !== 'function') {
       throw Error('Listener for one()/addEventListenerOnce() method is not a function');
     }
 
@@ -156,23 +156,5 @@ BaseClass.prototype = {
     return this;
   }
 };
-
-function createError(message, methodName, args) {
-  var error = new Error(methodName ? [
-    'Got error with message: "', message, '" ',
-    'after calling "', methodName, '"'
-  ].join('') : message);
-
-  Object.defineProperties(error, {
-    methodName: {
-      value: methodName
-    },
-    args: {
-      value: args
-    }
-  });
-
-  return error;
-}
 
 module.exports = BaseClass;

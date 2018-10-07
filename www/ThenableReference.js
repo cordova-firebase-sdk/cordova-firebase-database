@@ -5,17 +5,15 @@
 var utils = require('cordova/utils'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
-  ThenableReference = require('./ThenableReference'),
   cordova_exec = require('cordova/exec'),
   LZString = require('./LZString');
 
 /*******************************************************************************
- * @name Reference
+ * @name ThenableReference
  ******************************************************************************/
-function Reference(params) {
+function ThenableReference(params) {
   var self = this;
   Query.call(this, params);
-
 
   Object.defineProperty(self, 'parent', {
     value: params.parentRef
@@ -26,31 +24,37 @@ function Reference(params) {
 
 }
 
-utils.extend(Reference, Query);
 
+utils.extend(ThenableReference, Query);
 
-//---------------------------------------------------------------------------------
-// Reference.child
-// https://firebase.google.com/docs/reference/js/firebase.database.Reference#child
-//---------------------------------------------------------------------------------
-Reference.prototype.child = function(path) {
+ThenableReference.prototype.then = function(resolveCallback) {
   var self = this;
 
-  var key = null;
-  if (path) {
-    path = path.replace(/\/$/, '');
-    key = path.replace(/^.*\//, '') || self.key;
-  } else {
-    throw new Error('Reference.child failed: Was called with 0 arguments. Expects at least 1.');
-  }
-
-  var reference = new Reference({
-    pluginName: self.pluginName,
-    parent: self,
-    key: key
+  return new Promise(function(resolve, reject) {
+    self._resolve = function() {
+      resolveCallback.call(self, self);
+    };
+    self._reject = reject;
   });
-  self._exec(function(results) {
-    reference._privateInit(results);
+};
+
+ThenableReference.prototype.catch = function(rejectCallback) {
+  this._reject = rejectCallback;
+};
+
+
+//---------------------------------------------------------------------------------
+// ThenableReference.child
+// https://firebase.google.com/docs/reference/js/firebase.database.Reference#child
+//---------------------------------------------------------------------------------
+ThenableReference.prototype.child = function(path) {
+  var self = this;
+
+  var reference = new ThenableReference(self.pluginName, self);
+  delete reference.then;
+  delete reference.catch;
+  self._exec(function() {
+    ThenableReference._privateInit();
   }, function(error) {
     throw new Error(error);
   }, self.pluginName, 'reference_child', [{
@@ -65,13 +69,13 @@ Reference.prototype.child = function(path) {
 
 
 //---------------------------------------------------------------------------------
-// Reference.onDisconnect
+// ThenableReference.onDisconnect
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#remove
 //---------------------------------------------------------------------------------
-Reference.prototype.onDisconnect = function() {
+ThenableReference.prototype.onDisconnect = function() {
   var self = this;
 
-  var onDisconnect = new OnDisconnect(self.pluginName);
+  var onDisconnect = new OnDisconnect(self.pluginName, self.ref);
   self._exec(function() {
     onDisconnect._privateInit();
   }, function(error) {
@@ -87,10 +91,10 @@ Reference.prototype.onDisconnect = function() {
 
 
 //---------------------------------------------------------------------------------
-// Reference.push
+// ThenableReference.push
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#push
 //---------------------------------------------------------------------------------
-Reference.prototype.push = function(value, onComplete) {
+ThenableReference.prototype.push = function(value, onComplete) {
   var self = this;
 
   var reference = new ThenableReference({
@@ -137,10 +141,10 @@ Reference.prototype.push = function(value, onComplete) {
 
 
 //---------------------------------------------------------------------------------
-// Reference.remove
+// ThenableReference.remove
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#remove
 //---------------------------------------------------------------------------------
-Reference.prototype.remove = function(onComplete) {
+ThenableReference.prototype.remove = function(onComplete) {
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -162,10 +166,10 @@ Reference.prototype.remove = function(onComplete) {
 
 
 //---------------------------------------------------------------------------------
-// Reference.set
+// ThenableReference.set
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#set
 //---------------------------------------------------------------------------------
-Reference.prototype.set = function(value, onComplete) {
+ThenableReference.prototype.set = function(value, onComplete) {
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -188,10 +192,10 @@ Reference.prototype.set = function(value, onComplete) {
 
 
 //---------------------------------------------------------------------------------
-// Reference.setPriority
+// ThenableReference.setPriority
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#setPriority
 //---------------------------------------------------------------------------------
-Reference.prototype.setPriority = function(priority, onComplete) {
+ThenableReference.prototype.setPriority = function(priority, onComplete) {
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -214,10 +218,10 @@ Reference.prototype.setPriority = function(priority, onComplete) {
 
 
 //---------------------------------------------------------------------------------
-// Reference.setWithPriority
+// ThenableReference.setWithPriority
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#setWithPriority
 //---------------------------------------------------------------------------------
-Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) {
+ThenableReference.prototype.setWithPriority = function(newVal, newPriority, onComplete) {
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -241,10 +245,10 @@ Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) 
 
 
 //---------------------------------------------------------------------------------
-// Reference.transaction
+// ThenableReference.transaction
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction
 //---------------------------------------------------------------------------------
-Reference.prototype.transaction = function(transactionUpdate, onComplete, applyLocally) {
+ThenableReference.prototype.transaction = function(transactionUpdate, onComplete, applyLocally) {
   var self = this;
   var transactionId = Math.floor(Date.now() * Math.random());
   var eventName = self.pluginName + '-' + self.id + '-transaction';
@@ -283,10 +287,10 @@ Reference.prototype.transaction = function(transactionUpdate, onComplete, applyL
 
 
 //---------------------------------------------------------------------------------
-// Reference.update
+// ThenableReference.update
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#update
 //---------------------------------------------------------------------------------
-Reference.prototype.update = function(values, onComplete) {
+ThenableReference.prototype.update = function(values, onComplete) {
   var self = this;
   return new Promise(function(resolve, reject) {
     self._exec(function() {
@@ -306,4 +310,4 @@ Reference.prototype.update = function(values, onComplete) {
   });
 };
 
-module.exports = Reference;
+module.exports = ThenableReference;

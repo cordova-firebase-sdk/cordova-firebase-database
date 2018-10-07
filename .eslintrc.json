@@ -22,15 +22,13 @@
         ],
         "no-console": "off"
     },
-    "excludedFiles": [
-      "www/lz-string.js"
-    ],
     "globals": {
       "require": false,
       "Symbol": false,
       "window": false,
       "cordova": false,
       "Promise": false,
-      "module": false
+      "module": false,
+      "angular": false
     }
 }
