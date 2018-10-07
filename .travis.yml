@@ -14,18 +14,6 @@ matrix:
     os: linux
     language: node_js
     node_js: '5.5'
-  - env: PLATFORM=browser-firefox
-    os: linux
-    language: node_js
-    node_js: '5.5'
-  - env: PLATFORM=browser-safari
-    os: linux
-    language: node_js
-    node_js: '5.5'
-  - env: PLATFORM=browser-edge
-    os: linux
-    language: node_js
-    node_js: '5.5'
 
 before_install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm

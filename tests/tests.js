@@ -14,9 +14,6 @@ exports.defineAutoTests = function() {
       expect(window.plugin.firebase.database).toBeDefined();
     });
 
-    it('should contain "database" namespace', function() {
-      expect(window.plugin.firebase.database).toBeDefined();
-    });
   });
 
 
