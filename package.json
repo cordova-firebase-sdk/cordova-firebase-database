@@ -11,8 +11,7 @@
     ]
   },
   "scripts": {
-    "test": "npm run eslintWWW",
-    "eslintWWW": "node node_modules/eslint/bin/eslint www",
+    "test": "npm run eslint",
     "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src && node node_modules/eslint/bin/eslint tests"
   },
   "keywords": [

@@ -29,6 +29,8 @@
       "cordova": false,
       "Promise": false,
       "module": false,
-      "angular": false
+      "angular": false,
+      "firebase": false,
+      "exports": false
     }
 }

@@ -3,7 +3,7 @@
 var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
-  Reference = require('./Reference'),
+  ReferenceModule = require('./Reference'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
 function CordovaFirebaseDatabase(firebaseInitOptions) {
@@ -141,7 +141,7 @@ CordovaFirebaseDatabase.prototype.ref = function(path) {
     key = path.replace(/^.*\//, '') || null;
   }
 
-  var reference = new Reference({
+  var reference = new ReferenceModule.Reference({
     pluginName: this.id,
     parent: null,
     key: key,

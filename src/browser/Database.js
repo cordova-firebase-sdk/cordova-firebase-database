@@ -1,12 +1,9 @@
 
 
 
-var VARS_FIELD = typeof Symbol === 'undefined' ? '__vars' + Date.now() : Symbol('vars');
-var SUBSCRIPTIONS_FIELD = typeof Symbol === 'undefined' ? '__subs' + Date.now() : Symbol('subscriptions');
-
 var utils = require('cordova/utils'),
-    BaseClass = require('cordova-firebase-database.BaseClass'),
-    LZString = require('cordova-firebase-database.LZString');
+  BaseClass = require('cordova-firebase-database.BaseClass'),
+  LZString = require('cordova-firebase-database.LZString');
 
 /****************************************************************************** *
  * @name Database
@@ -41,11 +38,15 @@ utils.extend(Database, BaseClass);
 // Database.goOffline
 // https://firebase.google.com/docs/reference/js/firebase.database.Database#goOffline
 //---------------------------------------------------------------------------------
-Database.prototype.database_goOffline = function(onSuccess, onError, args) {
+Database.prototype.database_goOffline = function(onSuccess, onError) {
   console.log('[broswer] database.goOffline()');
 
-  this.database.goOffline();
-  onSuccess();
+  try {
+    this.database.goOffline();
+    onSuccess();
+  } catch(e) {
+    onError(e);
+  }
 };
 
 
@@ -54,11 +55,15 @@ Database.prototype.database_goOffline = function(onSuccess, onError, args) {
 // Database.goOnline
 // https://firebase.google.com/docs/reference/js/firebase.database.Database#goOnline
 //---------------------------------------------------------------------------------
-Database.prototype.database_goOnline = function(onSuccess, onError, args) {
+Database.prototype.database_goOnline = function(onSuccess, onError) {
   console.log('[broswer] database.goOnline()');
 
-  this.database.goOnline();
-  onSuccess();
+  try {
+    this.database.goOnline();
+    onSuccess();
+  } catch(e) {
+    onError(e);
+  }
 };
 
 
@@ -203,13 +208,13 @@ Database.prototype.reference_push = function(onSuccess, onError, args) {
   var ref = this.get(options.targetId);
   var thenableRef;
   if (options.value) {
-   thenableRef = ref.push(JSON.parse(LZString.decompress(options.value)));
+    thenableRef = ref.push(JSON.parse(LZString.decompress(options.value)));
   } else {
-   thenableRef = ref.push();
+    thenableRef = ref.push();
   }
   this.set(options.newId, thenableRef);
   thenableRef.then(function(res) {
-    console.log(res);
+    // console.log(res);
     onSuccess({
       key: thenableRef.key,
       url: thenableRef.toString()
@@ -290,7 +295,7 @@ Database.prototype.reference_transaction = function(onSuccess, onError, args) {
   console.log('[broswer] reference.transaction()', options);
   var ref = this.get(options.targetId);
 
-  (new new Promise(function(resolve, reject) {
+  (new new Promise(function(resolve) {
     var prevValue;
     var timer = setInterval(function() {
       ref.once('value').then(function(value) {
@@ -314,7 +319,7 @@ Database.prototype.reference_transaction = function(onSuccess, onError, args) {
     }, 100);
   }))
   .then(function(newValues) {
-    ref.transaction(function(currentValue) {
+    ref.transaction(function() {
       return newValues;
     },
     function(error, committed, snapshot) {
@@ -356,8 +361,7 @@ Database.prototype.reference_onTransactionCallback = function(onSuccess, onError
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#update
 //---------------------------------------------------------------------------------
 Database.prototype.reference_update = function(onSuccess, onError, args) {
-  var options = args[0],
-    self = this;
+  var options = args[0];
   console.log('[broswer] reference.update()', options);
 
   var ref = this.get(options.targetId);
@@ -456,15 +460,15 @@ Database.prototype.query_off = function(onSuccess, onError, args) {
     options = args[0];
   console.log('[broswer] query.off()', options);
 
-  var referenceOrQuery = this.get(options.targetId);
+  var referenceOrQuery = self.get(options.targetId);
   var listener;
   if (options.listenerId) {
-    listener = this.get(options.listenerId);
+    listener = self.get(options.listenerId);
   }
 
   referenceOrQuery.off(options.eventType, listener);
 
-  this.delete(options.listenerId);
+  self.delete(options.listenerId);
 
 };
 
@@ -517,8 +521,7 @@ Database.prototype.query_on = function(onSuccess, onError, args) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#once
 //---------------------------------------------------------------------------------
 Database.prototype.query_once = function(onSuccess, onError, args) {
-  var self = this,
-    options = args[0];
+  var options = args[0];
   console.log('[broswer] query.once()', options);
 
   var referenceOrQuery = this.get(options.targetId);
@@ -551,7 +554,7 @@ Database.prototype.orderByChild = function(onSuccess, onError, args) {
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByChild(options.path);
-    self.set(options.newId, referenceOrQuery);
+    self.set(options.newId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -572,7 +575,7 @@ Database.prototype.query_orderByKey = function(onSuccess, onError, args) {
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByKey();
-    self.set(options.newId, referenceOrQuery);
+    self.set(options.newId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -593,7 +596,7 @@ Database.prototype.query_orderByPriority = function(onSuccess, onError, args) {
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByPriority();
-    self.set(options.newId, referenceOrQuery);
+    self.set(options.newId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -614,7 +617,7 @@ Database.prototype.query_orderByValue = function(onSuccess, onError, args) {
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByValue();
-    self.set(options.newId, referenceOrQuery);
+    self.set(options.newId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);

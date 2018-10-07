@@ -15,7 +15,6 @@ function CordovaFirebaseDatabase() {
 utils.extend(CordovaFirebaseDatabase, BaseClass);
 
 CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) {
-  var self = this;
 
   common.loadJsPromise({
     'url': 'https://www.gstatic.com/firebasejs/5.5.0/firebase-app.js',
@@ -30,7 +29,6 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
     var options = args[0] || {};
 
     // Create/retrieve firebaseRef
-    var firebaseRef;
     if (!firebase.default || firebase.default.apps.length === 0) {
       firebase.initializeApp(options.browserConfigs || {});
     }

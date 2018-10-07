@@ -5,7 +5,6 @@
 var utils = require('cordova/utils'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
-  ThenableReference = require('./ThenableReference'),
   cordova_exec = require('cordova/exec'),
   LZString = require('./LZString');
 
@@ -307,4 +306,33 @@ Reference.prototype.update = function(values, onComplete) {
   });
 };
 
-module.exports = Reference;
+
+/*******************************************************************************
+ * @name ThenableReference
+ ******************************************************************************/
+function ThenableReference(params) {
+  Reference.call(this, params);
+}
+
+utils.extend(ThenableReference, Reference);
+
+ThenableReference.prototype.then = function(resolveCallback) {
+  var self = this;
+
+  return new Promise(function(resolve, reject) {
+    self._resolve = function() {
+      resolveCallback.call(self, self);
+    };
+    self._reject = reject;
+  });
+};
+
+ThenableReference.prototype.catch = function(rejectCallback) {
+  this._reject = rejectCallback;
+};
+
+
+module.exports = {
+  Reference: Reference,
+  ThenableReference: ThenableReference
+};
