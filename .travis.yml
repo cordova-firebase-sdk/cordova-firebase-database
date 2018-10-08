@@ -26,8 +26,8 @@ before_install:
   - node --version
   - npm install -g cordova@${CORDOVA_VERSION}
   - cordova --version
-  - git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
-    && npm install && popd
+
+
 
 
 install:
@@ -36,5 +36,5 @@ install:
 
 script:
   - npm test
-  - node /tmp/paramedi
+
 
