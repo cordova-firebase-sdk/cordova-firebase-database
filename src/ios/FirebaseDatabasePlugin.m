@@ -54,6 +54,14 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] database.ref() %@", options);
+  
+  FIRDatabaseReference *ref;
+  if ([options objectForKey:@"path"]) {
+    ref = [self.database referenceWithPath:[options objectForKey:@"path"]];
+  } else {
+    ref = [self.database reference];
+  }
+  [self.objects setObject:ref forKey:[options objectForKey:@"id"]];
 
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -140,7 +148,7 @@
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
     
-    NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+    NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
     NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
     NSError *jsonError;
     NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -181,7 +189,7 @@
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
     
-    NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+    NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
     NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
     NSError *jsonError;
     NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -226,7 +234,7 @@
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
     
-    NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+    NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
     NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
     NSError *jsonError;
     NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -318,7 +326,7 @@
   [self.objects setObject:thenableRef forKey:newId];
   
   
-  NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+  NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -374,7 +382,7 @@
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   
-  NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+  NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -432,7 +440,7 @@
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   
-  NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+  NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -553,8 +561,8 @@
 }
 
 - (void)reference_onTransactionCallback:(CDVInvokedUrlCommand*)command {
-  NSString *transactionId = [[command.arguments objectAtIndex:0] stringValue];
-  NSString *serializedValue = [[[command.arguments objectAtIndex:1] stringValue] decompressLZ];
+  NSString *transactionId = [command.arguments objectAtIndex:0];
+  NSString *serializedValue = [[NSString stringWithFormat:@"%@", [command.arguments objectAtIndex:1]] decompressLZ];
   NSData* jsonData = [serializedValue dataUsingEncoding:NSUTF8StringEncoding];
   
   @synchronized (self.jsCallbackHolder) {
@@ -576,7 +584,7 @@
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   
-  NSString *valueStr = [[[options objectForKey:@"value"] stringValue] decompressLZ];
+  NSString *valueStr = [[NSString stringWithFormat:@"%@", [options objectForKey:@"value"]] decompressLZ];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -616,7 +624,7 @@
   NSString *queryId = [options objectForKey:@"queryId"];
   NSString *key = [options objectForKey:@"key"];
   
-  NSString *valueStr = [[options objectForKey:@"value"] stringValue];
+  NSString *valueStr = [options objectForKey:@"value"];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -649,7 +657,7 @@
   NSString *queryId = [options objectForKey:@"queryId"];
   NSString *key = [options objectForKey:@"key"];
   
-  NSString *valueStr = [[options objectForKey:@"value"] stringValue];
+  NSString *valueStr = [options objectForKey:@"value"];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
@@ -1031,7 +1039,7 @@
   NSString *queryId = [options objectForKey:@"queryId"];
   NSString *key = [options objectForKey:@"key"];
   
-  NSString *valueStr = [[options objectForKey:@"value"] stringValue];
+  NSString *valueStr = [options objectForKey:@"value"];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
   NSDictionary *value = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&jsonError];
