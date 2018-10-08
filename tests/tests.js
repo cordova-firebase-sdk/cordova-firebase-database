@@ -1,12 +1,12 @@
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function() {
-  describe("IsPrime (plugin.firebase)", function () {
-    it("should exist", function () {
-        expect(plugin.firebase).toBeDefined();
+  describe('IsPrime (plugin.firebase)', function () {
+    it('should exist', function () {
+      expect(window.plugin.firebase).toBeDefined();
     });
-    it("should be function", function () {
-        expect(typeof plugin.firebase.database).toBe('function');
+    it('should be function', function () {
+      expect(typeof window.plugin.firebase.database).toBe('function');
     });
   });
   //
