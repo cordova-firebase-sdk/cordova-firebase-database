@@ -36,5 +36,5 @@ install:
 
 script:
   - npm test
-  - node /tmp/paramedic/main.js --platform ${CORDOVA_PLATFORM} --plugin $(pwd)
-    --buildName travis-plugin-geolocation-$TRAVIS_JOB_NUMBER --verbose
+  - node /tmp/paramedi
+
