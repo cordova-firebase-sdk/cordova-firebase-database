@@ -7,8 +7,7 @@
 
 @interface CordovaFirebaseDatabase : CDVPlugin
 
-@property (nonatomic) NSMutableDictionary *geoFireMap;
-@property (strong, nonatomic) FIRDatabaseReference *firebaseRef;
+@property (strong, atomic) NSMutableDictionary *DBs;
 @property (atomic) dispatch_semaphore_t semaphore;
 
 

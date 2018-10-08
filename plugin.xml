@@ -18,7 +18,41 @@
     <js-module name="CordovaFirebaseDatabase" src="src/browser/CordovaFirebaseDatabase.js">
       <runs/>
     </js-module>
-    <js-module name="Database" src="src/browser/Database.js" />
+    <js-module name="FirebaseDatabasePlugin" src="src/browser/FirebaseDatabasePlugin.js" />
   </platform>
 
+  <platform name="android">
+    <config-file parent="/*" target="res/xml/config.xml">
+      <feature name="CordovaFirebaseDatabase">
+        <param name="android-package" value="plugin.firebase.database.CordovaFirebaseDatabase"/>
+      </feature>
+    </config-file>
+    <framework src="com.google.firebase:firebase-core:+"/>
+    <framework src="com.google.firebase:firebase-database:+"/>
+    <dependency id="cordova-support-google-services" />
+
+    <config-file parent="/*" target="AndroidManifest.xml"/>
+    <source-file src="src/android/plugin/firebase/database/CordovaFirebaseDatabase.java" target-dir="src/plugin/firebase/database/" />
+    <source-file src="src/android/plugin/firebase/database/IActionHandler.java" target-dir="src/plugin/firebase/database/" />
+    <source-file src="src/android/plugin/firebase/database/NewInstance.java" target-dir="src/plugin/firebase/database/" />
+  </platform>
+
+  <platform name="ios">
+    <config-file parent="/*" target="config.xml">
+      <feature name="CordovaFirebaseDatabase">
+        <param name="ios-package" value="CordovaFirebaseDatabase"/>
+      </feature>
+      <feature name="FirebaseDatabasePlugin">
+        <param name="ios-package" value="FirebaseDatabasePlugin"/>
+      </feature>
+    </config-file>
+    <framework src="Firebase/Core" type="podspec" spec=""/>
+    <framework src="Firebase/Database" type="podspec" spec=""/>
+    <framework src="LZCompression" type="podspec" spec=""/>
+
+    <header-file src="src/ios/CordovaFirebaseDatabase.h"/>
+    <source-file src="src/ios/CordovaFirebaseDatabase.m"/>
+    <header-file src="src/ios/FirebaseDatabasePlugin.h"/>
+    <source-file src="src/ios/FirebaseDatabasePlugin.m"/>
+  </platform>
 </plugin>

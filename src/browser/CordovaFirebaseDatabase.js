@@ -4,7 +4,7 @@
 
 
 var BaseClass = require('cordova-firebase-database.BaseClass'),
-  Database = require('cordova-firebase-database.Database'),
+  FirebaseDatabasePlugin = require('cordova-firebase-database.FirebaseDatabasePlugin'),
   utils = require('cordova/utils'),
   common = require('cordova-firebase-database.Common');
 
@@ -37,7 +37,7 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
     //console.log(database.app);
 
     // Create firebase reference
-    var instance = new Database(options.id, database);
+    var instance = new FirebaseDatabasePlugin(options.id, database);
     var dummyObj = {};
     var keys = Object.getOwnPropertyNames(Database.prototype).filter(function (p) {
       return typeof Database.prototype[p] === 'function';
