@@ -5,6 +5,7 @@ var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
   DataSnapshot = require('./DataSnapshot'),
+  LZString = require('./LZString'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
 /*******************************************************************************
@@ -96,7 +97,7 @@ Query.prototype.endAt = function(value, key) {
       throw new Error(error);
     }
   }, self.pluginName, 'query_endAt', [{
-    value: value,
+    value: LZString.compress(JSON.stringify(value)),
     key: key,
     targetId: self.id,
     queryId: query.id
@@ -131,7 +132,7 @@ Query.prototype.equalTo = function(value, key) {
       throw new Error(error);
     }
   }, self.pluginName, 'query_equalTo', [{
-    value: value,
+    value: LZString.compress(JSON.stringify(value)),
     key: key,
     targetId: self.id,
     queryId: query.id
@@ -366,7 +367,7 @@ Query.prototype.orderByChild = function(path) {
     }
   }, self.pluginName, 'query_orderByChild', [{
     targetId: self.id,
-    newId: query.id,
+    queryId: query.id,
     path: path
   }]);
 
@@ -397,7 +398,7 @@ Query.prototype.orderByKey = function() {
     }
   }, self.pluginName, 'query_orderByKey', [{
     targetId: self.id,
-    newId: query.id
+    queryId: query.id
   }]);
 
   return query;
@@ -427,7 +428,7 @@ Query.prototype.orderByPriority = function() {
     }
   }, self.pluginName, 'query_orderByPriority', [{
     targetId: self.id,
-    newId: query.id
+    queryId: query.id
   }]);
 
   return query;
@@ -457,7 +458,7 @@ Query.prototype.orderByValue = function() {
     }
   }, self.pluginName, 'query_orderByValue', [{
     targetId: self.id,
-    newId: query.id
+    queryId: query.id
   }]);
 
   return query;
@@ -487,7 +488,7 @@ Query.prototype.startAt = function(value, key) {
       throw new Error(error);
     }
   }, self.pluginName, 'query_startAt', [{
-    value: value,
+    value: LZString.compress(JSON.stringify(value)),
     key: key,
     targetId: self.id,
     queryId: query.id

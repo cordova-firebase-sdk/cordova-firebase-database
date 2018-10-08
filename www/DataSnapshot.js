@@ -64,7 +64,7 @@ DataSnapshot.prototype.val = function() {
   return JSON.parse(LZString.decompress(this._nativeResults.val));
 };
 DataSnapshot.prototype.toJson = function() {
-  return JSON.parse(LZString.decompress(this._nativeResults.toJSON));
+  throw new Error('not implemented');
 };
 
 

@@ -132,7 +132,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_set = function(onSuccess, onError,
 
 //---------------------------------------------------------------------------------
 // onDisconnect.setWithPriority
-// https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect#set
+// https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect#setWithPriority
 //---------------------------------------------------------------------------------
 FirebaseDatabasePlugin.prototype.onDisconnect_setWithPriority = function(onSuccess, onError, args) {
   var options = args[0];
@@ -146,7 +146,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_setWithPriority = function(onSucce
 
 //---------------------------------------------------------------------------------
 // onDisconnect.update
-// https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect#set
+// https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect#update
 //---------------------------------------------------------------------------------
 FirebaseDatabasePlugin.prototype.onDisconnect_update = function(onSuccess, onError, args) {
   var options = args[0];
@@ -183,7 +183,7 @@ FirebaseDatabasePlugin.prototype.reference_child = function(onSuccess, onError, 
 
 //---------------------------------------------------------------------------------
 // Reference.onDisconnect
-// https://firebase.google.com/docs/reference/js/firebase.database.Reference#remove
+// https://firebase.google.com/docs/reference/js/firebase.database.Reference#onDisconnect
 //---------------------------------------------------------------------------------
 FirebaseDatabasePlugin.prototype.reference_onDisconnect = function(onSuccess, onError, args) {
   var options = args[0];
@@ -335,8 +335,7 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
           exportVal: LZString.compress(JSON.stringify(snapshot.exportVal())),
           getPriority: snapshot.getPriority(),
           numChildren: snapshot.numChildren(),
-          val: LZString.compress(JSON.stringify(snapshot.val())),
-          toJSON: LZString.compress(JSON.stringify(snapshot.toJSON()))
+          val: LZString.compress(JSON.stringify(snapshot.val()))
         }
       });
 
@@ -391,7 +390,7 @@ FirebaseDatabasePlugin.prototype.query_endAt = function(onSuccess, onError, args
   console.log('[broswer] query.endAt()', options);
 
   var ref = this.get(options.refId);
-  var query = ref.endAt(options.value, options.key);
+  var query = ref.endAt(JSON.parse(LZString.decompress(options.value)), options.key);
   this.set(options.queryId, query);
 
   onSuccess();
@@ -408,7 +407,7 @@ FirebaseDatabasePlugin.prototype.query_equalTo = function(onSuccess, onError, ar
   console.log('[broswer] query.equalTo()', options);
 
   var ref = this.get(options.refId);
-  var query = ref.equalTo(options.value, options.key);
+  var query = ref.equalTo(JSON.parse(LZString.decompress(options.value)), options.key);
   this.set(options.queryId, query);
 
   onSuccess();
@@ -452,7 +451,7 @@ FirebaseDatabasePlugin.prototype.query_limitToLast = function(onSuccess, onError
 
 //---------------------------------------------------------------------------------
 // Query.off
-// https://firebase.google.com/docs/reference/js/firebase.database.Query#on
+// https://firebase.google.com/docs/reference/js/firebase.database.Query#off
 //---------------------------------------------------------------------------------
 FirebaseDatabasePlugin.prototype.query_off = function(onSuccess, onError, args) {
   var self = this,
@@ -484,33 +483,21 @@ FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
 
   var referenceOrQuery = this.get(options.targetId);
   var listener = referenceOrQuery.on(options.eventType, function(snapshot, key) {
+    var values = {
+      key: snapshot.key,
+      exists: snapshot.exists(),
+      exportVal: LZString.compress(JSON.stringify(snapshot.exportVal())),
+      getPriority: snapshot.getPriority(),
+      numChildren: snapshot.numChildren(),
+      val: LZString.compress(JSON.stringify(snapshot.val()))
+    };
 
-    var dbInstance = window.plugin.firebase.database._DBs[self.id];
-
-    if (dbInstance) {
-      var target = dbInstance.get(options.targetId);
-      if (target) {
-        var args = [options.eventType];
-        args.push({
-          key: snapshot.key,
-          exists: snapshot.exists(),
-          exportVal: LZString.compress(JSON.stringify(snapshot.exportVal())),
-          getPriority: snapshot.getPriority(),
-          numChildren: snapshot.numChildren(),
-          val: LZString.compress(JSON.stringify(snapshot.val())),
-          toJSON: LZString.compress(JSON.stringify(snapshot.toJSON()))
-        });
-
-        if (key) {
-          args.push(key);
-        }
-        target._trigger.apply(target, args);
-      }
-    }
+    window.plugin.firebase.database._nativeCallback(self.id, options.targetId, options.eventType, values, key);
 
   });
 
   this.set(options.listenerId, listener);
+  onSuccess();
 };
 
 
@@ -532,8 +519,7 @@ FirebaseDatabasePlugin.prototype.query_once = function(onSuccess, onError, args)
         exportVal: LZString.compress(JSON.stringify(snapshot.exportVal())),
         getPriority: snapshot.getPriority(),
         numChildren: snapshot.numChildren(),
-        val: LZString.compress(JSON.stringify(snapshot.val())),
-        toJSON: LZString.compress(JSON.stringify(snapshot.toJSON()))
+        val: LZString.compress(JSON.stringify(snapshot.val()))
       });
     })
     .catch(onError);
@@ -545,7 +531,7 @@ FirebaseDatabasePlugin.prototype.query_once = function(onSuccess, onError, args)
 // Query.orderByChild
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#orderByChild
 //---------------------------------------------------------------------------------
-FirebaseDatabasePlugin.prototype.orderByChild = function(onSuccess, onError, args) {
+FirebaseDatabasePlugin.prototype.query_orderByChild = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
   console.log('[broswer] query.orderByChild()', options);
@@ -553,7 +539,7 @@ FirebaseDatabasePlugin.prototype.orderByChild = function(onSuccess, onError, arg
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByChild(options.path);
-    self.set(options.newId, newQuery);
+    self.set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -574,7 +560,7 @@ FirebaseDatabasePlugin.prototype.query_orderByKey = function(onSuccess, onError,
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByKey();
-    self.set(options.newId, newQuery);
+    self.set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -595,7 +581,7 @@ FirebaseDatabasePlugin.prototype.query_orderByPriority = function(onSuccess, onE
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByPriority();
-    self.set(options.newId, newQuery);
+    self.set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -616,7 +602,7 @@ FirebaseDatabasePlugin.prototype.query_orderByValue = function(onSuccess, onErro
   var referenceOrQuery = this.get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByValue();
-    self.set(options.newId, newQuery);
+    self.set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -634,7 +620,7 @@ FirebaseDatabasePlugin.prototype.query_startAt = function(onSuccess, onError, ar
   console.log('[broswer] query.startAt()', options);
 
   var ref = this.get(options.refId);
-  var query = ref.startAt(options.value, options.key);
+  var query = ref.startAt(JSON.parse(LZString.decompress(options.value)), options.key);
   this.set(options.queryId, query);
 
   onSuccess();

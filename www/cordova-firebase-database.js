@@ -182,4 +182,23 @@ cordova.addConstructor(function() {
     value: {},
     enumerable: false
   });
+  Object.defineProperty(window.plugin.firebase.database, '_nativeCallback', {
+    value: function(dbId, targetId, eventType, values, key) {
+
+      var dbInstance = window.plugin.firebase.database._DBs[dbId];
+
+      if (dbInstance) {
+        var target = dbInstance.get(targetId);
+        if (target) {
+          var args = [eventType, values];
+
+          if (key) {
+            args.push(key);
+          }
+          target._trigger.apply(target, args);
+        }
+      }
+    },
+    enumerable: false
+  });
 });
