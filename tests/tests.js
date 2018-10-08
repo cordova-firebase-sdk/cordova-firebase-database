@@ -1,19 +1,13 @@
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function() {
-  describe('Plugin namespace test (window.plugin)', function() {
-    it('should exist', function() {
-      expect(window.plugin).toBeDefined();
+  describe("IsPrime (plugin.firebase)", function () {
+    it("should exist", function () {
+        expect(plugin.firebase).toBeDefined();
     });
-
-    it('should contain "firebase" namespace', function() {
-      expect(window.plugin.firebase).toBeDefined();
+    it("should be function", function () {
+        expect(typeof plugin.firebase.database).toBe('function');
     });
-
-    it('should contain "database" namespace', function() {
-      expect(window.plugin.firebase.database).toBeDefined();
-    });
-
   });
   //
   // describe('Database class', function() {

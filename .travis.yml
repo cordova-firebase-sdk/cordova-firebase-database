@@ -22,8 +22,10 @@ before_install:
     && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
     install ${TRAVIS_NODE_VERSION}
   - node --version
-  - npm install -g cordova@${CORDOVA_VERSION} cordova-paramedic
+  - npm install -g cordova@${CORDOVA_VERSION}
   - cordova --version
+  - git clone https://github.com/apache/cordova-paramedic /tmp/paramedic && pushd /tmp/paramedic
+    && npm install && popd
 
 
 install:
@@ -32,4 +34,5 @@ install:
 
 script:
   - npm test
-  - cordova-paramedic --platform ${CORDOVA_PLATFORM} --plugin . --cleanUpAfterRun --verbose
+  - node /tmp/paramedic/main.js --platform ${CORDOVA_PLATFORM} --plugin $(pwd)
+    --buildName travis-plugin-geolocation-$TRAVIS_JOB_NUMBER --verbose
