@@ -39,8 +39,8 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
     // Create firebase reference
     var instance = new FirebaseDatabasePlugin(options.id, database);
     var dummyObj = {};
-    var keys = Object.getOwnPropertyNames(Database.prototype).filter(function (p) {
-      return typeof Database.prototype[p] === 'function';
+    var keys = Object.getOwnPropertyNames(FirebaseDatabasePlugin.prototype).filter(function (p) {
+      return typeof FirebaseDatabasePlugin.prototype[p] === 'function';
     });
     keys.forEach(function(key) {
       dummyObj[key] = instance[key].bind(instance);

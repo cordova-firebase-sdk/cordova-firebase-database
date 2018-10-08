@@ -627,4 +627,4 @@ FirebaseDatabasePlugin.prototype.query_startAt = function(onSuccess, onError, ar
 };
 
 
-module.exports = Database;
+module.exports = FirebaseDatabasePlugin;
