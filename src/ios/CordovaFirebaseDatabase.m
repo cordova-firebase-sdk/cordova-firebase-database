@@ -3,7 +3,6 @@
 @implementation CordovaFirebaseDatabase
 - (void)pluginInitialize
 {
-  self.DBs = [NSMutableDictionary dictionary];
 
   if (![FIRApp defaultApp]) {
     [FIRApp configure];
@@ -19,26 +18,16 @@
 
   // Obtain reference to firebase DB
   FIRDatabase *database = [FIRDatabase database];
-
+  FirebaseDatabasePlugin *databasePlugin = [[FirebaseDatabasePlugin alloc] init];
 
   // Hack:
   // In order to load the plugin instance of the same class but different names,
-  // register the map plugin instance into the pluginObjects directly.
-  if ([pluginMap respondsToSelector:@selector(setViewController:)]) {
-    [pluginMap setViewController:cdvViewController];
-  }
-  if ([pluginMap respondsToSelector:@selector(setCommandDelegate:)]) {
-    [pluginMap setCommandDelegate:cdvViewController.commandDelegate];
-  }
-  [cdvViewController.pluginObjects setObject:pluginMap forKey:mapId];
-  [cdvViewController.pluginsMap setValue:mapId forKey:mapId];
-  [pluginMap pluginInitialize];
+  // register the FirebaseDatabasePlugin instance into the pluginObjects directly.
+  CDVViewController *cdvViewController = (CDVViewController*)self.viewController;
+  [cdvViewController.pluginObjects setObject:databasePlugin forKey:instanceId];
+  [cdvViewController.pluginsMap setValue:instanceId forKey:instanceId];
+  [databasePlugin pluginInitializeWithFIRDatabase: database andPluginId: instanceId];
 
-  [self.viewPlugins setObject:pluginMap forKey:mapId];
-
-
-
-  [self.DBs setObject:database forKey:instanceId];
 
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
