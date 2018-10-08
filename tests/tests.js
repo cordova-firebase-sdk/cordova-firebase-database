@@ -15,6 +15,21 @@ exports.defineAutoTests = function() {
     });
 
   });
-
-
+  //
+  // describe('Database class', function() {
+  //
+  //   var database;
+  //   describe('plugin.firebase.database', function() {
+  //
+  //     database = plugin.firebase.database({
+  //       browserConfigs: {
+  //         apiKey: "AIzaSyA898h_Ez99cQUfmhkAVKT2BmivNhHm_3Y",
+  //         databaseURL: "https://geofire-test-34492.firebaseio.com"
+  //       }
+  //     });
+  //
+  //     it('should ')
+  //
+  //   });
+  // });
 };

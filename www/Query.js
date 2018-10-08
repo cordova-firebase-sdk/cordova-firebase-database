@@ -513,7 +513,7 @@ Query.prototype.toJSON = function() {
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#toString
 //---------------------------------------------------------------------------------
 Query.prototype.toString = function() {
-  return this.url;
+  return this.url || null;
 };
 
 module.exports = Query;

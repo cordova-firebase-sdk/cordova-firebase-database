@@ -14,19 +14,13 @@ branches:
 matrix:
   include:
   - os: linux
-    env: CORDOVA_VERSION="6.5.0" CORDOVA_PLATFORM="browser"
-
-  - os: linux
-    env: CORDOVA_VERSION="7.1.0" CORDOVA_PLATFORM="browser"
-
-  - os: linux
     env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser"
 
 
 before_install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
     && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
-    install $TRAVIS_NODE_VERSION
+    install ${TRAVIS_NODE_VERSION}
   - node --version
   - npm install -g cordova@${CORDOVA_VERSION} cordova-paramedic
   - cordova --version
@@ -38,4 +32,4 @@ install:
 
 script:
   - npm test
-  - cordova-paramedic --platform ${CORDOVA_PLATFORM} --plugin .
+  - cordova-paramedic --platform ${CORDOVA_PLATFORM} --plugin . --cleanUpAfterRun --verbose
