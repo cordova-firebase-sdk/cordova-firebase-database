@@ -15,6 +15,8 @@ matrix:
   include:
   - os: linux
     env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser"
+    language: node_js
+    node_js: '${TRAVIS_NODE_VERSION}'
 
 
 before_install:
