@@ -1,6 +1,6 @@
 ![](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database.svg?branch=master)
 
-**This plugin is still under beta version. Please don't use this plugin in your application yet."
+**This plugin is still under beta version. Please don't use this plugin in your application yet.**
 
 # cordova-firebase-database
 
