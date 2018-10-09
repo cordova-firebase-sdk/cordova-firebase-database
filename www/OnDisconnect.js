@@ -127,7 +127,7 @@ OnDisconnect.prototype.set = function(value, onComplete) {
       }
     }, self.pluginName, 'onDisconnect_set', [{
       targetId: self.id,
-      value: LZString.compress(JSON.stringify(value))
+      value: LZString.compressToBase64(JSON.stringify(value))
     }]);
   });
 };
@@ -154,7 +154,7 @@ OnDisconnect.prototype.setWithPriority = function(value, priority, onComplete) {
       }
     }, self.pluginName, 'onDisconnect_setWithPriority', [{
       targetId: self.id,
-      value: LZString.compress(JSON.stringify(value)),
+      value: LZString.compressToBase64(JSON.stringify(value)),
       priority: priority
     }]);
   });
@@ -182,7 +182,7 @@ OnDisconnect.prototype.update = function(values, onComplete) {
       }
     }, self.pluginName, 'onDisconnect_update', [{
       targetId: self.id,
-      values: LZString.compress(JSON.stringify(values))
+      values: LZString.compressToBase64(JSON.stringify(values))
     }]);
   });
 };

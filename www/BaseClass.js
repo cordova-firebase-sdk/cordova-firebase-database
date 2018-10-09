@@ -147,7 +147,7 @@ BaseClass.prototype = {
     var self = this;
 
     var callback = function () {
-      self.off(eventName, arguments.callee);
+      self._off(eventName, arguments.callee);
       listener.apply(self, arguments);
       callback = undefined;
     };

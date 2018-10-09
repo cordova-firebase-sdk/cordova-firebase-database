@@ -97,7 +97,7 @@ Query.prototype.endAt = function(value, key) {
       throw new Error(error);
     }
   }, self.pluginName, 'query_endAt', [{
-    value: LZString.compress(JSON.stringify(value)),
+    value: LZString.compressToBase64(JSON.stringify(value)),
     key: key,
     targetId: self.id,
     queryId: query.id
@@ -132,7 +132,7 @@ Query.prototype.equalTo = function(value, key) {
       throw new Error(error);
     }
   }, self.pluginName, 'query_equalTo', [{
-    value: LZString.compress(JSON.stringify(value)),
+    value: LZString.compressToBase64(JSON.stringify(value)),
     key: key,
     targetId: self.id,
     queryId: query.id
@@ -488,7 +488,7 @@ Query.prototype.startAt = function(value, key) {
       throw new Error(error);
     }
   }, self.pluginName, 'query_startAt', [{
-    value: LZString.compress(JSON.stringify(value)),
+    value: LZString.compressToBase64(JSON.stringify(value)),
     key: key,
     targetId: self.id,
     queryId: query.id

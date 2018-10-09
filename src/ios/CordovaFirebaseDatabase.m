@@ -22,12 +22,18 @@
     NSLog(@"--->ignore error = %@", e);
   }
   FirebaseDatabasePlugin *databasePlugin = [[FirebaseDatabasePlugin alloc] init];
+  [databasePlugin pluginInitialize];
 
   // Hack:
   // In order to load the plugin instance of the same class but different names,
-  // register the FirebaseDatabasePlugin instance into the pluginObjects directly.
+  // register the plugin instance into the pluginObjects directly.
   CDVViewController *cdvViewController = (CDVViewController*)self.viewController;
-  databasePlugin.commandDelegate = self.commandDelegate;
+  if ([databasePlugin respondsToSelector:@selector(setViewController:)]) {
+    [databasePlugin setViewController:cdvViewController];
+  }
+  if ([databasePlugin respondsToSelector:@selector(setCommandDelegate:)]) {
+    [databasePlugin setCommandDelegate:cdvViewController.commandDelegate];
+  }
   [cdvViewController.pluginObjects setObject:databasePlugin forKey:instanceId];
   [cdvViewController.pluginsMap setValue:instanceId forKey:instanceId];
   [databasePlugin pluginInitializeWithFIRDatabase: database andPluginId: instanceId];

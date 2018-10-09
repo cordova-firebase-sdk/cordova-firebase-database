@@ -58,10 +58,10 @@ DataSnapshot.prototype.numChildren = function() {
   return this._nativeResults.numChildren;
 };
 DataSnapshot.prototype.exportVal = function() {
-  return JSON.parse(LZString.decompress(this._nativeResults.exportVal));
+  return JSON.parse(LZString.decompressFromBase64(this._nativeResults.exportVal));
 };
 DataSnapshot.prototype.val = function() {
-  return JSON.parse(LZString.decompress(this._nativeResults.val));
+  return JSON.parse(LZString.decompressFromBase64(this._nativeResults.val));
 };
 DataSnapshot.prototype.toJson = function() {
   throw new Error('not implemented');

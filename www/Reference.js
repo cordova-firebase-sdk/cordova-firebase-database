@@ -2,6 +2,7 @@
 
 
 
+
 var utils = require('cordova/utils'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
@@ -110,7 +111,7 @@ Reference.prototype.push = function(value, onComplete) {
         onComplete.call(self, error);
       }
     }, self.pluginName, 'reference_push', [{
-      value: LZString.compress(JSON.stringify(value)),
+      value: LZString.compressToBase64(JSON.stringify(value)),
       targetId: self.id,
       newId: reference.id
     }]);
@@ -180,7 +181,7 @@ Reference.prototype.set = function(value, onComplete) {
       }
     }, self.pluginName, 'reference_set', [{
       targetId: self.id,
-      data: LZString.compress(JSON.stringify(value))
+      data: LZString.compressToBase64(JSON.stringify(value))
     }]);
   });
 };
@@ -206,7 +207,7 @@ Reference.prototype.setPriority = function(priority, onComplete) {
       }
     }, self.pluginName, 'reference_setPriority', [{
       targetId: self.id,
-      priority: LZString.compress(JSON.stringify(priority))
+      priority: LZString.compressToBase64(JSON.stringify(priority))
     }]);
   });
 };
@@ -232,8 +233,8 @@ Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) 
       }
     }, self.pluginName, 'reference_setWithPriority', [{
       targetId: self.id,
-      data: LZString.compress(JSON.stringify(newVal)),
-      priority: LZString.compress(JSON.stringify(newPriority))
+      data: LZString.compressToBase64(JSON.stringify(newVal)),
+      priority: LZString.compressToBase64(JSON.stringify(newPriority))
     }]);
   });
 };
@@ -249,9 +250,9 @@ Reference.prototype.transaction = function(transactionUpdate, onComplete, applyL
   var transactionId = Math.floor(Date.now() * Math.random());
   var eventName = self.pluginName + '-' + self.id + '-transaction';
 
-  var onNativeCallback = function(currentValue) {
-    var newValue = transactionUpdate.call(self, JSON.parse(LZString.decompress(currentValue)));
-    cordova_exec(null, null, self.pluginName, 'reference_onTransactionCallback', [transactionId, LZString.compress(JSON.stringify(newValue))]);
+  var onNativeCallback = function(args) {
+    var newValue = transactionUpdate.call(self, JSON.parse(LZString.decompressFromBase64(args[0])));
+    cordova_exec(null, null, self.pluginName, 'reference_onTransactionCallback', [transactionId, LZString.compressToBase64(JSON.stringify(newValue))]);
   };
   document.addEventListener(eventName, onNativeCallback, {
     once: true
@@ -301,7 +302,7 @@ Reference.prototype.update = function(values, onComplete) {
       }
     }, self.pluginName, 'reference_update', [{
       targetId: self.id,
-      data: LZString.compress(JSON.stringify(values))
+      data: LZString.compressToBase64(JSON.stringify(values))
     }]);
   });
 };
