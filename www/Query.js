@@ -280,7 +280,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
     context_ = cancelCallbackOrContext;
   }
 
-  eventType = eventType || "";
+  eventType = eventType || '';
   eventType = eventType.toLowerCase();
   if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
     var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
@@ -350,12 +350,12 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
     context_ = failureCallbackOrContext;
   }
 
-  eventType = eventType || "";
+  eventType = eventType || '';
   eventType = eventType.toLowerCase();
   if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
     var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
-    if (typeof cancelCallbackOrContext === 'function') {
-      cancelCallbackOrContext.call(context_, new Error(error));
+    if (typeof failureCallbackOrContext === 'function') {
+      failureCallbackOrContext.call(context_, new Error(error));
     } else {
       throw new Error(error);
     }
