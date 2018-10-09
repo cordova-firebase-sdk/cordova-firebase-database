@@ -316,7 +316,7 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
     });
   }))
   .then(function(newValues) {
-    ref.transaction(function(currentValue) {
+    ref.transaction(function() {
       return newValues;
     },
     function(error, committed, snapshot) {
