@@ -26,6 +26,27 @@
   }
 }
 
+
+- (NSString *)jsonStringify: (NSDictionary*)dictionary error:(NSError **)error {
+
+  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary options:0 error:error];
+
+  if (jsonData) {
+    return [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] compressToBase64];
+  } else {
+    return nil;
+  }
+}
+- (NSDictionary *)jsonParse: (NSString*)serializedStr error:(NSError **)error {
+
+  serializedStr = [serializedStr decompressFromBase64];
+  NSData *jsonData = [serializedStr dataUsingEncoding:NSUTF8StringEncoding];
+  NSDictionary *result = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:error];
+  return result;
+}
+
+
+
 //---------------------------------------------------------------------------------
 // Database.goOffline
 // https://firebase.google.com/docs/reference/js/firebase.database.Database#goOffline
@@ -496,20 +517,15 @@
   
   [ref runTransactionBlock:^FIRTransactionResult * _Nonnull(FIRMutableData * _Nonnull currentData) {
     NSDictionary *currentValue = currentData.value;
-    NSLog(@"--->currentData.value = %@", currentData.value);
     // current value -> serialized json strings
     NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:currentValue options:0 error:&error];
-    
-    
+    __block NSString *serializedStr = [self jsonStringify: currentValue error:&error];
     if (error) {
       CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
       [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
       return [FIRTransactionResult abort];
     }
-    __block NSString* serializedStr = [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] compressToBase64];
   
-    NSLog(@"--->serialized = %@", serializedStr);
     
     @synchronized (self.semaphore) {
       // Execute JS callback
@@ -529,17 +545,12 @@
   
     // returned value -> currentData.value
     NSString *serializedValue = [self.jsCallbackHolder objectForKey:transactionId];
-    serializedValue = [serializedValue decompressFromBase64];
-    jsonData = [serializedValue dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary *result = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
-    currentData.value = [NSMutableDictionary dictionaryWithDictionary: result];
-    NSLog(@"--->returened value = %@", currentData.value);
+    currentData.value = [self jsonParse: serializedValue error:&error];
+    
     if (serializedValue) {
       [self.jsCallbackHolder removeObjectForKey:transactionId];
-    NSLog(@"--->commit this transaction");
       return [FIRTransactionResult successWithValue:currentData];
     } else {
-    NSLog(@"--->about this transaction");
       return [FIRTransactionResult abort];
     }
       
@@ -553,32 +564,28 @@
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     } else {
     
-    NSLog(@"--->committed");
-    
       // Execute JS callback
       NSMutableDictionary *snapshotValues = [NSMutableDictionary dictionary];
       [snapshotValues setObject:snapshot.key forKey:@"key"];
     
       // exportVal -> serialized json strings
       NSDictionary *exportVal = [snapshot valueInExportFormat];
-    NSLog(@"--->exportVal = %@", exportVal);
-      NSData *serializedExportValue = [NSJSONSerialization dataWithJSONObject:exportVal options:kNilOptions error:&error];
+      NSString *serializedExportValStr = [self jsonStringify:exportVal error:&error];
       if (error) {
         NSLog(@"--->JSON serialize(exportVal) error at reference.transaction: %@", error);
         return;
       }
-      NSString *serializedExportValStr = [[[NSString init] initWithData:serializedExportValue] compressToBase64];
       [snapshotValues setObject:serializedExportValStr forKey:@"exportVal"];
 
       // value -> serialized json strings
       NSDictionary *value = [snapshot value];
-      NSData *serializedValue = [NSJSONSerialization dataWithJSONObject:value options:kNilOptions error:&error];
+      NSString *serializedValueStr = [self jsonStringify:value error:&error];
       if (error) {
         NSLog(@"--->JSON serialize(val) error at reference.transaction: %@", error);
         return;
       }
-      NSString *serializedValueStr = [[[NSString init] initWithData:serializedValue] compressToBase64];
       [snapshotValues setObject:serializedValueStr forKey:@"val"];
+
     
       [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
       [snapshotValues setObject:[NSNumber numberWithBool:snapshot.exists] forKey:@"exists"];
