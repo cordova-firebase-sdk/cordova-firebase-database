@@ -295,6 +295,8 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
   console.log('[broswer] reference.transaction()', options);
   var ref = this.get(options.targetId);
 
+  // Note: Because your update function is called multiple times, it must be able to handle null data.
+  // Even if there is existing data in your remote database, it may not be locally cached when the transaction function is run, resulting in null for the initial value.
   (new Promise(function(resolve) {
     ref.once('value')
     .then(function(value) {
@@ -316,7 +318,7 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
     });
   }))
   .then(function(newValues) {
-    ref.transaction(function() {
+    ref.transaction(function(currentValue) {
       return newValues;
     },
     function(error, committed, snapshot) {
@@ -489,8 +491,9 @@ FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
       numChildren: snapshot.numChildren(),
       val: LZString.compressToBase64(JSON.stringify(snapshot.val()))
     };
+    var valuesStr = LZString.compressToBase64(JSON.stringify(values));
 
-    window.plugin.firebase.database._nativeCallback(self.id, options.targetId, options.eventType, values, key);
+    window.plugin.firebase.database._nativeCallback(self.id, options.listenerId, options.eventType, valuesStr, key);
 
   });
 

@@ -16,6 +16,8 @@
 
 - (void)pluginInitializeWithFIRDatabase:(FIRDatabase*)databaseRef andPluginId:(NSString *)pluginId;
 - (void)execJS: (NSString *)jsString;
+- (NSString *)jsonStringify: (NSDictionary*)dictionary error:(NSError **)error;
+- (NSDictionary *)jsonParse: (NSString*)serializedStr error:(NSError **)error;
 
 - (void)database_goOffline:(CDVInvokedUrlCommand*)command;
 - (void)database_goOnline:(CDVInvokedUrlCommand*)command;
