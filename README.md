@@ -56,9 +56,10 @@ For example, this is the original usage of `firebase database api`.
 
 ## Supported platforms
   This plugin supports the following platforms:
-    - Browser (full implemented)
+    - Browser (implemented, not tested deeply)
+    - iOS (implemented, not tested deeply)
 
-  `Android`, and `iOS` will be supported soon.
+  `Android` will be supported soon.
 
 ## Installation
 
