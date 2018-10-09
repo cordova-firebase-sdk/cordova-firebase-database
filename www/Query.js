@@ -260,7 +260,7 @@ Query.prototype.off = function(eventType, callback) {
     eventType: eventType
   }]);
 
-  this._off(eventType, callback);
+  this._off(listenerId, callback);
 
 };
 
@@ -271,12 +271,25 @@ Query.prototype.off = function(eventType, callback) {
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#on
 //---------------------------------------------------------------------------------
 Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, context) {
+
   var self = this;
   var context_ = this;
   if (arguments.length === 4) {
     context_ = context;
   } else if (arguments.length === 3) {
     context_ = cancelCallbackOrContext;
+  }
+
+  eventType = eventType || "";
+  eventType = eventType.toLowerCase();
+  if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
+    var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
+    if (typeof cancelCallbackOrContext === 'function') {
+      cancelCallbackOrContext.call(context_, new Error(error));
+    } else {
+      throw new Error(error);
+    }
+    return;
   }
 
   var listener = function(result, key) {
@@ -290,7 +303,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
       callback.apply(context_, args);
     }
   };
-  var listenerId = self.id + '_on' + Math.floor(Date.now() * Math.random());
+  var listenerId = self.id + '_' + eventType.toLowerCase() + Math.floor(Date.now() * Math.random());
   Object.defineProperty(listener, '_hashCode', {
     value: listenerId,
     enumerable: false
@@ -337,7 +350,17 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
     context_ = failureCallbackOrContext;
   }
 
-  console.log('[js] Query.once');
+  eventType = eventType || "";
+  eventType = eventType.toLowerCase();
+  if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
+    var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
+    if (typeof cancelCallbackOrContext === 'function') {
+      cancelCallbackOrContext.call(context_, new Error(error));
+    } else {
+      throw new Error(error);
+    }
+    return;
+  }
 
   return new Promise(function(resolve, reject) {
     self._exec(function(result) {

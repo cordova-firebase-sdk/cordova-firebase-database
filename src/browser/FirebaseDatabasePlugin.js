@@ -491,8 +491,9 @@ FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
       numChildren: snapshot.numChildren(),
       val: LZString.compressToBase64(JSON.stringify(snapshot.val()))
     };
+    var valuesStr = LZString.compressToBase64(JSON.stringify(values));
 
-    window.plugin.firebase.database._nativeCallback(self.id, options.listenerId, options.eventType, values, key);
+    window.plugin.firebase.database._nativeCallback(self.id, options.listenerId, options.eventType, valuesStr, key);
 
   });
 

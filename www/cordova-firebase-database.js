@@ -4,6 +4,7 @@ var utils = require('cordova/utils'),
   BaseClass = require('./BaseClass'),
   BaseArrayClass = require('./BaseArrayClass'),
   ReferenceModule = require('./Reference'),
+  LZString = require('./LZString'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
 function CordovaFirebaseDatabase(firebaseInitOptions) {
@@ -191,12 +192,11 @@ cordova.addConstructor(function() {
 
       var dbInstance = window.plugin.firebase.database._DBs[dbId];
 
-
       if (dbInstance) {
         dbInstance._trigger('nativeEvent', {
           listenerId: listenerId,
           eventType: eventType,
-          values: values,
+          values: JSON.parse(LZString.decompressFromBase64(values)),
           key: key
         });
       }
