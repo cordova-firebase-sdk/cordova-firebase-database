@@ -296,30 +296,27 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
   var ref = this.get(options.targetId);
 
   (new Promise(function(resolve) {
-    var prevValue;
-    var timer = setInterval(function() {
-      ref.once('value').then(function(value) {
-        prevValue = value;
+    ref.once('value')
+    .then(function(value) {
 
-        ref.transaction(function(currentValue) {
-          if (JSON.stringify(prevValue) === JSON.stringify(currentValue)) {
-            clearInterval(timer);
-            self._one(options.transactionId + '_callback', function(newValue) {
-              resolve(JSON.parse(LZString.decompressFromBase64(newValue)));
-            });
-            cordova.fireDocumentEvent(options.eventName, [LZString.compressToBase64(JSON.stringify(currentValue))]);
-          }
-          return; // abort this transaction
-        }).then(function() {
-          // ignore
-        }).catch(function() {
-          // ignore
+      return ref.transaction(function(currentValue) {
+        currentValue = currentValue || value;
+
+        self._one(options.transactionId + '_callback', function(newValue) {
+          resolve(JSON.parse(LZString.decompressFromBase64(newValue)));
         });
+        cordova.fireDocumentEvent(options.eventName, [LZString.compressToBase64(JSON.stringify(currentValue))]);
+
+        return;
+      }).then(function() {
+        // ignore
+      }).catch(function() {
+        // ignore
       });
-    }, 100);
+    });
   }))
   .then(function(newValues) {
-    ref.transaction(function() {
+    ref.transaction(function(currentValue) {
       return newValues;
     },
     function(error, committed, snapshot) {
@@ -340,16 +337,15 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
         }
       });
 
-    }, options.applyLocally);
+    }, options.applyLocally === false ? false : true);
   });
 };
 
 FirebaseDatabasePlugin.prototype.reference_onTransactionCallback = function(onSuccess, onError, args) {
   var transactionId = args[0],
     values = args[1];
-  console.log('[broswer] reference.reference_onTransactionCallback()');
+  console.log('[broswer] reference.reference_onTransactionCallback()', transactionId);
 
-console.log(args[0], args[1]);
   this._trigger(transactionId + '_callback', values);
   onSuccess();
 };

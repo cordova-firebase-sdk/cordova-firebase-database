@@ -248,7 +248,7 @@ Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) 
 Reference.prototype.transaction = function(transactionUpdate, onComplete, applyLocally) {
   var self = this;
   var transactionId = Math.floor(Date.now() * Math.random());
-  var eventName = self.pluginName + '-' + self.id + '-transaction';
+  var eventName = self.pluginName + '-' + self.id + '-' + transactionId + '-transaction';
 
   var onNativeCallback = function(args) {
     var newValue = transactionUpdate.call(self, JSON.parse(LZString.decompressFromBase64(args[0])));
