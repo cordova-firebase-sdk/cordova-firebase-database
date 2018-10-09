@@ -3,6 +3,9 @@
 
 
 
+
+
+
 var utils = require('cordova/utils'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
@@ -49,6 +52,9 @@ Reference.prototype.child = function(path) {
     parent: self,
     key: key,
     url: self.url + '/' + path
+  });
+  self._on('nativeEvent', function(params) {
+    reference._trigger('nativeEvent', params);
   });
   self._exec(function() {
     reference._privateInit();

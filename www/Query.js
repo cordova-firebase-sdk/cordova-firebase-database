@@ -57,6 +57,9 @@ function Query(params) {
     enumerable: false
   });
 
+  self._on('nativeEvent', function(params) {
+    self._trigger(params.listenerId, params);
+  });
 }
 
 utils.extend(Query, BaseClass);
@@ -87,6 +90,9 @@ Query.prototype.endAt = function(value, key) {
     pluginName: self.pluginName,
     ref: self,
     url: self.url
+  });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -122,6 +128,9 @@ Query.prototype.equalTo = function(value, key) {
     pluginName: self.pluginName,
     ref: self,
     url: self.url
+  });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -167,6 +176,9 @@ Query.prototype.limitToFirst = function(limit) {
     ref: self,
     url: self.url
   });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
+  });
   self._exec(function(results) {
     query._privateInit(results);
   }, function(error) {
@@ -200,6 +212,9 @@ Query.prototype.limitToLast = function(limit) {
     pluginName: self.pluginName,
     ref: self,
     url: self.url
+  });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -281,7 +296,10 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
     enumerable: false
   });
 
-  this._on(eventType, listener);
+
+  self._on(listenerId, function(params) {
+    listener(params.values, params.key);
+  });
 
   self._exec(null, function(error) {
     if (typeof cancelCallbackOrContext === 'function') {
@@ -357,6 +375,9 @@ Query.prototype.orderByChild = function(path) {
     ref: self,
     url: self.url
   });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
+  });
   self._exec(function(results) {
     query._privateInit(results);
   }, function(error) {
@@ -388,6 +409,9 @@ Query.prototype.orderByKey = function() {
     ref: self,
     url: self.url
   });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
+  });
   self._exec(function(results) {
     query._privateInit(results);
   }, function(error) {
@@ -417,6 +441,9 @@ Query.prototype.orderByPriority = function() {
     pluginName: self.pluginName,
     ref: self,
     url: self.url
+  });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
   });
   self._exec(function(results) {
     query._privateInit(results);
@@ -448,6 +475,9 @@ Query.prototype.orderByValue = function() {
     ref: self,
     url: self.url
   });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
+  });
   self._exec(function(results) {
     query._privateInit(results);
   }, function(error) {
@@ -478,6 +508,9 @@ Query.prototype.startAt = function(value, key) {
     pluginName: self.pluginName,
     ref: self,
     url: self.url
+  });
+  self._on('nativeEvent', function(params) {
+    query._trigger('nativeEvent', params);
   });
   self._exec(function(results) {
     query._privateInit(results);
