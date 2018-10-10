@@ -3,10 +3,10 @@
 
 
 
-var BaseClass = require('cordova-firebase-database.BaseClass'),
-  FirebaseDatabasePlugin = require('cordova-firebase-database.FirebaseDatabasePlugin'),
+var BaseClass = require('cordova-firebase-core.BaseClass'),
+  FirebaseDatabasePlugin = require('./FirebaseDatabasePlugin'),
   utils = require('cordova/utils'),
-  common = require('cordova-firebase-database.Common');
+  common = require('cordova-firebase-core.Common');
 
 
 function CordovaFirebaseDatabase() {
@@ -14,27 +14,22 @@ function CordovaFirebaseDatabase() {
 }
 utils.extend(CordovaFirebaseDatabase, BaseClass);
 
+
 CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) {
 
+
   common.loadJsPromise({
-    'url': 'https://www.gstatic.com/firebasejs/5.5.0/firebase-app.js',
-    'package': 'firebase.app'
-  }).then(function() {
-    return common.loadJsPromise({
-      'url': 'https://www.gstatic.com/firebasejs/5.5.0/firebase-database.js',
-      'package': 'firebase.database'
-    });
+    'url': 'https://www.gstatic.com/firebasejs/5.5.0/firebase-database.js',
+    'package': 'firebase.database'
   })
   .then(function() {
     var options = args[0] || {};
 
-    // Create/retrieve firebaseRef
-    if (!firebase.default || firebase.default.apps.length === 0) {
-      firebase.initializeApp(options.browserConfigs || {});
-    }
+    // Create a database instance
     console.log('--->[browser] CordovaFirebaseDatabase.newInstance() : ' + options.id);
-    var database = firebase.database();
-    //console.log(database.app);
+    var app = window.plugin.firebase.app._APPs[options.appId];
+
+    var database = firebase.database(app);
 
     // Create firebase reference
     var instance = new FirebaseDatabasePlugin(options.id, database);
@@ -47,9 +42,7 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
     });
     require('cordova/exec/proxy').add(options.id, dummyObj);
 
-    resolve({
-      'url': database.ref().toString()
-    });
+    resolve();
   })
   .catch(reject);
 };

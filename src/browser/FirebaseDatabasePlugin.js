@@ -2,8 +2,8 @@
 
 
 var utils = require('cordova/utils'),
-  BaseClass = require('cordova-firebase-database.BaseClass'),
-  LZString = require('cordova-firebase-database.LZString');
+  BaseClass = require('cordova-firebase-core.BaseClass'),
+  LZString = require('cordova-firebase-core.LZString');
 
 /****************************************************************************** *
  * @name FirebaseDatabasePlugin
