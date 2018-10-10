@@ -2,7 +2,7 @@
 <plugin id="cordova-firebase-database" version="0.0.3" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>cordova-firebase-database</name>
   <js-module name="cordova-firebase-database" src="www/cordova-firebase-database.js">
-    <clobbers target="plugin.firebase.database"/>
+    <runs />
   </js-module>
   <js-module name="Reference" src="www/Reference.js" />
   <js-module name="Query" src="www/Query.js" />
