@@ -3,18 +3,21 @@
 @implementation CordovaFirebaseDatabase
 - (void)pluginInitialize
 {
-  [FIRApp configure];
-  
+  [super pluginInitialize];
 }
 - (void)newInstance:(CDVInvokedUrlCommand*)command
 {
 
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSString *instanceId = [options objectForKey:@"id"];
+  NSString *appId = [options objectForKey:@"appId"];
 
+  CDVViewController *cdvViewController = (CDVViewController*)self.viewController;
+  CordovaFirebaseCore *firebaseCorePlugin = [cdvViewController getCommandInstance:@"CordovaFirebaseCore"];
+  FirebaseAppPlugin *fireAppPlugin = [firebaseCorePlugin.apps objectForKey:appId];
 
   // Obtain reference to firebase DB
-  FIRDatabase *database = [FIRDatabase database];
+  FIRDatabase *database = [FIRDatabase databaseForApp:fireAppPlugin.app];
   @try {
     [database setPersistenceEnabled:YES];
   }
@@ -27,7 +30,6 @@
   // Hack:
   // In order to load the plugin instance of the same class but different names,
   // register the plugin instance into the pluginObjects directly.
-  CDVViewController *cdvViewController = (CDVViewController*)self.viewController;
   if ([databasePlugin respondsToSelector:@selector(setViewController:)]) {
     [databasePlugin setViewController:cdvViewController];
   }
@@ -38,14 +40,8 @@
   [cdvViewController.pluginsMap setValue:instanceId forKey:instanceId];
   [databasePlugin pluginInitializeWithFIRDatabase: database andPluginId: instanceId];
   
-  FIRDatabaseReference *tmpRef = [database reference];
-  NSString *url = [NSString stringWithFormat:@"%@", tmpRef];
-  
-  NSMutableDictionary *result = [NSMutableDictionary dictionary];
-  [result setObject:url forKey:@"url"];
 
-
-  CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+  CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 

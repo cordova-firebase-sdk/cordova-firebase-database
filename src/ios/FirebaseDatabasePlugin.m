@@ -27,25 +27,40 @@
 }
 
 
-- (NSString *)jsonStringify: (NSDictionary*)dictionary error:(NSError **)error {
+- (NSString *)serialize: (id)target error:(NSError **)error {
 
-  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dictionary options:0 error:error];
+  NSString *targetStr = nil;
+  if ([target isKindOfClass:NSString.class]) {
+    targetStr = target;
+  } else if ([target isKindOfClass:NSDictionary.class] || [targetStr isKindOfClass:NSArray.class]) {
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:(NSDictionary *)target options:0 error:error];
+    targetStr = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+  }
 
-  if (jsonData) {
-    return [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] compressToBase64];
+  if (targetStr) {
+    return [targetStr compressToBase64];
   } else {
     return nil;
   }
 }
-- (NSDictionary *)jsonParse: (NSString*)serializedStr error:(NSError **)error {
+- (id)deserialize: (NSString*)serializedStr {
   if (!serializedStr || [serializedStr isEqualToString:@""]) {
     return nil;
   }
 
   serializedStr = [serializedStr decompressFromBase64];
-  NSData *jsonData = [serializedStr dataUsingEncoding:NSUTF8StringEncoding];
-  NSDictionary *result = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:error];
-  return result;
+  if (([serializedStr hasPrefix:@"{"] && [serializedStr hasSuffix:@"}"]) ||
+      ([serializedStr hasPrefix:@"["] && [serializedStr hasSuffix:@"]"])) {
+    @try {
+      NSData *jsonData = [serializedStr dataUsingEncoding:NSUTF8StringEncoding];
+      NSError *error;
+      return [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+    } @catch (NSException *error) {
+      return serializedStr;
+    }
+  } else {
+    return serializedStr;
+  }
 }
 
 
@@ -178,15 +193,8 @@
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
     
-    NSError *error;
-    NSDictionary *value = [self jsonParse:[options objectForKey:@"value"] error:&error];
-    if (error) {
-      CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      return;
-    }
-    
-    [ref onDisconnectSetValue:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+    id result = [self deserialize:[options objectForKey:@"value"]];
+    [ref onDisconnectSetValue:result withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
       if (error) {
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
@@ -217,14 +225,7 @@
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
     
-    NSError *error;
-    NSDictionary *value = [self jsonParse:[options objectForKey:@"value"] error:&error];
-    if (error) {
-      CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      return;
-    }
-    
+    id value = [self deserialize:[options objectForKey:@"value"]];
     id priority = [options objectForKey:@"priority"];
     
     [ref onDisconnectSetValue:value andPriority:priority withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
@@ -261,14 +262,7 @@
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
     
-    NSError *error;
-    NSDictionary *value = [self jsonParse:[options objectForKey:@"values"] error:&error];
-    if (error) {
-      CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      return;
-    }
-    
+    id value = [self deserialize:[options objectForKey:@"values"]];
     [ref onDisconnectUpdateChildValues:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
       if (error) {
@@ -351,14 +345,7 @@
   [self.objects setObject:thenableRef forKey:newId];
   
   if ([options objectForKey:@"value"]) {
-    NSError *error;
-    NSDictionary *value = [self jsonParse:[options objectForKey:@"value"] error:&error];
-    if (error) {
-      CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-      [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      return;
-    }
-    
+    id value = [self deserialize:[options objectForKey:@"value"]];
     [thenableRef setValue:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
       if (error) {
@@ -415,14 +402,7 @@
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   
-  NSError *error;
-  NSDictionary *value = [self jsonParse:[options objectForKey:@"data"] error:&error];
-  if (error) {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    return;
-  }
-  
+  id value = [self deserialize:[options objectForKey:@"data"]];
   [ref setValue:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
     if (error) {
@@ -475,13 +455,7 @@
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   
-  NSError *error;
-  NSDictionary *value = [self jsonParse:[options objectForKey:@"data"] error:&error];
-  if (error) {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    return;
-  }
+  id value = [self deserialize:[options objectForKey:@"data"]];
   id priority = [options objectForKey:@"priority"];
   
   [ref setValue:value andPriority:priority withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
@@ -521,7 +495,7 @@
     
     // current value -> serialized json strings
     NSError *error;
-    __block NSString *serializedStr = [self jsonStringify: currentValue error:&error];
+    __block NSString *serializedStr = [self serialize: currentValue error:&error];
     if (error) {
       CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
       [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -547,7 +521,7 @@
   
     // returned value -> currentData.value
     NSString *serializedValue = [self.jsCallbackHolder objectForKey:transactionId];
-    currentData.value = [self jsonParse: serializedValue error:&error];
+    currentData.value = [self deserialize: serializedValue];
     
     if (serializedValue) {
       [self.jsCallbackHolder removeObjectForKey:transactionId];
@@ -571,10 +545,10 @@
       [snapshotValues setObject:snapshot.key forKey:@"key"];
     
       // exportVal -> serialized json strings
-      [snapshotValues setObject:[self jsonStringify:[snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
+      [snapshotValues setObject:[self serialize:[snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
 
       // value -> serialized json strings
-      [snapshotValues setObject:[self jsonStringify:[snapshot value] error:&error] forKey:@"val"];
+      [snapshotValues setObject:[self serialize:[snapshot value] error:&error] forKey:@"val"];
 
     
       [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
@@ -612,14 +586,7 @@
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   
-  NSError *error;
-  NSDictionary *value = [self jsonParse:[options objectForKey:@"data"] error:&error];
-  if (error) {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    return;
-  }
-  
+  id value = [self deserialize:[options objectForKey:@"data"]];
   [ref updateChildValues:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
     if (error) {
@@ -843,10 +810,10 @@
         NSError *error;
       
         // exportVal -> serialized json strings
-        [snapshotValues setObject:[self jsonStringify: [snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
+        [snapshotValues setObject:[self serialize: [snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
       
         // value -> serialized json strings
-        [snapshotValues setObject:[self jsonStringify: [snapshot value] error:&error] forKey:@"val"];
+        [snapshotValues setObject:[self serialize: [snapshot value] error:&error] forKey:@"val"];
       
         [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
         [snapshotValues setObject:[NSNumber numberWithBool:snapshot.exists] forKey:@"exists"];
@@ -856,7 +823,7 @@
         NSString* jsString = [NSString
                               stringWithFormat:@"javascript:window.plugin.firebase.database._nativeCallback('%@', '%@', '%@', '%@', '%@');",
                               self.pluginId, [options objectForKey:@"listenerId"], eventTypeStr,
-                              [self jsonStringify: snapshotValues error:&error],
+                              [self serialize: snapshotValues error:&error],
                               snapshot.key];
 
         [self execJS:jsString];
@@ -915,10 +882,10 @@
       NSError *error;
     
       // exportVal -> serialized json strings
-      [snapshotValues setObject:[self jsonStringify: [snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
+      [snapshotValues setObject:[self serialize: [snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
 
       // value -> serialized json strings
-      [snapshotValues setObject:[self jsonStringify: [snapshot value] error:&error] forKey:@"val"];
+      [snapshotValues setObject:[self serialize: [snapshot value] error:&error] forKey:@"val"];
     
       [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
       [snapshotValues setObject:[NSNumber numberWithBool:snapshot.exists] forKey:@"exists"];

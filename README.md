@@ -1,6 +1,6 @@
 ![](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database.svg?branch=master)
 
-**This plugin is still under beta version. Please don't use this plugin in your application yet.**
+**THIS PLUGIN IS NOT READY TO SHIP. DO NOT USE THIS PLUGIN IN YOUR APP YET.**
 
 # cordova-firebase-database
 
@@ -15,17 +15,15 @@ For example, this is the original usage of `firebase database api`.
   // TODO: Replace with your project's config object
   var config = {
     apiKey: "apiKey",
-    authDomain: "projectId.firebaseapp.com",
-    databaseURL: "https://databaseName.firebaseio.com",
-    storageBucket: "bucket.appspot.com"
+    databaseURL: "https://databaseName.firebaseio.com"
   };
-  firebase.initializeApp(config);
+  var app = firebase.initializeApp(config);
 
   // Get a reference to the database service
-  var database = firebase.database();
+  var database = app.database();
 
   // Store data into users/user01
-  firebase.database().ref('users/user01').set({
+  database.ref('users/user01').set({
     username: 'Masashi Katsumata',
     email: 'wf9a5m75@gmail.com'
   });
@@ -37,19 +35,17 @@ For example, this is the original usage of `firebase database api`.
   // Set the configuration for your app
   // TODO: Replace with your project's config object
   var config = {
-    apiKey: "apiKey",
-    authDomain: "projectId.firebaseapp.com",
-    databaseURL: "https://databaseName.firebaseio.com",
-    storageBucket: "bucket.appspot.com"
+    apiKey: "apiKey",  // optional
+    databaseURL: "https://databaseName.firebaseio.com" // required
   };
 
+  var app = plugin.firebase.initializeApp(config);
+
   // Get a reference to the database service
-  var database = plugin.firebase.database({
-    'browserConfigs': config
-  });
+  var database = app.database();
 
   // Store data into users/user01
-  firebase.database().ref('users/user01').set({
+  database.ref('users/user01').set({
     username: 'Masashi Katsumata',
     email: 'wf9a5m75@gmail.com'
   });
@@ -58,7 +54,7 @@ For example, this is the original usage of `firebase database api`.
 
 ## Supported platforms
   This plugin supports the following platforms:
-  
+
     - Browser (implemented, not tested deeply)
     - iOS (implemented, not tested deeply)
 
@@ -94,7 +90,7 @@ For example, this is the original usage of `firebase database api`.
     </platform>
     ```
 
-  - **Step4** Make sure your Firestore rule
+  - **Step4** Make sure your Firebase realtime database rule
 
     ```
     service cloud.firestore {
@@ -110,23 +106,31 @@ For example, this is the original usage of `firebase database api`.
 
     ```js
     document.addEventListener('deviceready', function() {
-      var database = plugin.firebase.database({
-        browserConfigs: {
-          apiKey: "(your web API key)",
-          databaseURL: "(your database url)"
-        }
-      });
 
-      database.ref('test').push({
+      var config = {
+        apiKey: "(YOUR API KEY)",
+        databaseURL: "https://(YOUR PROJECT ID).firebaseio.com"
+      };
+
+      var app = plugin.firebase.initializeApp(config);
+      var database = app.database();
+
+      // - test
+      //  |- user01
+      //  |   |- hello = world
+      //  |
+      //  |- user02
+      //      |- hello = world
+      var rootRef = database.ref("test");
+      rootRef.update({
         'user01': {
           'hello':'world'
         }
-      }).then(function(ref) {
-        return ref.push({
-          'user02': {
-            'hello':'world'
-          }
-        });
+      });
+      rootRef.update({
+        'user02': {
+          'hello':'world'
+        }
       });
 
     });

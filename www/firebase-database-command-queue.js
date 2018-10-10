@@ -4,7 +4,7 @@
  * (Save the number of method executing at the same time)
  *****************************************************************************/
 var cordova_exec = require('cordova/exec'),
-  common = require('./Common');
+  common = require('cordova-firebase-core.Common');
 
 var commandQueue = [];
 var _isWaitMethod = null;

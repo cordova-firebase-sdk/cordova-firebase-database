@@ -1,14 +1,24 @@
 
 
 var utils = require('cordova/utils'),
-  BaseClass = require('./BaseClass'),
-  BaseArrayClass = require('./BaseArrayClass'),
+  BaseClass = require('cordova-firebase-core.BaseClass'),
+  BaseArrayClass = require('cordova-firebase-core.BaseArrayClass'),
   ReferenceModule = require('./Reference'),
-  LZString = require('./LZString'),
+  LZString = require('cordova-firebase-core.LZString'),
+  common = require('cordova-firebase-core.Common'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
-function CordovaFirebaseDatabase(firebaseInitOptions) {
+function CordovaFirebaseDatabase(appId, firebaseInitOptions) {
   BaseClass.apply(this);
+  if (!firebaseInitOptions) {
+    throw new Error('firebaseInitOptions parameter is required.');
+  }
+  if (!firebaseInitOptions.databaseURL) {
+    throw new Error('Please specify \'databaseURL\' property at least.');
+  }
+  if (firebaseInitOptions.databaseURL.indexOf('firebaseio.com') === -1) {
+    throw new Error('Invalid url is specified for \'databaseURL\' property.');
+  }
 
   var self = this,
     cmdQueue = new BaseArrayClass();
@@ -21,6 +31,11 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
 
   Object.defineProperty(self, '_isRemoved', {
     value: false,
+    enumerable: false
+  });
+
+  Object.defineProperty(self, 'appId', {
+    value: appId,
     enumerable: false
   });
 
@@ -55,29 +70,31 @@ function CordovaFirebaseDatabase(firebaseInitOptions) {
     enumerable: false
   });
 
-  execCmd.call({
-    '_isReady': true
-  },
-  function(result) {
-    Object.defineProperty(self, 'url', {
-      value: result.url,
-      enumerable: false
-    });
+  var dbUrl = firebaseInitOptions.databaseURL.replace(/(firebaseio.com).*$/, '$1');
 
-    self._isReady = true;
-    self._cmdQueue._trigger('insert_at');
-  }, function(error) {
-    if (error instanceof Error) {
-      throw error;
-    } else {
-      throw new Error(error);
-    }
-  }, 'CordovaFirebaseDatabase', 'newInstance', [{
-    'id': self.id,
-    'refPath': firebaseInitOptions.refPath || '',
-    'browserConfigs': firebaseInitOptions.browserConfigs || {}
-  }], {
-    'sync': true
+  Object.defineProperty(self, 'url', {
+    value: dbUrl,
+    enumerable: false
+  });
+
+  self._one('fireAppReady', function() {
+    execCmd.call({
+      '_isReady': true
+    }, function() {
+      self._isReady = true;
+      self._cmdQueue._trigger('insert_at');
+    }, function(error) {
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error(error);
+      }
+    }, 'CordovaFirebaseDatabase', 'newInstance', [{
+      'id': self.id,
+      'appId': self.appId
+    }], {
+      'sync': true
+    });
   });
 }
 
@@ -170,37 +187,75 @@ CordovaFirebaseDatabase.prototype.ref = function(path) {
 
 
 
+//---------------------------------------------------------------------------------
+// Database.ref
+// https://firebase.google.com/docs/reference/js/firebase.database.Database#refFromURL
+//---------------------------------------------------------------------------------
+CordovaFirebaseDatabase.prototype.refFromURL = function(path) {
+
+  var key = null;
+  if (path) {
+    path = path.replace(/\/$/, '');
+    key = path.replace(/^.*\//, '') || null;
+  }
+
+  var reference = new ReferenceModule.Reference({
+    pluginName: this.id,
+    parent: null,
+    key: key,
+    url: this.url
+  });
+  this._on('nativeEvent', function(params) {
+    reference._trigger('nativeEvent', params);
+  });
+
+  this._exec(function(results) {
+    reference._privateInit(results);
+  }, function(error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error);
+    }
+  }, this.id, 'database_ref', [{
+    path: path,
+    id: reference.id
+  }]);
+
+  return reference;
+};
+
+module.exports = CordovaFirebaseDatabase;
+
 
 cordova.addConstructor(function() {
   if (!window.Cordova) {
     window.Cordova = cordova;
   }
-  window.plugin = window.plugin || {};
-  window.plugin.firebase = window.plugin.firebase || {};
-  window.plugin.firebase.database = function(options) {
-    var db = new CordovaFirebaseDatabase(options);
-    window.plugin.firebase.database._DBs[db.id] = db;
-    return db;
-  };
+  if (common.isInitialized('plugin.firebase.app')) {
+    window.plugin = window.plugin || {};
+    window.plugin.firebase = window.plugin.firebase || {};
+    window.plugin.firebase.database = {};
 
-  Object.defineProperty(window.plugin.firebase.database, '_DBs', {
-    value: {},
-    enumerable: false
-  });
-  Object.defineProperty(window.plugin.firebase.database, '_nativeCallback', {
-    value: function(dbId, listenerId, eventType, values, key) {
+    Object.defineProperty(window.plugin.firebase.database, '_DBs', {
+      value: {},
+      enumerable: false
+    });
+    Object.defineProperty(window.plugin.firebase.database, '_nativeCallback', {
+      value: function(dbId, listenerId, eventType, values, key) {
 
-      var dbInstance = window.plugin.firebase.database._DBs[dbId];
+        var dbInstance = window.plugin.firebase.database._DBs[dbId];
 
-      if (dbInstance) {
-        dbInstance._trigger('nativeEvent', {
-          listenerId: listenerId,
-          eventType: eventType,
-          values: JSON.parse(LZString.decompressFromBase64(values)),
-          key: key
-        });
-      }
-    },
-    enumerable: false
-  });
+        if (dbInstance) {
+          dbInstance._trigger('nativeEvent', {
+            listenerId: listenerId,
+            eventType: eventType,
+            values: JSON.parse(LZString.decompressFromBase64(values)),
+            key: key
+          });
+        }
+      },
+      enumerable: false
+    });
+  }
 });

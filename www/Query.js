@@ -2,10 +2,10 @@
 
 
 var utils = require('cordova/utils'),
-  BaseClass = require('./BaseClass'),
-  BaseArrayClass = require('./BaseArrayClass'),
+  BaseClass = require('cordova-firebase-core.BaseClass'),
+  BaseArrayClass = require('cordova-firebase-core.BaseArrayClass'),
   DataSnapshot = require('./DataSnapshot'),
-  LZString = require('./LZString'),
+  LZString = require('cordova-firebase-core.LZString'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
 /*******************************************************************************
@@ -31,7 +31,8 @@ function Query(params) {
 
   Object.defineProperty(self, '_isReady', {
     value: false,
-    writable: true
+    writable: true,
+    enumerable: false
   });
 
   Object.defineProperty(self, 'url', {
@@ -64,18 +65,30 @@ function Query(params) {
 
 utils.extend(Query, BaseClass);
 
-Query.prototype._privateInit = function() {
 
-  this._isReady = true;
-  this._cmdQueue._trigger('insert_at');
-};
 
-Query.prototype._exec = function() {
-  this._cmdQueue.push.call(this._cmdQueue, {
-    target: this,
-    args: Array.prototype.slice.call(arguments, 0)
-  });
-};
+//---------------------------------------------------------------------------------
+// Internal methods. Don't use it from your code
+//---------------------------------------------------------------------------------
+Object.defineProperty(Query.prototype, '_privateInit', {
+  value: function() {
+    this._isReady = true;
+    this._cmdQueue._trigger('insert_at');
+  },
+  writable: false,
+  enumerable: false
+});
+
+Object.defineProperty(Query.prototype, '_exec', {
+  value: function() {
+    this._cmdQueue.push.call(this._cmdQueue, {
+      target: this,
+      args: Array.prototype.slice.call(arguments, 0)
+    });
+  },
+  writable: false,
+  enumerable: false
+});
 
 
 

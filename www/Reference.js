@@ -10,7 +10,7 @@ var utils = require('cordova/utils'),
   Query = require('./Query'),
   OnDisconnect = require('./OnDisconnect'),
   cordova_exec = require('cordova/exec'),
-  LZString = require('./LZString');
+  LZString = require('cordova-firebase-core.LZString');
 
 /*******************************************************************************
  * @name Reference

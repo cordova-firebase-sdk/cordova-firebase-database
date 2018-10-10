@@ -1,7 +1,7 @@
 
 
 
-var LZString = require('./LZString');
+var LZString = require('cordova-firebase-core.LZString');
 
 /*******************************************************************************
  * @name DataSnapshot

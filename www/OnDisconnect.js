@@ -1,9 +1,9 @@
 
 
 
-var BaseArrayClass = require('./BaseArrayClass'),
+var BaseArrayClass = require('cordova-firebase-core.BaseArrayClass'),
   execCmd = require('./FirebaseDatabaseCommandQueue'),
-  LZString = require('./LZString');
+  LZString = require('cordova-firebase-core.LZString');
 
 /*******************************************************************************
  * @name OnDisconnect
@@ -43,17 +43,29 @@ function OnDisconnect(pluginName) {
 
 }
 
-OnDisconnect.prototype._privateInit = function() {
-  this._isReady = true;
-  this._cmdQueue._trigger('insert_at');
-};
+//---------------------------------------------------------------------------------
+// Internal methods. Don't use it from your code
+//---------------------------------------------------------------------------------
+Object.defineProperty(OnDisconnect.prototype, '_privateInit', {
+  value: function() {
+    this._isReady = true;
+    this._cmdQueue._trigger('insert_at');
+  },
+  writable: false,
+  enumerable: false
+});
 
-OnDisconnect.prototype._exec = function() {
-  this._cmdQueue.push.call(this._cmdQueue, {
-    target: this,
-    args: Array.prototype.slice.call(arguments, 0)
-  });
-};
+Object.defineProperty(OnDisconnect.prototype, '_exec', {
+  value: function() {
+    this._cmdQueue.push.call(this._cmdQueue, {
+      target: this,
+      args: Array.prototype.slice.call(arguments, 0)
+    });
+  },
+  writable: false,
+  enumerable: false
+});
+
 
 
 //---------------------------------------------------------------------------------
@@ -63,7 +75,7 @@ OnDisconnect.prototype._exec = function() {
 OnDisconnect.prototype.cancel = function(onComplete) {
   var self = this;
 
-  return new new Promise(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     self._exec(function() {
       resolve.call(self);
       if (typeof onComplete === 'function') {
@@ -89,7 +101,7 @@ OnDisconnect.prototype.cancel = function(onComplete) {
 OnDisconnect.prototype.remove = function(onComplete) {
   var self = this;
 
-  return new new Promise(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     self._exec(function() {
       resolve.call(self);
       if (typeof onComplete === 'function') {
@@ -114,7 +126,7 @@ OnDisconnect.prototype.remove = function(onComplete) {
 OnDisconnect.prototype.set = function(value, onComplete) {
   var self = this;
 
-  return new new Promise(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     self._exec(function() {
       resolve.call(self);
       if (typeof onComplete === 'function') {
@@ -141,7 +153,7 @@ OnDisconnect.prototype.set = function(value, onComplete) {
 OnDisconnect.prototype.setWithPriority = function(value, priority, onComplete) {
   var self = this;
 
-  return new new Promise(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     self._exec(function() {
       resolve.call(self);
       if (typeof onComplete === 'function') {
@@ -169,7 +181,7 @@ OnDisconnect.prototype.setWithPriority = function(value, priority, onComplete) {
 OnDisconnect.prototype.update = function(values, onComplete) {
   var self = this;
 
-  return new new Promise(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     self._exec(function() {
       resolve.call(self);
       if (typeof onComplete === 'function') {
