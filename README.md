@@ -89,7 +89,7 @@ For example, this is the original usage of `firebase database api`.
     </platform>
     ```
 
-  - **Step4** Make sure your Firestore rule
+  - **Step4** Make sure your Firebase realtime database rule
 
     ```
     service cloud.firestore {
@@ -105,23 +105,31 @@ For example, this is the original usage of `firebase database api`.
 
     ```js
     document.addEventListener('deviceready', function() {
-      var database = plugin.firebase.database({
-        browserConfigs: {
-          apiKey: "(your web API key)",
-          databaseURL: "(your database url)"
-        }
-      });
 
-      database.ref('test').push({
+      var config = {
+        apiKey: "(YOUR API KEY)",
+        databaseURL: "https://(YOUR PROJECT ID).firebaseio.com"
+      };
+
+      var app = plugin.firebase.initializeApp(config);
+      var database = app.database();
+
+      // - test
+      //  |- user01
+      //  |   |- hello = world
+      //  |
+      //  |- user02
+      //      |- hello = world
+      var rootRef = database.ref("test");
+      rootRef.update({
         'user01': {
           'hello':'world'
         }
-      }).then(function(ref) {
-        return ref.push({
-          'user02': {
-            'hello':'world'
-          }
-        });
+      });
+      rootRef.update({
+        'user02': {
+          'hello':'world'
+        }
       });
 
     });
