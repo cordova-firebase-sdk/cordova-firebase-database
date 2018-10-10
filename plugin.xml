@@ -29,8 +29,7 @@
 
     <config-file parent="/*" target="AndroidManifest.xml"/>
     <source-file src="src/android/plugin/firebase/database/CordovaFirebaseDatabase.java" target-dir="src/plugin/firebase/database/" />
-    <source-file src="src/android/plugin/firebase/database/IActionHandler.java" target-dir="src/plugin/firebase/database/" />
-    <source-file src="src/android/plugin/firebase/database/NewInstance.java" target-dir="src/plugin/firebase/database/" />
+    <source-file src="src/android/plugin/firebase/database/FirebaseDatabasePlugin.java" target-dir="src/plugin/firebase/database/" />
   </platform>
 
   <platform name="ios">
