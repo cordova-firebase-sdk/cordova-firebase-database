@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import plugin.firebase.core.FirebaseAppPlugin;
+import plugin.firebase.core.FirebasePluginUtil;
 import plugin.firebase.core.IActionHandler;
-import rufus.lzstring4java.LZString;
 
 public class FirebaseDatabasePlugin extends CordovaPlugin {
   private final String TAG = "FireDatabasePlugin";
@@ -71,81 +71,6 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     webView.loadUrl(jsString);
   }
 
-  private String serialize(Object target) throws JSONException {
-    if (target instanceof JSONObject) {
-      return LZString.compressToBase64(((JSONObject) target).toString(0));
-    } else if (target instanceof JSONArray) {
-      return LZString.compressToBase64(((JSONArray) target).toString(0));
-    } else {
-      return LZString.compressToBase64((String)target);
-    }
-  }
-
-  private Object deserialize(String serializedStr) {
-    serializedStr = LZString.decompressFromBase64(serializedStr);
-    try {
-      if (serializedStr.startsWith("{") && serializedStr.endsWith("}")) {
-        return new JSONObject(serializedStr);
-      } else if (serializedStr.startsWith("[") && serializedStr.endsWith("]")) {
-        return new JSONArray(serializedStr);
-      }
-      return serializedStr;
-    } catch (Exception e) {
-      // ignore
-      return serializedStr;
-    }
-  }
-
-  public static ArrayList<Object> Json2Map(JSONArray jsonArray) throws JSONException {
-
-    ArrayList<Object> array = new ArrayList<Object>();
-
-    Object value2;
-    for (int i = 0; i < jsonArray.length(); i++) {
-      value2 = jsonArray.get(i);
-      if (value2 == null ||
-              Boolean.class.isInstance(value2) ||
-              value2 instanceof Number ||
-              value2 instanceof String) {
-        array.add(value2);
-      } else if (JSONObject.class.isInstance(value2)) {
-        array.add(Json2Map((JSONObject)value2));
-      } else if (JSONArray.class.isInstance(value2)) {
-        array.add(Json2Map((JSONArray)value2));
-      } else {
-        array.add(value2 + "");
-      }
-    }
-    return array;
-  }
-
-  public static Map<String, Object> Json2Map(JSONObject json) throws JSONException {
-    HashMap<String, Object> mMap = new HashMap<>();
-    @SuppressWarnings("unchecked")
-    Iterator<String> iterator = json.keys();
-    Object value;
-    while (iterator.hasNext()) {
-      String key = iterator.next();
-      try {
-        value = json.get(key);
-        if (value == null ||
-                Boolean.class.isInstance(value) ||
-                value instanceof Number ||
-                value instanceof String) {
-          mMap.put(key, value);
-        } else if (JSONObject.class.isInstance(value)) {
-          mMap.put(key, Json2Map((JSONObject)value));
-        } else if (JSONArray.class.isInstance(value)) {
-          mMap.put(key, Json2Map((JSONArray)value));
-        } else {
-          mMap.put(key, value + "");
-        }
-      } catch (JSONException e) {
-        e.printStackTrace();
-      }
-    }
-    return mMap;
-  }
 
   /******************************************
    * Methods for Database class
@@ -306,7 +231,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       String targetId = options.getString("targetId");
       String serializedValue = options.getString("value");
-      final Object valueObj = deserialize(serializedValue);
+      final Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
 
       synchronized (objects) {
         if (objects.containsKey(targetId)) {
@@ -330,6 +255,11 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     }
   }
 
+
+  //---------------------------------------------------------------------------------
+  // onDisconnect.setWithPriority
+  // https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect#setWithPriority
+  //---------------------------------------------------------------------------------
   private class onDisconnect_setWithPriority implements IActionHandler {
 
     @Override
@@ -341,7 +271,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       String targetId = options.getString("targetId");
       String serializedValue = options.getString("value");
-      final Object valueObj = deserialize(serializedValue);
+      final Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
 
       Object priority = options.get("priority");
 
@@ -385,6 +315,10 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // onDisconnect.update
+  // https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect#update
+  //---------------------------------------------------------------------------------
   private class onDisconnect_update implements IActionHandler {
 
     @Override
@@ -396,9 +330,9 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       String targetId = options.getString("targetId");
       String serializedValue = options.getString("value");
-      JSONObject values = (JSONObject)deserialize(serializedValue);
+      JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
 
-      Map<String, Object> valueObj = Json2Map(values);
+      Map<String, Object> valueObj = FirebasePluginUtil.Json2Map(values);
 
 
       synchronized (objects) {
@@ -423,30 +357,97 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     }
   }
 
+
+
+
+
+  /*******************************************************************************
+   * Methods for Reference class
+   ******************************************************************************/
+
+  //---------------------------------------------------------------------------------
+  // Reference.child
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#child
+  //---------------------------------------------------------------------------------
   private class reference_child implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
+      Log.d(TAG, "[android] reference.child()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String childId = options.getString("childId");
+      String path = options.getString("path");
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+      DatabaseReference childRef = ref.child(path);
+      objects.put(childId, childRef);
 
       callbackContext.success();
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.onDisconnect
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#onDisconnect
+  //---------------------------------------------------------------------------------
   private class reference_onDisconnect implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] reference.onDisconnect()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String onDisconnectId = options.getString("onDisconnectId");
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+      OnDisconnect onDisconnect = ref.onDisconnect();
+      objects.put(onDisconnectId, onDisconnect);
+
       callbackContext.success();
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.push
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#push
+  //---------------------------------------------------------------------------------
   private class reference_push implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-      callbackContext.success();
+      Log.d(TAG, "[android] reference.push()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String onDisconnectId = options.getString("onDisconnectId");
+      final String newId = options.getString("newId");
+      String serializedValue = options.getString("value");
+      JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+
+      DatabaseReference newRef = ref.push();
+      objects.put(newId, newRef);
+      final JSONObject results = new JSONObject();
+      results.put("key", newRef.getKey());
+      results.put("url", newRef.toString());
+
+      if (values == null) {
+        callbackContext.success();
+      } else {
+        ref.setValue(values, new DatabaseReference.CompletionListener() {
+          @Override
+          public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+            callbackContext.success(results);
+          }
+        });
+      }
+
     }
   }
 
