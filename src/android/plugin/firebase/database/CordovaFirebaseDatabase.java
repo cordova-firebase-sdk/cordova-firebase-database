@@ -32,7 +32,7 @@ public class CordovaFirebaseDatabase extends CordovaPlugin {
 
 
     public Map<String, IActionHandler> handlers = new Hashtable<>();
-    public Map<String, FirebaseApp> fireDBs = new Hashtable<>();
+    public Map<String, PluginEntry> plugins = new Hashtable<>();
     private Context context;
     private PluginManager pluginManager;
 
@@ -93,6 +93,8 @@ public class CordovaFirebaseDatabase extends CordovaPlugin {
                 }
             }
 
+            // Get the FirebaseApp instance based on appId variable.
+            // (should be hold)
             FirebaseApp app = null;
             if (firebaseCorePlugin != null) {
                 entry = firebaseCorePlugin.plugins.get(appId);
@@ -100,20 +102,25 @@ public class CordovaFirebaseDatabase extends CordovaPlugin {
                 app = appPlugin.app;
             }
 
-            FirebaseDatabase database = FirebaseDatabase.getInstance(app);
+            // Create an instance of FirebaseDatabase
+            FirebaseDatabase database;
+            if (app != null) {
+                database = FirebaseDatabase.getInstance(app);
+            } else {
+                // just in case
+                database = FirebaseDatabase.getInstance();
+            }
 
 
-            // Create an instance of FirebaseApp
-            FirebaseApp app = FirebaseApp.initializeApp(context);
 
             // Create an instance of FireBaseAppPlugin
-            FirebaseAppPlugin appPlugin = new FirebaseAppPlugin(app);
-            appPlugin.privateInitialize(instanceId, cordova, webView, null);
-            appPlugin.initialize(cordova, webView);
+            FirebaseDatabasePlugin databasePlugin = new FirebaseDatabasePlugin(database);
+            databasePlugin.privateInitialize(instanceId, cordova, webView, null);
+            databasePlugin.initialize(cordova, webView);
 
             // Register as new plugin
-            // (plugin name is "instanceId" variable.
-            PluginEntry pluginEntry = new PluginEntry(instanceId, appPlugin);
+            // (plugin name is "instanceId" variable)
+            PluginEntry pluginEntry = new PluginEntry(instanceId, databasePlugin);
             plugins.put(instanceId, pluginEntry);
             pluginManager.addService(pluginEntry);
 
