@@ -6,10 +6,16 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
 import com.google.firebase.database.OnDisconnect;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.Transaction;
+import com.google.firebase.database.ValueEventListener;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -34,7 +40,17 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
   private FirebaseDatabase database;
   private final Map<String, IActionHandler> handlers = new ConcurrentHashMap<>();
   private final Map<String, Object> objects = new ConcurrentHashMap<>();
+  private final Map<String, String> jsCallbackHolder = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, ListenerHolder> listenerHolders = new ConcurrentHashMap<>();
   private Context context;
+  private final Object semaphore = new Object();
+
+  class ListenerHolder {
+    ValueEventListener valueEventListener;
+    ChildEventListener childEventListener;
+    String eventType;
+    boolean isValueEvent;
+  }
 
   FirebaseDatabasePlugin(FirebaseDatabase firebaseDB) {
     this.database = firebaseDB;
@@ -273,13 +289,15 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
       String serializedValue = options.getString("value");
       final Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
 
-      Object priority = options.get("priority");
+      String serializedProperty = options.getString("priority");
+      final Object propertyObj = FirebasePluginUtil.deserialize(serializedProperty);
+
 
       synchronized (objects) {
         if (objects.containsKey(targetId)) {
           final OnDisconnect onDisconnect = (OnDisconnect) objects.get(targetId);
-          if (priority == null || priority instanceof String) {
-            onDisconnect.setValue(valueObj, (String)priority, new DatabaseReference.CompletionListener() {
+          if (propertyObj == null || propertyObj instanceof String) {
+            onDisconnect.setValue(valueObj, (String)propertyObj, new DatabaseReference.CompletionListener() {
               @Override
               public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
 
@@ -291,9 +309,9 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
                 }
               }
             });
-          } else if (priority instanceof Number) {
+          } else if (propertyObj instanceof Number) {
 
-            onDisconnect.setValue(valueObj, (double) priority, new DatabaseReference.CompletionListener() {
+            onDisconnect.setValue(valueObj, (double) propertyObj, new DatabaseReference.CompletionListener() {
               @Override
               public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
 
@@ -424,7 +442,6 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       JSONObject options = args.getJSONObject(0);
       String targetId = options.getString("targetId");
-      String onDisconnectId = options.getString("onDisconnectId");
       final String newId = options.getString("newId");
       String serializedValue = options.getString("value");
       JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
@@ -443,7 +460,13 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
         ref.setValue(values, new DatabaseReference.CompletionListener() {
           @Override
           public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
-            callbackContext.success(results);
+
+            if (databaseError != null) {
+              Log.e(TAG, "ref.push() error\n" + databaseError.getDetails());
+              callbackContext.error(databaseError.getMessage());
+            } else {
+              callbackContext.success(results);
+            }
           }
         });
       }
@@ -451,100 +474,439 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.remove
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#remove
+  //---------------------------------------------------------------------------------
   private class reference_remove implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-      callbackContext.success();
+      Log.d(TAG, "[android] reference.remove()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+      ref.removeValue(new DatabaseReference.CompletionListener() {
+        @Override
+        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+
+          if (databaseError != null) {
+            Log.e(TAG, "ref.remove() error\n" + databaseError.getDetails());
+            callbackContext.error(databaseError.getMessage());
+          } else {
+            callbackContext.success();
+          }
+        }
+      });
+
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.set
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#set
+  //---------------------------------------------------------------------------------
   private class reference_set implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-      callbackContext.success();
+      Log.d(TAG, "[android] reference.set()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String serializedValue = options.getString("value");
+      JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+
+      ref.setValue(values, new DatabaseReference.CompletionListener() {
+        @Override
+        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+
+          if (databaseError != null) {
+            Log.e(TAG, "ref.set() error\n" + databaseError.getDetails());
+            callbackContext.error(databaseError.getMessage());
+          } else {
+            callbackContext.success();
+          }
+        }
+      });
+
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.setPriority
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#setPriority
+  //---------------------------------------------------------------------------------
   private class reference_setPriority implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-      callbackContext.success();
+      JSONObject options = args.getJSONObject(0);
+
+      Log.d(TAG, "[android] ref.setPriority()");
+
+      String targetId = options.getString("targetId");
+      String serializedProperty = options.getString("priority");
+      final Object propertyObj = FirebasePluginUtil.deserialize(serializedProperty);
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+      ref.setPriority(propertyObj, new DatabaseReference.CompletionListener() {
+        @Override
+        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+
+          if (databaseError != null) {
+            Log.e(TAG, "ref.setPriority() error\n" + databaseError.getDetails());
+            callbackContext.error(databaseError.getMessage());
+          } else {
+            callbackContext.success();
+          }
+        }
+      });
+
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.setWithPriority
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#setWithPriority
+  //---------------------------------------------------------------------------------
   private class reference_setWithPriority implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-      callbackContext.success();
+      JSONObject options = args.getJSONObject(0);
+
+      Log.d(TAG, "[android] ref.setWithPriority()");
+
+      String targetId = options.getString("targetId");
+      String serializedValue = options.getString("value");
+      final Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+
+      String serializedProperty = options.getString("priority");
+      final Object propertyObj = FirebasePluginUtil.deserialize(serializedProperty);
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+      ref.setValue(valueObj, propertyObj, new DatabaseReference.CompletionListener() {
+        @Override
+        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+
+          if (databaseError != null) {
+            Log.e(TAG, "ref.setPriority() error\n" + databaseError.getDetails());
+            callbackContext.error(databaseError.getMessage());
+          } else {
+            callbackContext.success();
+          }
+        }
+      });
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Reference.transaction
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction
+  //---------------------------------------------------------------------------------
   private class reference_transaction implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      JSONObject options = args.getJSONObject(0);
+
+      Log.d(TAG, "[android] ref.transaction()");
+
+      boolean applyLocal = options.getBoolean("applyLocal");
+
+      final String eventName = options.getString("eventName");
+      final String targetId = options.getString("targetId");
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+
+      ref.runTransaction(new Transaction.Handler() {
+        @NonNull
+        @Override
+        public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+
+          String serializedValueStr = null;
+          try {
+            serializedValueStr = FirebasePluginUtil.serialize(mutableData.getValue());
+          } catch (JSONException e) {
+            e.printStackTrace();
+            return Transaction.abort();
+          }
+
+          synchronized (semaphore) {
+            execJS(String.format(
+                    "javascript:cordova.fireDocumentEvent('%s', ['%s'])",
+                    eventName, serializedValueStr));
+            try {
+              semaphore.wait(10000);
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+              return Transaction.abort();
+            }
+          }
+          if (jsCallbackHolder.containsKey(targetId)) {
+            String serializedValue = jsCallbackHolder.get(targetId);
+            Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+            mutableData.setValue(valueObj);
+            jsCallbackHolder.remove(targetId);
+            return Transaction.success(mutableData);
+          } else {
+            return Transaction.abort();
+          }
+        }
+
+        @Override
+        public void onComplete(@Nullable DatabaseError databaseError, boolean committed, @Nullable DataSnapshot dataSnapshot) {
+
+          if (databaseError != null) {
+            Log.e(TAG, "ref.transaction() error\n" + databaseError.getDetails());
+            callbackContext.error(databaseError.getMessage());
+          } else {
+
+            try {
+
+              JSONObject snapshotValues = new JSONObject();
+              snapshotValues.put("key", dataSnapshot.getKey());
+              snapshotValues.put("exists", dataSnapshot.exists());
+              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+              snapshotValues.put("getPriority", dataSnapshot.getPriority());
+              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+              snapshotValues.put("vl", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+              JSONObject result = new JSONObject();
+              result.put("snapshot", snapshotValues);
+              result.put("committed", committed);
+
+              callbackContext.success(result);
+            } catch (JSONException e) {
+              e.printStackTrace();
+              callbackContext.error(e.getMessage());
+            }
+          }
+        }
+      }, applyLocal);
+
+
       callbackContext.success();
     }
   }
+
 
   private class reference_onTransactionCallback implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
-
+      String refId = args.getString(0);
+      String valueStr = args.getString(1);
+      synchronized (semaphore) {
+        jsCallbackHolder.put(refId, valueStr);
+        semaphore.notify();
+      }
       callbackContext.success();
     }
   }
 
-  private class datareference_updatebase_goOffline implements IActionHandler {
+
+  //---------------------------------------------------------------------------------
+  // Reference.update
+  // https://firebase.google.com/docs/reference/js/firebase.database.Reference#update
+  //---------------------------------------------------------------------------------
+  private class reference_update implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-      callbackContext.success();
+      Log.d(TAG, "[android] reference.set()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String serializedValue = options.getString("value");
+      JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
+      Map<String, Object> valuesMap = FirebasePluginUtil.Json2Map(values);
+
+
+      DatabaseReference ref = (DatabaseReference) objects.get(targetId);
+
+      ref.updateChildren(valuesMap, new DatabaseReference.CompletionListener() {
+        @Override
+        public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+
+          if (databaseError != null) {
+            Log.e(TAG, "ref.update() error\n" + databaseError.getDetails());
+            callbackContext.error(databaseError.getMessage());
+          } else {
+            callbackContext.success();
+          }
+        }
+      });
+
     }
   }
 
+
+
+
+
+
+
+
+  /*******************************************************************************
+   * Methods for Query class
+   ******************************************************************************/
+
+  //---------------------------------------------------------------------------------
+  // Query.endAt
+  // https://firebase.google.com/docs/reference/js/firebase.database.Query#endAt
+  //---------------------------------------------------------------------------------
   private class query_endAt implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.endAt()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+      String key = options.getString("key");
+      String serializedValue = options.getString("value");
+      Object value = FirebasePluginUtil.deserialize(serializedValue);
+
+      Query query;
+      Query ref_or_query = (Query) objects.get(targetId);
+      if (key == null || key.isEmpty()) {
+        if (value == null || String.class.isInstance(value)) {
+          query = ref_or_query.endAt((String)value);
+        } else if (Number.class.isInstance(value)) {
+          query = ref_or_query.endAt((double)value);
+        } else if (Boolean.class.isInstance(value)) {
+          query = ref_or_query.endAt((boolean)value);
+        } else {
+          callbackContext.error("Value must be number, string, boolean, or null");
+          return;
+        }
+      } else {
+
+        if (value == null || String.class.isInstance(value)) {
+          query = ref_or_query.endAt((String)value, key);
+        } else if (Number.class.isInstance(value)) {
+          query = ref_or_query.endAt((double)value, key);
+        } else if (Boolean.class.isInstance(value)) {
+          query = ref_or_query.endAt((boolean)value, key);
+        } else {
+          callbackContext.error("Value must be number, string, boolean, or null");
+          return;
+        }
+      }
+      objects.put(queryId, query);
+
       callbackContext.success();
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Query.equalTo
+  // https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToFirst
+  //---------------------------------------------------------------------------------
   private class query_equalTo implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.equalTo()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+      String key = options.getString("key");
+      String serializedValue = options.getString("value");
+      Object value = FirebasePluginUtil.deserialize(serializedValue);
+
+      Query query;
+      Query ref_or_query = (Query) objects.get(targetId);
+      if (key == null || key.isEmpty()) {
+        if (value == null || String.class.isInstance(value)) {
+          query = ref_or_query.equalTo((String)value);
+        } else if (Number.class.isInstance(value)) {
+          query = ref_or_query.equalTo((double)value);
+        } else if (Boolean.class.isInstance(value)) {
+          query = ref_or_query.equalTo((boolean)value);
+        } else {
+          callbackContext.error("Value must be number, string, boolean, or null");
+          return;
+        }
+      } else {
+
+        if (value == null || String.class.isInstance(value)) {
+          query = ref_or_query.equalTo((String)value, key);
+        } else if (Number.class.isInstance(value)) {
+          query = ref_or_query.equalTo((double)value, key);
+        } else if (Boolean.class.isInstance(value)) {
+          query = ref_or_query.equalTo((boolean)value, key);
+        } else {
+          callbackContext.error("Value must be number, string, boolean, or null");
+          return;
+        }
+      }
+      objects.put(queryId, query);
+
       callbackContext.success();
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Query.limitToFirst
+  // https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToFirst
+  //---------------------------------------------------------------------------------
   private class query_limitToFirst implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.equalTo()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+      int limit = options.getInt("limit");
+
+      Query query;
+      Query ref_or_query = (Query) objects.get(targetId);
+      query = ref_or_query.limitToFirst(limit);
+      objects.put(queryId, query);
+
       callbackContext.success();
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Query.limitToLast
+  // https://firebase.google.com/docs/reference/js/firebase.database.Query#limitToLast
+  //---------------------------------------------------------------------------------
   private class query_limitToLast implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
+
+      Log.d(TAG, "[android] query.equalTo()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+      int limit = options.getInt("limit");
+
+      Query query;
+      Query ref_or_query = (Query) objects.get(targetId);
+      query = ref_or_query.limitToLast(limit);
+      objects.put(queryId, query);
 
       callbackContext.success();
     }
@@ -555,32 +917,243 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.off()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String listenerId = options.getString("listenerId");
+      String eventType = options.getString("eventType");
+
+
+      Query ref_or_query = (Query)objects.get(targetId);
+      if (listenerId != null && !listenerId.isEmpty()) {
+        ListenerHolder holder = listenerHolders.remove(listenerId);
+        if (holder.isValueEvent) {
+          ref_or_query.removeEventListener(holder.valueEventListener);
+        } else {
+          ref_or_query.removeEventListener(holder.childEventListener);
+        }
+      } else {
+        boolean skipEventTypeCheck = false;
+        if (eventType == null || eventType.isEmpty()) {
+          skipEventTypeCheck = true;
+        }
+        ArrayList<String> removedKeys = new ArrayList<>();
+        ListenerHolder holder;
+        for (String key: listenerHolders.keySet()) {
+          holder = listenerHolders.get(key);
+          if (!skipEventTypeCheck && !holder.eventType.equals(eventType)) {
+            continue;
+          }
+          if (holder.isValueEvent) {
+            ref_or_query.removeEventListener(holder.valueEventListener);
+          } else {
+            ref_or_query.removeEventListener(holder.childEventListener);
+          }
+          removedKeys.add(key);
+        }
+        Iterator<String> iterator = removedKeys.iterator();
+        String removedKey;
+        while (iterator.hasNext()) {
+          removedKey = iterator.next();
+          listenerHolders.remove(removedKey);
+        }
+      }
+
       callbackContext.success();
     }
   }
 
+  //---------------------------------------------------------------------------------
+  // Query.on
+  // https://firebase.google.com/docs/reference/js/firebase.database.Query#on
+  //---------------------------------------------------------------------------------
   private class query_on implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.on()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String eventType = options.getString("eventType");
+      final String listenerId = options.getString("listenerId");
+
+
+      Query ref_or_query = (Query) objects.get(targetId);
+      if (eventType.equals("value")) {
+        ValueEventListener valueEventListener = new ValueEventListener() {
+          @Override
+          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+            try {
+              JSONObject snapshotValues = new JSONObject();
+              snapshotValues.put("key", dataSnapshot.getKey());
+              snapshotValues.put("exists", dataSnapshot.exists());
+              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+              snapshotValues.put("getPriority", dataSnapshot.getPriority());
+              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+              snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', '%s', '%s');",
+                      getServiceName(), listenerId, eventType,
+                      FirebasePluginUtil.serialize(snapshotValues)
+              ));
+
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+
+          }
+
+          @Override
+          public void onCancelled(@NonNull DatabaseError databaseError) {
+
+//            execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'cancelled');",
+//                    getServiceName(), listenerId
+//            ));
+
+          }
+        };
+
+        ListenerHolder holder = new ListenerHolder();
+        holder.valueEventListener = valueEventListener;
+        holder.eventType = eventType;
+        holder.isValueEvent = true;
+        listenerHolders.put(listenerId, holder);
+
+        ref_or_query.addValueEventListener(valueEventListener);
+      } else if (eventType.startsWith("child_")) {
+        ChildEventListener childEventListener = new ChildEventListener() {
+          @Override
+          public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String prevChildKey) {
+
+            try {
+              JSONObject snapshotValues = new JSONObject();
+              snapshotValues.put("key", dataSnapshot.getKey());
+              snapshotValues.put("exists", dataSnapshot.exists());
+              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+              snapshotValues.put("getPriority", dataSnapshot.getPriority());
+              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+              snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_added', '%s', '%s');",
+                      getServiceName(), listenerId,
+                      FirebasePluginUtil.serialize(snapshotValues), prevChildKey
+              ));
+
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+
+          }
+
+          @Override
+          public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String prevChildKey) {
+
+            try {
+              JSONObject snapshotValues = new JSONObject();
+              snapshotValues.put("key", dataSnapshot.getKey());
+              snapshotValues.put("exists", dataSnapshot.exists());
+              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+              snapshotValues.put("getPriority", dataSnapshot.getPriority());
+              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+              snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_changed', '%s', '%s');",
+                      getServiceName(), listenerId,
+                      FirebasePluginUtil.serialize(snapshotValues), prevChildKey
+              ));
+
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+
+          }
+
+          @Override
+          public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            try {
+              JSONObject snapshotValues = new JSONObject();
+              snapshotValues.put("key", dataSnapshot.getKey());
+              snapshotValues.put("exists", dataSnapshot.exists());
+              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+              snapshotValues.put("getPriority", dataSnapshot.getPriority());
+              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+              snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_removed', '%s');",
+                      getServiceName(), listenerId,
+                      FirebasePluginUtil.serialize(snapshotValues)
+              ));
+
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+
+          }
+
+          @Override
+          public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String prevChildKey) {
+
+            try {
+              JSONObject snapshotValues = new JSONObject();
+              snapshotValues.put("key", dataSnapshot.getKey());
+              snapshotValues.put("exists", dataSnapshot.exists());
+              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+              snapshotValues.put("getPriority", dataSnapshot.getPriority());
+              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+              snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_moved', '%s');",
+                      getServiceName(), listenerId,
+                      FirebasePluginUtil.serialize(snapshotValues)
+              ));
+
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+          }
+
+          @Override
+          public void onCancelled(@NonNull DatabaseError databaseError) {
+
+//            execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'cancelled');",
+//                    getServiceName(), listenerId
+//            ));
+          }
+        };
+        ref_or_query.addChildEventListener(childEventListener);
+
+        ListenerHolder holder = new ListenerHolder();
+        holder.childEventListener = childEventListener;
+        holder.eventType = eventType;
+        holder.isValueEvent = true;
+        listenerHolders.put(listenerId, holder);
+      }
+
       callbackContext.success();
     }
   }
 
-  private class query_once implements IActionHandler {
-
-    @Override
-    public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
-
-      callbackContext.success();
-    }
-  }
 
   private class query_orderByChild implements IActionHandler {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
+
+      Log.d(TAG, "[android] query.orderByChild()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+      String path = options.getString("path");
+
+      Query ref_or_query = (Query) objects.get(targetId);
+      Query query = ref_or_query.orderByChild(path);
+      objects.put(queryId, query);
 
       callbackContext.success();
     }
@@ -591,6 +1164,16 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.orderByKey()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+
+      Query ref_or_query = (Query) objects.get(targetId);
+      Query query = ref_or_query.orderByKey();
+      objects.put(queryId, query);
+
       callbackContext.success();
     }
   }
@@ -599,6 +1182,16 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
+
+      Log.d(TAG, "[android] query.orderByPriority()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+
+      Query ref_or_query = (Query) objects.get(targetId);
+      Query query = ref_or_query.orderByPriority();
+      objects.put(queryId, query);
 
       callbackContext.success();
     }
@@ -609,6 +1202,16 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+      Log.d(TAG, "[android] query.orderByValue()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+
+      Query ref_or_query = (Query) objects.get(targetId);
+      Query query = ref_or_query.orderByValue();
+      objects.put(queryId, query);
+
       callbackContext.success();
     }
   }
@@ -617,6 +1220,43 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
+
+      Log.d(TAG, "[android] query.startAt()");
+
+      JSONObject options = args.getJSONObject(0);
+      String targetId = options.getString("targetId");
+      String queryId = options.getString("queryId");
+      String key = options.getString("key");
+      String serializedValue = options.getString("value");
+      Object value = FirebasePluginUtil.deserialize(serializedValue);
+
+      Query query;
+      Query ref_or_query = (Query) objects.get(targetId);
+      if (key == null || key.isEmpty()) {
+        if (value == null || String.class.isInstance(value)) {
+          query = ref_or_query.startAt((String)value);
+        } else if (Number.class.isInstance(value)) {
+          query = ref_or_query.startAt((double)value);
+        } else if (Boolean.class.isInstance(value)) {
+          query = ref_or_query.startAt((boolean)value);
+        } else {
+          callbackContext.error("Value must be number, string, boolean, or null");
+          return;
+        }
+      } else {
+
+        if (value == null || String.class.isInstance(value)) {
+          query = ref_or_query.startAt((String)value, key);
+        } else if (Number.class.isInstance(value)) {
+          query = ref_or_query.startAt((double)value, key);
+        } else if (Boolean.class.isInstance(value)) {
+          query = ref_or_query.startAt((boolean)value, key);
+        } else {
+          callbackContext.error("Value must be number, string, boolean, or null");
+          return;
+        }
+      }
+      objects.put(queryId, query);
 
       callbackContext.success();
     }

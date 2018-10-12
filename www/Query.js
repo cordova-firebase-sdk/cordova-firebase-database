@@ -273,7 +273,8 @@ Query.prototype.off = function(eventType, callback) {
     eventType: eventType
   }]);
 
-  this._off(listenerId, callback);
+  var listeners = this._off(listenerId, callback);
+  console.log('listeners', listeners);
 
 };
 
@@ -297,45 +298,45 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
   eventType = eventType.toLowerCase();
   if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
     var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
-    if (typeof cancelCallbackOrContext === 'function') {
-      cancelCallbackOrContext.call(context_, new Error(error));
-    } else {
-      throw new Error(error);
-    }
-    return;
+    throw new Error(error);
   }
 
-  var listener = function(result, key) {
+  var listener = function(result) {
+    console.log(result);
 
-    var snapshot = new DataSnapshot(self, result);
+    var snapshot = new DataSnapshot(self, result.snapshot);
     if (typeof callback === 'function') {
       var args = [snapshot];
-      if (key) {
-        args.push(key);
+      if (result.key) {
+        args.push(result.key);
       }
       callback.apply(context_, args);
     }
+
   };
   var listenerId = self.id + '_' + eventType.toLowerCase() + Math.floor(Date.now() * Math.random());
   Object.defineProperty(listener, '_hashCode', {
     value: listenerId,
     enumerable: false
   });
+  Object.defineProperty(listener, '_cancelCallback', {
+    value: function() {
 
+    },
+    enumerable: false
+  });
+
+  console.log('--->on:' + listenerId);
 
   self._on(listenerId, function(params) {
     listener(params.values, params.key);
   });
 
   self._exec(null, function(error) {
-    if (typeof cancelCallbackOrContext === 'function') {
-      cancelCallbackOrContext.call(context_, new Error(error));
+    if (error instanceof Error) {
+      throw error;
     } else {
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error(error);
-      }
+      throw new Error(error);
     }
   }, self.pluginName, 'query_on', [{
     targetId: self.id,
@@ -362,37 +363,32 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
   } else if (arguments.length === 3) {
     context_ = failureCallbackOrContext;
   }
-
-  eventType = eventType || '';
-  eventType = eventType.toLowerCase();
-  if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
-    var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
-    if (typeof failureCallbackOrContext === 'function') {
-      failureCallbackOrContext.call(context_, new Error(error));
-    } else {
-      throw new Error(error);
-    }
-    return;
-  }
+  console.log('--->once');
 
   return new Promise(function(resolve, reject) {
-    self._exec(function(result) {
+    try {
+      var listener = self.on.call(self, eventType, function(snapshot, key) {
+        self.off(listener);
 
-      var snapshot = new DataSnapshot(self, result);
-      resolve.call(context_, snapshot);
-      if (typeof successCallback === 'function') {
-        successCallback.call(context_, snapshot);
-      }
+        var args = [snapshot];
+        if (key) {
+          args.push(key);
+        }
+        resolve.apply(context_, args);
+        if (typeof successCallback === 'function') {
+          successCallback.apply(context_, args);
+        }
+      }, function() {
+        console.log('cancelled');
+        // cancelled
+        self.off(listener);
+      });
+      console.log('--->once -> on');
 
-    }, function(error) {
-      reject.call(context_, error);
-      if (typeof failureCallbackOrContext === 'function') {
-        failureCallbackOrContext.call(context_, error);
-      }
-    }, self.pluginName, 'query_once', [{
-      'targetId': self.id,
-      'eventType': eventType
-    }]);
+    } catch(e) {
+      reject(e);
+    }
+
   });
 
 };
