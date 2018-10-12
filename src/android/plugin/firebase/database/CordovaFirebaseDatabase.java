@@ -75,7 +75,6 @@ public class CordovaFirebaseDatabase extends CordovaPlugin {
             JSONObject options = args.getJSONObject(0);
             String instanceId = options.getString("id");
             String appId = options.getString("appId");
-            String name = options.getString("name");
 
             // TODO: create app using options
             // FirebaseOptions.Builder builder = new FirebaseOptions.Builder();

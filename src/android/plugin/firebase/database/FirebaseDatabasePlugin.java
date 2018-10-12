@@ -57,14 +57,37 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
   }
 
 
-  //- (void)execJS: (NSString *)jsString;
-  //- (NSString *)serialize: (id)target error:(NSError **)error;
-  //- (id)deserialize: (NSString*)serializedStr error:(NSError **)error;
-  //
-
   @Override
   protected void pluginInitialize() {
     this.context = cordova.getContext();
+    handlers.put("database_goOffline", new database_goOffline());
+    handlers.put("database_goOnline", new database_goOnline());
+    handlers.put("database_ref", new database_ref());
+    handlers.put("onDisconnect_cancel", new onDisconnect_cancel());
+    handlers.put("onDisconnect_set", new onDisconnect_set());
+    handlers.put("onDisconnect_setWithPriority", new onDisconnect_setWithPriority());
+    handlers.put("onDisconnect_update", new onDisconnect_update());
+    handlers.put("reference_child", new reference_child());
+    handlers.put("reference_onDisconnect", new reference_onDisconnect());
+    handlers.put("reference_push", new reference_push());
+    handlers.put("reference_remove", new reference_remove());
+    handlers.put("reference_set", new reference_set());
+    handlers.put("reference_setPriority", new reference_setPriority());
+    handlers.put("reference_setWithPriority", new reference_setWithPriority());
+    handlers.put("reference_transaction", new reference_transaction());
+    handlers.put("reference_onTransactionCallback", new reference_onTransactionCallback());
+    handlers.put("reference_update", new reference_update());
+    handlers.put("query_endAt", new query_endAt());
+    handlers.put("query_equalTo", new query_equalTo());
+    handlers.put("query_limitToFirst", new query_limitToFirst());
+    handlers.put("query_limitToLast", new query_limitToLast());
+    handlers.put("query_off", new query_off());
+    handlers.put("query_on", new query_on());
+    handlers.put("query_orderByChild", new query_orderByChild());
+    handlers.put("query_orderByKey", new query_orderByKey());
+    handlers.put("query_orderByPriority", new query_orderByPriority());
+    handlers.put("query_orderByValue", new query_orderByValue());
+    handlers.put("query_startAt", new query_startAt());
   }
 
   @Override
@@ -83,8 +106,13 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     }
   }
 
-  private void execJS(String jsString) {
-    webView.loadUrl(jsString);
+  private void execJS(final String jsString) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        webView.loadUrl(jsString);
+      }
+    });
   }
 
 
@@ -518,12 +546,17 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       JSONObject options = args.getJSONObject(0);
       String targetId = options.getString("targetId");
-      String serializedValue = options.getString("value");
-      JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
+      String serializedValue = options.getString("data");
+      Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+      if (valueObj instanceof JSONObject) {
+        valueObj = FirebasePluginUtil.Json2Map((JSONObject)valueObj);
+      } else if (valueObj instanceof JSONArray) {
+        valueObj = FirebasePluginUtil.JsonArray2Map((JSONArray)valueObj);
+      }
 
       DatabaseReference ref = (DatabaseReference) objects.get(targetId);
 
-      ref.setValue(values, new DatabaseReference.CompletionListener() {
+      ref.setValue(valueObj, new DatabaseReference.CompletionListener() {
         @Override
         public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
 
@@ -587,8 +620,13 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
       Log.d(TAG, "[android] ref.setWithPriority()");
 
       String targetId = options.getString("targetId");
-      String serializedValue = options.getString("value");
-      final Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+      String serializedValue = options.getString("data");
+      Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+      if (valueObj instanceof JSONObject) {
+        valueObj = FirebasePluginUtil.Json2Map((JSONObject)valueObj);
+      } else if (valueObj instanceof JSONArray) {
+        valueObj = FirebasePluginUtil.JsonArray2Map((JSONArray)valueObj);
+      }
 
       String serializedProperty = options.getString("priority");
       final Object propertyObj = FirebasePluginUtil.deserialize(serializedProperty);
@@ -622,7 +660,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       Log.d(TAG, "[android] ref.transaction()");
 
-      boolean applyLocal = options.getBoolean("applyLocal");
+      boolean applyLocal = options.has("applyLocal") ? options.getBoolean("applyLocal") : true;
 
       final String eventName = options.getString("eventName");
       final String targetId = options.getString("targetId");
@@ -643,8 +681,8 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
           synchronized (semaphore) {
             execJS(String.format(
-                    "javascript:cordova.fireDocumentEvent('%s', ['%s'])",
-                    eventName, serializedValueStr));
+                "javascript:cordova.fireDocumentEvent('%s', ['%s'])",
+                eventName, serializedValueStr));
             try {
               semaphore.wait(10000);
             } catch (InterruptedException e) {
@@ -655,6 +693,12 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
           if (jsCallbackHolder.containsKey(targetId)) {
             String serializedValue = jsCallbackHolder.get(targetId);
             Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+            if (valueObj instanceof JSONObject) {
+              valueObj = FirebasePluginUtil.Json2Map((JSONObject)valueObj);
+            } else if (valueObj instanceof JSONArray) {
+              valueObj = FirebasePluginUtil.JsonArray2Map((JSONArray)valueObj);
+            }
+
             mutableData.setValue(valueObj);
             jsCallbackHolder.remove(targetId);
             return Transaction.success(mutableData);
@@ -728,7 +772,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       JSONObject options = args.getJSONObject(0);
       String targetId = options.getString("targetId");
-      String serializedValue = options.getString("value");
+      String serializedValue = options.getString("data");
       JSONObject values = (JSONObject)FirebasePluginUtil.deserialize(serializedValue);
       Map<String, Object> valuesMap = FirebasePluginUtil.Json2Map(values);
 
@@ -921,43 +965,21 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       JSONObject options = args.getJSONObject(0);
       String targetId = options.getString("targetId");
-      String listenerId = options.getString("listenerId");
-      String eventType = options.getString("eventType");
-
+      JSONArray listenerIdSet = options.getJSONArray("listenerIdSet");
 
       Query ref_or_query = (Query)objects.get(targetId);
-      if (listenerId != null && !listenerId.isEmpty()) {
-        ListenerHolder holder = listenerHolders.remove(listenerId);
+      String listenerId;
+      ListenerHolder holder;
+      for (int i = 0; i < listenerIdSet.length(); i++) {
+        listenerId = listenerIdSet.getString(i);
+        holder = listenerHolders.remove(listenerId);
+
         if (holder.isValueEvent) {
           ref_or_query.removeEventListener(holder.valueEventListener);
         } else {
           ref_or_query.removeEventListener(holder.childEventListener);
         }
-      } else {
-        boolean skipEventTypeCheck = false;
-        if (eventType == null || eventType.isEmpty()) {
-          skipEventTypeCheck = true;
-        }
-        ArrayList<String> removedKeys = new ArrayList<>();
-        ListenerHolder holder;
-        for (String key: listenerHolders.keySet()) {
-          holder = listenerHolders.get(key);
-          if (!skipEventTypeCheck && !holder.eventType.equals(eventType)) {
-            continue;
-          }
-          if (holder.isValueEvent) {
-            ref_or_query.removeEventListener(holder.valueEventListener);
-          } else {
-            ref_or_query.removeEventListener(holder.childEventListener);
-          }
-          removedKeys.add(key);
-        }
-        Iterator<String> iterator = removedKeys.iterator();
-        String removedKey;
-        while (iterator.hasNext()) {
-          removedKey = iterator.next();
-          listenerHolders.remove(removedKey);
-        }
+        holder = null;
       }
 
       callbackContext.success();
@@ -994,9 +1016,10 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
               snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
               snapshotValues.put("getPriority", dataSnapshot.getPriority());
               snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+
               snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
 
-              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', '%s', '%s');",
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', '%s', ['%s']);",
                       getServiceName(), listenerId, eventType,
                       FirebasePluginUtil.serialize(snapshotValues)
               ));
@@ -1010,9 +1033,6 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
           @Override
           public void onCancelled(@NonNull DatabaseError databaseError) {
 
-//            execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'cancelled');",
-//                    getServiceName(), listenerId
-//            ));
 
           }
         };
@@ -1038,7 +1058,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
               snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
               snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
 
-              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_added', '%s', '%s');",
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_added', '%s', ['%s']);",
                       getServiceName(), listenerId,
                       FirebasePluginUtil.serialize(snapshotValues), prevChildKey
               ));
@@ -1061,7 +1081,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
               snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
               snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
 
-              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_changed', '%s', '%s');",
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_changed', '%s', ['%s']);",
                       getServiceName(), listenerId,
                       FirebasePluginUtil.serialize(snapshotValues), prevChildKey
               ));
@@ -1084,7 +1104,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
               snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
               snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
 
-              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_removed', '%s');",
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_removed', ['%s']);",
                       getServiceName(), listenerId,
                       FirebasePluginUtil.serialize(snapshotValues)
               ));
@@ -1107,7 +1127,7 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
               snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
               snapshotValues.put("val", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
 
-              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_moved', '%s');",
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'child_moved', ['%s']);",
                       getServiceName(), listenerId,
                       FirebasePluginUtil.serialize(snapshotValues)
               ));
