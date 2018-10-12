@@ -664,82 +664,101 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
       final String eventName = options.getString("eventName");
       final String targetId = options.getString("targetId");
+      final String transactionId = options.getString("transactionId");
       DatabaseReference ref = (DatabaseReference) objects.get(targetId);
 
-      ref.runTransaction(new Transaction.Handler() {
-        @NonNull
+      // Read value from database to synchronize localDB with remoteDB
+      ref.addListenerForSingleValueEvent(new ValueEventListener() {
         @Override
-        public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-          String serializedValueStr = null;
-          try {
-            serializedValueStr = FirebasePluginUtil.serialize(mutableData.getValue());
-          } catch (JSONException e) {
-            e.printStackTrace();
-            return Transaction.abort();
-          }
+          // Then execute transaction.
+          ref.runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
 
-          synchronized (semaphore) {
-            execJS(String.format(
-                "javascript:cordova.fireDocumentEvent('%s', ['%s'])",
-                eventName, serializedValueStr));
-            try {
-              semaphore.wait(10000);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-              return Transaction.abort();
+              String serializedValueStr = null;
+              try {
+                serializedValueStr = FirebasePluginUtil.serialize(mutableData.getValue());
+              } catch (JSONException e) {
+                e.printStackTrace();
+                return Transaction.abort();
+              }
+
+              synchronized (semaphore) {
+                execJS(String.format(
+                    "javascript:cordova.fireDocumentEvent('%s', ['%s'])",
+                    eventName, serializedValueStr));
+                try {
+                  semaphore.wait(10000);
+                } catch (InterruptedException e) {
+                  e.printStackTrace();
+                  return Transaction.abort();
+                }
+              }
+              if (jsCallbackHolder.containsKey(transactionId)) {
+                String serializedValue = jsCallbackHolder.get(transactionId);
+                Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
+                try {
+                  if (valueObj instanceof JSONObject) {
+                    valueObj = FirebasePluginUtil.Json2Map((JSONObject) valueObj);
+                  } else if (valueObj instanceof JSONArray) {
+                    valueObj = FirebasePluginUtil.JsonArray2Map((JSONArray) valueObj);
+                  }
+                } catch (JSONException e) {
+                  e.printStackTrace();
+                  valueObj = valueObj + "";
+                }
+
+                mutableData.setValue(valueObj);
+                jsCallbackHolder.remove(targetId);
+                return Transaction.success(mutableData);
+              } else {
+                return Transaction.abort();
+              }
             }
-          }
-          if (jsCallbackHolder.containsKey(targetId)) {
-            String serializedValue = jsCallbackHolder.get(targetId);
-            Object valueObj = FirebasePluginUtil.deserialize(serializedValue);
-            if (valueObj instanceof JSONObject) {
-              valueObj = FirebasePluginUtil.Json2Map((JSONObject)valueObj);
-            } else if (valueObj instanceof JSONArray) {
-              valueObj = FirebasePluginUtil.JsonArray2Map((JSONArray)valueObj);
-            }
 
-            mutableData.setValue(valueObj);
-            jsCallbackHolder.remove(targetId);
-            return Transaction.success(mutableData);
-          } else {
-            return Transaction.abort();
-          }
+            @Override
+            public void onComplete(@Nullable DatabaseError databaseError, boolean committed, @Nullable DataSnapshot dataSnapshot) {
+
+              if (databaseError != null) {
+                Log.e(TAG, "ref.transaction() error\n" + databaseError.getDetails());
+                callbackContext.error(databaseError.getMessage());
+              } else {
+
+                try {
+
+                  JSONObject snapshotValues = new JSONObject();
+                  snapshotValues.put("key", dataSnapshot.getKey());
+                  snapshotValues.put("exists", dataSnapshot.exists());
+                  snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
+                  snapshotValues.put("getPriority", dataSnapshot.getPriority());
+                  snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
+                  snapshotValues.put("vl", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
+
+                  JSONObject result = new JSONObject();
+                  result.put("snapshot", snapshotValues);
+                  result.put("committed", committed);
+
+                  callbackContext.success(result);
+                } catch (JSONException e) {
+                  e.printStackTrace();
+                  callbackContext.error(e.getMessage());
+                }
+              }
+            }
+          }, applyLocal);
         }
 
         @Override
-        public void onComplete(@Nullable DatabaseError databaseError, boolean committed, @Nullable DataSnapshot dataSnapshot) {
+        public void onCancelled(@NonNull DatabaseError databaseError) {
 
-          if (databaseError != null) {
-            Log.e(TAG, "ref.transaction() error\n" + databaseError.getDetails());
-            callbackContext.error(databaseError.getMessage());
-          } else {
-
-            try {
-
-              JSONObject snapshotValues = new JSONObject();
-              snapshotValues.put("key", dataSnapshot.getKey());
-              snapshotValues.put("exists", dataSnapshot.exists());
-              snapshotValues.put("exportVal", FirebasePluginUtil.serialize(dataSnapshot.getValue(true)));
-              snapshotValues.put("getPriority", dataSnapshot.getPriority());
-              snapshotValues.put("numChildren", dataSnapshot.getChildrenCount());
-              snapshotValues.put("vl", FirebasePluginUtil.serialize(dataSnapshot.getValue(false)));
-
-              JSONObject result = new JSONObject();
-              result.put("snapshot", snapshotValues);
-              result.put("committed", committed);
-
-              callbackContext.success(result);
-            } catch (JSONException e) {
-              e.printStackTrace();
-              callbackContext.error(e.getMessage());
-            }
-          }
+          callbackContext.error(databaseError.getMessage());
         }
-      }, applyLocal);
+      });
 
 
-      callbackContext.success();
     }
   }
 
@@ -748,10 +767,13 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
 
     @Override
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
-      String refId = args.getString(0);
+      String transactionId = args.getString(0);
       String valueStr = args.getString(1);
+      Log.d(TAG, "--->transactionId " +transactionId);
+      synchronized (jsCallbackHolder) {
+        jsCallbackHolder.put(transactionId, valueStr);
+      }
       synchronized (semaphore) {
-        jsCallbackHolder.put(refId, valueStr);
         semaphore.notify();
       }
       callbackContext.success();

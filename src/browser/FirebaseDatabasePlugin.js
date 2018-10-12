@@ -234,7 +234,7 @@ FirebaseDatabasePlugin.prototype.reference_remove = function(onSuccess, onError,
 
   var ref = this._get(options.targetId);
   ref.remove().then(function() {
-    self.delete(options.targetId);
+    self._delete(options.targetId);
     onSuccess();
   }).catch(onError);
 };
@@ -459,7 +459,7 @@ FirebaseDatabasePlugin.prototype.query_off = function(onSuccess, onError, args) 
 
   options.listenerIdSet.forEach(function(listenerId) {
     referenceOrQuery.off(options.eventType, self._get(listenerId));
-    self.delete(listenerId);
+    self._delete(listenerId);
   });
 
 };

@@ -109,6 +109,11 @@ public class CordovaFirebaseDatabase extends CordovaPlugin {
                 // just in case
                 database = FirebaseDatabase.getInstance();
             }
+            try {
+              database.setPersistenceEnabled(true);
+            } catch (Exception e) {
+              // ignore
+            }
 
 
 
