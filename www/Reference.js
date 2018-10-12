@@ -253,16 +253,20 @@ Reference.prototype.setWithPriority = function(newVal, newPriority, onComplete) 
 //---------------------------------------------------------------------------------
 Reference.prototype.transaction = function(transactionUpdate, onComplete, applyLocally) {
   var self = this;
-  var transactionId = Math.floor(Date.now() * Math.random());
-  var eventName = self.pluginName + '-' + self.id + '-' + transactionId + '-transaction';
+  var transactionId = Math.floor(Date.now() * Math.random()) + '_transaction';
+  var eventName = self.pluginName + '-' + self.id + '-' + transactionId;
 
-  var onNativeCallback = function(args) {
-    var newValue = transactionUpdate.call(self, JSON.parse(LZString.decompressFromBase64(args[0])));
-    cordova_exec(null, null, self.pluginName, 'reference_onTransactionCallback', [transactionId, LZString.compressToBase64(JSON.stringify(newValue))]);
-  };
-  document.addEventListener(eventName, onNativeCallback, {
-    once: true
-  });
+  if (cordova.platformId === "browser") {
+    self._set(transactionId, transactionUpdate);
+  } else {
+    var onNativeCallback = function(args) {
+      var newValue = transactionUpdate.call(self, JSON.parse(LZString.decompressFromBase64(args[0])));
+      cordova_exec(null, null, self.pluginName, 'reference_onTransactionCallback', [transactionId, LZString.compressToBase64(JSON.stringify(newValue))]);
+    };
+    document.addEventListener(eventName, onNativeCallback, {
+      once: true
+    });
+  }
 
 
   return new Promise(function(resolve, reject) {
@@ -277,6 +281,8 @@ Reference.prototype.transaction = function(transactionUpdate, onComplete, applyL
         onComplete.call(self, error);
       }
     }, self.pluginName, 'reference_transaction', [{
+      pluginName: self.pluginName,
+      hashCode: self.hashCode,
       targetId: self.id,
       eventName: eventName,
       transactionId: transactionId,

@@ -77,7 +77,7 @@ FirebaseDatabasePlugin.prototype.database_ref = function(onSuccess, onError, arg
   //console.log('[broswer] database.ref()', options);
 
   var ref = this.database.ref(options.path);
-  this.set(options.id, ref);
+  this._set(options.id, ref);
   onSuccess();
 };
 
@@ -95,7 +95,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_cancel = function(onSuccess, onErr
   var options = args[0];
   //console.log('[broswer] onDisconnect.cancel()', options);
 
-  var onDisconnect = this.get(options.targetId);
+  var onDisconnect = this._get(options.targetId);
   onDisconnect.cancel().then(onSuccess).catch(onError);
 };
 
@@ -109,7 +109,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_remove = function(onSuccess, onErr
   var options = args[0];
   //console.log('[broswer] onDisconnect.remove()', options);
 
-  var onDisconnect = this.get(options.targetId);
+  var onDisconnect = this._get(options.targetId);
   onDisconnect.remove().then(onSuccess).catch(onError);
 };
 
@@ -123,7 +123,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_set = function(onSuccess, onError,
   var options = args[0];
   //console.log('[broswer] onDisconnect.set()', options);
 
-  var onDisconnect = this.get(options.targetId);
+  var onDisconnect = this._get(options.targetId);
   onDisconnect.set(JSON.parse(LZString.decompressFromBase64(options.value))).then(onSuccess).catch(onError);
 };
 
@@ -138,7 +138,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_setWithPriority = function(onSucce
   var options = args[0];
   //console.log('[broswer] onDisconnect.setWithPriority()', options);
 
-  var onDisconnect = this.get(options.targetId);
+  var onDisconnect = this._get(options.targetId);
   onDisconnect.setWithPriority(JSON.parse(LZString.decompressFromBase64(options.value)), options.priority).then(onSuccess).catch(onError);
 };
 
@@ -152,7 +152,7 @@ FirebaseDatabasePlugin.prototype.onDisconnect_update = function(onSuccess, onErr
   var options = args[0];
   //console.log('[broswer] onDisconnect.update()', options);
 
-  var onDisconnect = this.get(options.targetId);
+  var onDisconnect = this._get(options.targetId);
   onDisconnect.update(JSON.parse(LZString.decompressFromBase64(options.values))).then(onSuccess).catch(onError);
 };
 
@@ -170,9 +170,9 @@ FirebaseDatabasePlugin.prototype.reference_child = function(onSuccess, onError, 
   var options = args[0];
   //console.log('[broswer] reference.child()', options);
 
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   var childRef = ref.child(options.path);
-  this.set(options.childId, childRef);
+  this._set(options.childId, childRef);
   onSuccess({
     key: childRef.key,
     url: childRef.toString()
@@ -189,9 +189,9 @@ FirebaseDatabasePlugin.prototype.reference_onDisconnect = function(onSuccess, on
   var options = args[0];
   //console.log('[broswer] reference.onDisconnect()', options);
 
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   var onDisconnect = ref.onDisconnect();
-  this.set(options.onDisconnectId, onDisconnect);
+  this._set(options.onDisconnectId, onDisconnect);
   onSuccess();
 };
 
@@ -205,14 +205,14 @@ FirebaseDatabasePlugin.prototype.reference_push = function(onSuccess, onError, a
   var options = args[0];
   //console.log('[broswer] reference.push()', options);
 
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   var thenableRef;
   if (options.value) {
     thenableRef = ref.push(JSON.parse(LZString.decompressFromBase64(options.value)));
   } else {
     thenableRef = ref.push();
   }
-  this.set(options.newId, thenableRef);
+  this._set(options.newId, thenableRef);
   thenableRef.then(function() {
     onSuccess({
       key: thenableRef.key,
@@ -232,7 +232,7 @@ FirebaseDatabasePlugin.prototype.reference_remove = function(onSuccess, onError,
     self = this;
   //console.log('[broswer] reference.remove()', options);
 
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   ref.remove().then(function() {
     self.delete(options.targetId);
     onSuccess();
@@ -248,7 +248,7 @@ FirebaseDatabasePlugin.prototype.reference_remove = function(onSuccess, onError,
 FirebaseDatabasePlugin.prototype.reference_set = function(onSuccess, onError, args) {
   var options = args[0];
   //console.log('[broswer] reference.set()', options);
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   ref.set(JSON.parse(LZString.decompressFromBase64(options.data)))
       .then(onSuccess).catch(onError);
 };
@@ -262,7 +262,7 @@ FirebaseDatabasePlugin.prototype.reference_set = function(onSuccess, onError, ar
 FirebaseDatabasePlugin.prototype.reference_setPriority = function(onSuccess, onError, args) {
   var options = args[0];
   //console.log('[broswer] reference.setPriority()', options);
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   ref.setPriority(JSON.parse(LZString.decompressFromBase64(options.priority)))
     .then(onSuccess)
     .catch(onError);
@@ -277,7 +277,7 @@ FirebaseDatabasePlugin.prototype.reference_setPriority = function(onSuccess, onE
 FirebaseDatabasePlugin.prototype.reference_setWithPriority = function(onSuccess, onError, args) {
   var options = args[0];
   //console.log('[broswer] reference.setWithPriority()', options);
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   ref.setWithPriority(JSON.parse(LZString.decompressFromBase64(options.data)), JSON.parse(LZString.decompressFromBase64(options.priority)))
     .then(onSuccess)
     .catch(onError);
@@ -293,54 +293,51 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
   var options = args[0],
     self = this;
   //console.log('[broswer] reference.transaction()', options);
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
 
   // Note: Because your update function is called multiple times, it must be able to handle null data.
   // Even if there is existing data in your remote database, it may not be locally cached when the transaction function is run, resulting in null for the initial value.
-  (new Promise(function(resolve) {
+  (new Promise(function(resolve, reject) {
     ref.once('value')
     .then(function(value) {
+      var jsDbInstance = window.plugin.firebase.database._DBs[options.pluginName];
+      if (jsDbInstance) {
+        var jsRefInstance = jsDbInstance._get(options.hashCode);
+        if (jsRefInstance) {
+          var transactionUpdate = jsRefInstance._get(options.transactionId);
+          if (transactionUpdate) {
+            ref.transaction(transactionUpdate, function(error, committed, snapshot) {
+              if (error) {
+                reject(error);
+                return;
+              }
 
-      return ref.transaction(function(currentValue) {
-        currentValue = currentValue || value;
+              resolve({
+                committed: committed,
+                snapshot: {
+                  key: snapshot.key,
+                  exists: snapshot.exists(),
+                  exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
+                  getPriority: snapshot.getPriority(),
+                  numChildren: snapshot.numChildren(),
+                  val: LZString.compressToBase64(JSON.stringify(snapshot.val()))
+                }
+              });
 
-        self._one(options.transactionId + '_callback', function(newValue) {
-          resolve(JSON.parse(LZString.decompressFromBase64(newValue)));
-        });
-        cordova.fireDocumentEvent(options.eventName, [LZString.compressToBase64(JSON.stringify(currentValue))]);
-
-        return;
-      }).then(function() {
-        // ignore
-      }).catch(function() {
-        // ignore
-      });
+            }, options.applyLocally === false ? false : true);
+          } else {
+            reject(new Error('can not find matched transactionUpdate with ' + transactionId));
+          }
+        } else {
+          reject(new Error('can not find matched reference instance with ' + options.hashCode));
+        }
+      } else {
+        reject(new Error('can not find matched database instance with ' + options.pluginName));
+      }
     });
   }))
-  .then(function(newValues) {
-    ref.transaction(function() {
-      return newValues;
-    },
-    function(error, committed, snapshot) {
-      if (error) {
-        onError(error);
-        return;
-      }
-
-      onSuccess({
-        committed: committed,
-        snapshot: {
-          key: snapshot.key,
-          exists: snapshot.exists(),
-          exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-          getPriority: snapshot.getPriority(),
-          numChildren: snapshot.numChildren(),
-          val: LZString.compressToBase64(JSON.stringify(snapshot.val()))
-        }
-      });
-
-    }, options.applyLocally === false ? false : true);
-  });
+  .then(onSuccess)
+  .catch(onError);
 };
 
 FirebaseDatabasePlugin.prototype.reference_onTransactionCallback = function(onSuccess, onError, args) {
@@ -362,7 +359,7 @@ FirebaseDatabasePlugin.prototype.reference_update = function(onSuccess, onError,
   var options = args[0];
   //console.log('[broswer] reference.update()', options);
 
-  var ref = this.get(options.targetId);
+  var ref = this._get(options.targetId);
   ref.update(JSON.parse(LZString.decompressFromBase64(options.data)))
       .then(onSuccess)
       .catch(onError);
@@ -389,9 +386,9 @@ FirebaseDatabasePlugin.prototype.query_endAt = function(onSuccess, onError, args
   var options = args[0];
   //console.log('[broswer] query.endAt()', options);
 
-  var ref = this.get(options.refId);
+  var ref = this._get(options.refId);
   var query = ref.endAt(JSON.parse(LZString.decompressFromBase64(options.value)), options.key);
-  this.set(options.queryId, query);
+  this._set(options.queryId, query);
 
   onSuccess();
 };
@@ -406,9 +403,9 @@ FirebaseDatabasePlugin.prototype.query_equalTo = function(onSuccess, onError, ar
   var options = args[0];
   //console.log('[broswer] query.equalTo()', options);
 
-  var ref = this.get(options.refId);
+  var ref = this._get(options.refId);
   var query = ref.equalTo(JSON.parse(LZString.decompressFromBase64(options.value)), options.key);
-  this.set(options.queryId, query);
+  this._set(options.queryId, query);
 
   onSuccess();
 };
@@ -423,9 +420,9 @@ FirebaseDatabasePlugin.prototype.query_limitToFirst = function(onSuccess, onErro
   var options = args[0];
   //console.log('[broswer] query.limitToFirst()', options);
 
-  var ref = this.get(options.refId);
+  var ref = this._get(options.refId);
   var query = ref.limitToFirst(options.limit);
-  this.set(options.queryId, query);
+  this._set(options.queryId, query);
 
   onSuccess();
 };
@@ -440,9 +437,9 @@ FirebaseDatabasePlugin.prototype.query_limitToLast = function(onSuccess, onError
   var options = args[0];
   //console.log('[broswer] query.limitToLast()', options);
 
-  var ref = this.get(options.refId);
+  var ref = this._get(options.refId);
   var query = ref.limitToLast(options.limit);
-  this.set(options.queryId, query);
+  this._set(options.queryId, query);
 
   onSuccess();
 };
@@ -458,10 +455,10 @@ FirebaseDatabasePlugin.prototype.query_off = function(onSuccess, onError, args) 
     options = args[0];
   //console.log('[broswer] query.off()', options);
 
-  var referenceOrQuery = self.get(options.targetId);
+  var referenceOrQuery = self._get(options.targetId);
 
   options.listenerIdSet.forEach(function(listenerId) {
-    referenceOrQuery.off(options.eventType, self.get(listenerId));
+    referenceOrQuery.off(options.eventType, self._get(listenerId));
     self.delete(listenerId);
   });
 
@@ -478,7 +475,7 @@ FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
     options = args[0];
   //console.log('[broswer] query.on()', options);
 
-  var referenceOrQuery = this.get(options.targetId);
+  var referenceOrQuery = this._get(options.targetId);
   var listener = referenceOrQuery.on(options.eventType, function(snapshot, prevChildKey) {
     var snapshotValues = {
       key: snapshot.key,
@@ -494,7 +491,7 @@ FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
 
   });
 
-  this.set(options.listenerId, listener);
+  this._set(options.listenerId, listener);
   //onSuccess();
 };
 
@@ -509,10 +506,10 @@ FirebaseDatabasePlugin.prototype.query_orderByChild = function(onSuccess, onErro
     options = args[0];
   //console.log('[broswer] query.orderByChild()', options);
 
-  var referenceOrQuery = this.get(options.targetId);
+  var referenceOrQuery = this._get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByChild(options.path);
-    self.set(options.queryId, newQuery);
+    self._set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -530,10 +527,10 @@ FirebaseDatabasePlugin.prototype.query_orderByKey = function(onSuccess, onError,
     options = args[0];
   //console.log('[broswer] query.orderByKey()', options);
 
-  var referenceOrQuery = this.get(options.targetId);
+  var referenceOrQuery = this._get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByKey();
-    self.set(options.queryId, newQuery);
+    self._set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -551,10 +548,10 @@ FirebaseDatabasePlugin.prototype.query_orderByPriority = function(onSuccess, onE
     options = args[0];
   //console.log('[broswer] query.orderByPriority()', options);
 
-  var referenceOrQuery = this.get(options.targetId);
+  var referenceOrQuery = this._get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByPriority();
-    self.set(options.queryId, newQuery);
+    self._set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -572,10 +569,10 @@ FirebaseDatabasePlugin.prototype.query_orderByValue = function(onSuccess, onErro
     options = args[0];
   //console.log('[broswer] query.orderByValue()', options);
 
-  var referenceOrQuery = this.get(options.targetId);
+  var referenceOrQuery = this._get(options.targetId);
   try {
     var newQuery = referenceOrQuery.orderByValue();
-    self.set(options.queryId, newQuery);
+    self._set(options.queryId, newQuery);
     onSuccess();
   } catch (e) {
     onError(e);
@@ -592,9 +589,9 @@ FirebaseDatabasePlugin.prototype.query_startAt = function(onSuccess, onError, ar
   var options = args[0];
   //console.log('[broswer] query.startAt()', options);
 
-  var ref = this.get(options.refId);
+  var ref = this._get(options.refId);
   var query = ref.startAt(JSON.parse(LZString.decompressFromBase64(options.value)), options.key);
-  this.set(options.queryId, query);
+  this._set(options.queryId, query);
 
   onSuccess();
 };

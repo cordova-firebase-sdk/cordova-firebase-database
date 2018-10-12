@@ -15,7 +15,7 @@ function Query(params) {
   var self = this,
     cmdQueue = new BaseArrayClass();
   BaseClass.apply(this);
-  window.plugin.firebase.database._DBs[params.pluginName].set(this.hashCode, this);
+  window.plugin.firebase.database._DBs[params.pluginName]._set(this.hashCode, this);
 
   Object.defineProperty(self, 'pluginName', {
     value: params.pluginName
