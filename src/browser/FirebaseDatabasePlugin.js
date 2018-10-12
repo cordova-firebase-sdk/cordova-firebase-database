@@ -459,14 +459,11 @@ FirebaseDatabasePlugin.prototype.query_off = function(onSuccess, onError, args) 
   //console.log('[broswer] query.off()', options);
 
   var referenceOrQuery = self.get(options.targetId);
-  var listener;
-  if (options.listenerId) {
-    listener = self.get(options.listenerId);
-  }
 
-  referenceOrQuery.off(options.eventType, listener);
-
-  self.delete(options.listenerId);
+  options.listenerIdSet.forEach(function(listenerId) {
+    referenceOrQuery.off(options.eventType, self.get(listenerId));
+    self.delete(listenerId);
+  });
 
 };
 
@@ -479,11 +476,11 @@ FirebaseDatabasePlugin.prototype.query_off = function(onSuccess, onError, args) 
 FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
   var self = this,
     options = args[0];
-  console.log('[broswer] query.on()', options);
+  //console.log('[broswer] query.on()', options);
 
   var referenceOrQuery = this.get(options.targetId);
-  var listener = referenceOrQuery.on(options.eventType, function(snapshot, key) {
-    var values = {
+  var listener = referenceOrQuery.on(options.eventType, function(snapshot, prevChildKey) {
+    var snapshotValues = {
       key: snapshot.key,
       exists: snapshot.exists(),
       exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
@@ -491,9 +488,9 @@ FirebaseDatabasePlugin.prototype.query_on = function(onSuccess, onError, args) {
       numChildren: snapshot.numChildren(),
       val: LZString.compressToBase64(JSON.stringify(snapshot.val()))
     };
-    var valuesStr = LZString.compressToBase64(JSON.stringify(values));
+    var snapshotStr = LZString.compressToBase64(JSON.stringify(snapshotValues));
 
-    window.plugin.firebase.database._nativeCallback(self.id, options.listenerId, options.eventType, valuesStr, key);
+    window.plugin.firebase.database._nativeCallback(self.id, options.listenerId, options.eventType, [snapshotStr, prevChildKey]);
 
   });
 

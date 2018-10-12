@@ -40,6 +40,11 @@ function Query(params) {
     writable: true
   });
 
+  Object.defineProperty(self, '_listeners', {
+    value: new BaseArrayClass(),
+    enumerable: false
+  });
+
   cmdQueue._on('insert_at', function() {
     if (!self._isReady) return;
 
@@ -253,28 +258,42 @@ Query.prototype.limitToLast = function(limit) {
 // Query.off
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#on
 //---------------------------------------------------------------------------------
-Query.prototype.off = function(eventType, callback) {
+Query.prototype.off = function(eventType, callback, context) {
   var self = this;
-
-  var listenerId;
-  if (callback) {
-    listenerId = callback._hashCode;
-    if (!listenerId) {
-      throw new Error('Specified callback is not registered.');
-    }
+  var context_ = this;
+  if (arguments.length === 3) {
+    context_ = context;
   }
+
+  var targetListeners = [];
+  if (arguments.length > 1 && typeof callback === 'function') {
+    targetListeners = self._listeners.filter(function(info) {
+      return info.callback === callback &&
+              info.eventType === eventType &&
+              info.context === context_;
+    });
+  }
+  if (arguments.length === 1) {
+    targetListeners = self._listeners.filter(function(info) {
+      return info.callback === callback;
+    });
+  }
+  if (arguments.length === 0) {
+    targetListeners = self._listeners;
+  }
+
+
 
 
   self._exec(null, function(error) {
     throw new Error(error);
   }, self.pluginName, 'query_off', [{
     targetId: self.id,
-    listenerId: listenerId,
+    listenerIdSet: targetListeners.map(function(info) {
+      return info.listenerId;
+    }),
     eventType: eventType
   }]);
-
-  var listeners = this._off(listenerId, callback);
-  console.log('listeners', listeners);
 
 };
 
@@ -301,35 +320,30 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
     throw new Error(error);
   }
 
-  var listener = function(snapshot, prevChildKey) {
+  var listenerId = self.id + '_' + eventType.toLowerCase() + Math.floor(Date.now() * Math.random());
+  self._listeners.push({
+    context: context_,
+    callback: callback,
+    eventType: eventType,
+    listenerId: listenerId
+  });
 
-    var snapshot = new DataSnapshot(self, snapshot);
-    if (typeof callback === 'function') {
-      var args = [snapshot];
-      if (prevChildKey) {
-        args.push(prevChildKey);
-      }
-      callback.apply(context_, args);
+  // Receive data from native side at once,
+  self._on(listenerId, function(params) {
+    var snapshotValues = JSON.parse(LZString.decompressFromBase64(params.args[0])),
+      prevChildKey = params.args[1];
+
+    var snapshot = new DataSnapshot(self, snapshotValues);
+    var args = [snapshot];
+    if (prevChildKey) {
+      args.push(prevChildKey);
     }
 
-  };
-  var listenerId = self.id + '_' + eventType.toLowerCase() + Math.floor(Date.now() * Math.random());
-  Object.defineProperty(listener, '_hashCode', {
-    value: listenerId,
-    enumerable: false
-  });
-  Object.defineProperty(listener, '_cancelCallback', {
-    value: function() {
-
-    },
-    enumerable: false
+    // Then trigger an event as eventType
+    callback.apply(context_, args);
   });
 
-  console.log('--->on:' + listenerId);
 
-  self._on(listenerId, function(params) {
-    listener(params.values, params.key);
-  });
 
   self._exec(null, function(error) {
     if (error instanceof Error) {
@@ -343,7 +357,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
     eventType: eventType
   }]);
 
-  return listener;
+  return callback;
 
 
 };
@@ -361,12 +375,13 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
     context_ = context;
   } else if (arguments.length === 3) {
     context_ = failureCallbackOrContext;
+    failureCallbackOrContext = null;
   }
 
   return new Promise(function(resolve, reject) {
     try {
       var listener = self.on.call(self, eventType, function(snapshot, key) {
-        self.off(listener);
+        self.off(eventType, listener);
 
         var args = [snapshot];
         if (key) {
@@ -376,12 +391,14 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
         if (typeof successCallback === 'function') {
           successCallback.apply(context_, args);
         }
-      }, function() {
-        console.log('cancelled');
+      }, function(e) {
         // cancelled
         self.off(listener);
+        reject(new Error(e));
+        if (typeof failureCallbackOrContext === 'function') {
+          failureCallbackOrContext.call(context_, new Error(e));
+        }
       });
-      console.log('--->once -> on');
 
     } catch(e) {
       reject(e);
