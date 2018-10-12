@@ -301,14 +301,13 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
     throw new Error(error);
   }
 
-  var listener = function(result) {
-    console.log(result);
+  var listener = function(snapshot, prevChildKey) {
 
-    var snapshot = new DataSnapshot(self, result.snapshot);
+    var snapshot = new DataSnapshot(self, snapshot);
     if (typeof callback === 'function') {
       var args = [snapshot];
-      if (result.key) {
-        args.push(result.key);
+      if (prevChildKey) {
+        args.push(prevChildKey);
       }
       callback.apply(context_, args);
     }
@@ -363,7 +362,6 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
   } else if (arguments.length === 3) {
     context_ = failureCallbackOrContext;
   }
-  console.log('--->once');
 
   return new Promise(function(resolve, reject) {
     try {
