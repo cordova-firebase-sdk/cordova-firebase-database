@@ -50,8 +50,7 @@ script:
       yes | sdkmanager "platforms;android-27" > /dev/null;
       yes | sdkmanager tools > /dev/null;
       yes | sdkmanager --licenses > /dev/null;
-      echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-27;googl
-e_apis;x86" --tag "google_apis";
+      echo no | ${ANDROID_HOME}/tools/bin/avdmanager -v create avd --force -n $EMULATOR_NAME -k 'system-images;android-27;google_apis;x86';
       android-wait-for-emulator;
       npm run paramedic_android;
     fi
