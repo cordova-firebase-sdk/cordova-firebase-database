@@ -52,8 +52,8 @@ before_install:
 
 before_script:
   - if [[ "$PLATFORM" =~ android ]]; then
-      echo no | avdmanager create avd --force --name test --abi google_apis/x86_64 --package 'system-images;android-$ANDROID_API_LEVEL;google_apis;x86_64';
-      yes | sdkmanager "platforms;android-27";
+      echo yes | sdkmanager "system-images;android-$ANDROID_API_LEVEL;google_apis;x86_64";
+      echo no | $ANDROID_HOME/tools/bin/avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
       yes | sdkmanager --licenses > /dev/null;
       $ANDROID_HOME/tools/emulator -avd test > /dev/null;
     fi
