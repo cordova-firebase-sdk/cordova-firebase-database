@@ -32,6 +32,7 @@ before_install:
     install ${TRAVIS_NODE_VERSION}
   - node --version
   - npm install -g cordova@${CORDOVA_VERSION}
+  - npm install -g cordova-paramedic
   - cordova --version
 
 
