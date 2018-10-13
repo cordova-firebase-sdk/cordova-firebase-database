@@ -43,7 +43,9 @@ install:
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
-      sdkmanager --licenses;
+      yes | sdkmanager "system-images;android-23;google_apis;x86" > /dev/null;
+      yes | sdkmanager tools > /dev/null;
+      yes | sdkmanager --licenses > /dev/null;
       echo no | avdmanager create avd --force --name testAVD --abi google_apis/x86_64 --package 'system-images;android-23;google_apis;x86_64';
       npm run paramedic_android;
     fi
