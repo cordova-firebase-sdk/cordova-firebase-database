@@ -52,9 +52,10 @@ before_install:
 
 before_script:
   - if [[ "$PLATFORM" =~ android ]]; then
+      yes | sdkmanager tools > /dev/null;
       echo yes | sdkmanager "system-images;android-$ANDROID_API_LEVEL;google_apis;x86_64";
-      echo no | ${ANDROID_SDK_ROOT}/tools/bin/avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
-      $ANDROID_SDK_ROOT/tools/emulator -avd test > /dev/null;
+      echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
+      ${ANDROID_HOME}/tools/emulator -avd test > /dev/null;
     fi
 
 
