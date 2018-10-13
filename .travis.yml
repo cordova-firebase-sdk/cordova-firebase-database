@@ -49,7 +49,8 @@ script:
       yes | sdkmanager "platforms;android-27" > /dev/null;
       yes | sdkmanager tools > /dev/null;
       yes | sdkmanager --licenses > /dev/null;
-      echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a;
-      emulator -avd test -no-audio -no-window & android-wait-for-emulator;
+      echo no | ${ANDROID_HOME}/tools/bin/avdmanager -v create avd --force -n $EMULATOR_NAME -k 'system-images;android-27;google_apis;x86'
+      ${ANDROID_HOME}/tools/emulator -avd $EMULATOR_NAME -skin 450x800 -no-audio -no-window -netspeed full -netdelay none &
+      android-wait-for-emulator;
       npm run paramedic_android;
     fi
