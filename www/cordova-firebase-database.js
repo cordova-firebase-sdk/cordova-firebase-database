@@ -4,7 +4,6 @@ var utils = require('cordova/utils'),
   BaseClass = require('cordova-firebase-core.BaseClass'),
   BaseArrayClass = require('cordova-firebase-core.BaseArrayClass'),
   ReferenceModule = require('./Reference'),
-  LZString = require('cordova-firebase-core.LZString'),
   common = require('cordova-firebase-core.Common'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
@@ -242,7 +241,7 @@ cordova.addConstructor(function() {
       enumerable: false
     });
     Object.defineProperty(window.plugin.firebase.database, '_nativeCallback', {
-      value: function(dbId, listenerId, eventType, values, key) {
+      value: function(dbId, listenerId, eventType, args) {
 
         var dbInstance = window.plugin.firebase.database._DBs[dbId];
 
@@ -250,8 +249,7 @@ cordova.addConstructor(function() {
           dbInstance._trigger('nativeEvent', {
             listenerId: listenerId,
             eventType: eventType,
-            values: JSON.parse(LZString.decompressFromBase64(values)),
-            key: key
+            args: args
           });
         }
       },

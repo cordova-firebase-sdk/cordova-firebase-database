@@ -10,7 +10,7 @@
   <js-module name="FirebaseDatabaseCommandQueue" src="www/firebase-database-command-queue.js" />
   <js-module name="OnDisconnect" src="www/OnDisconnect.js" />
 
-  <dependency id="cordova-firebase-core" url="https://github.com/cordova-firebase-sdk/cordova-firebase-core"/>
+  <dependency id="cordova-firebase-core" url="https://github.com/cordova-firebase-sdk/cordova-firebase-core#dev"/>
 
   <platform name="browser">
     <js-module name="CordovaFirebaseDatabase" src="src/browser/CordovaFirebaseDatabase.js">
@@ -29,8 +29,7 @@
 
     <config-file parent="/*" target="AndroidManifest.xml"/>
     <source-file src="src/android/plugin/firebase/database/CordovaFirebaseDatabase.java" target-dir="src/plugin/firebase/database/" />
-    <source-file src="src/android/plugin/firebase/database/IActionHandler.java" target-dir="src/plugin/firebase/database/" />
-    <source-file src="src/android/plugin/firebase/database/NewInstance.java" target-dir="src/plugin/firebase/database/" />
+    <source-file src="src/android/plugin/firebase/database/FirebaseDatabasePlugin.java" target-dir="src/plugin/firebase/database/" />
   </platform>
 
   <platform name="ios">

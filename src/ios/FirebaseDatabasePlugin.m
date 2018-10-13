@@ -14,7 +14,7 @@
   self.objects = [NSMutableDictionary dictionary];
   self.jsCallbackHolder = [NSMutableDictionary dictionary];
   self.pluginId = pluginId;
-  
+
 }
 
 - (void)execJS: (NSString *)jsString {
@@ -99,7 +99,7 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] database.ref() %@", options);
-  
+
   FIRDatabaseReference *ref;
   if ([options objectForKey:@"path"]) {
     ref = [self.database referenceWithPath:[options objectForKey:@"path"]];
@@ -126,12 +126,12 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] onDisconnect.cancel() %@", options);
-  
+
   NSString *onDisconnectId = [options objectForKey:@"targetId"];
   NSString *refId = [self.objects objectForKey:onDisconnectId];
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-    
+
     [ref cancelDisconnectOperationsWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
       if (error) {
@@ -156,12 +156,12 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] onDisconnect.remove() %@", options);
-  
+
   NSString *onDisconnectId = [options objectForKey:@"targetId"];
   NSString *refId = [self.objects objectForKey:onDisconnectId];
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-    
+
     [ref onDisconnectRemoveValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
       if (error) {
@@ -187,12 +187,12 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] onDisconnect.set() %@", options);
-  
+
   NSString *onDisconnectId = [options objectForKey:@"targetId"];
   NSString *refId = [self.objects objectForKey:onDisconnectId];
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-    
+
     id result = [self deserialize:[options objectForKey:@"value"]];
     [ref onDisconnectSetValue:result withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
@@ -219,15 +219,15 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] onDisconnect.setWithPriority() %@", options);
-  
+
   NSString *onDisconnectId = [options objectForKey:@"targetId"];
   NSString *refId = [self.objects objectForKey:onDisconnectId];
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-    
+
     id value = [self deserialize:[options objectForKey:@"value"]];
     id priority = [options objectForKey:@"priority"];
-    
+
     [ref onDisconnectSetValue:value andPriority:priority withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
       if (error) {
@@ -256,12 +256,12 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] onDisconnect.update() %@", options);
-  
+
   NSString *onDisconnectId = [options objectForKey:@"targetId"];
   NSString *refId = [self.objects objectForKey:onDisconnectId];
   if (refId) {
     FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-    
+
     id value = [self deserialize:[options objectForKey:@"values"]];
     [ref onDisconnectUpdateChildValues:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
       CDVPluginResult* pluginResult;
@@ -293,12 +293,12 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] Reference.child() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   NSString *path = [options objectForKey:@"path"];
   FIRDatabaseReference *childRef = [ref child:path];
-  
+
   NSString *childId = [options objectForKey:@"childId"];
   [self.objects setObject:childRef forKey:childId];
 
@@ -317,7 +317,7 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] Reference.onDisconnect() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   NSString *onDisconnectId = [options objectForKey:@"onDisconnectId"];
   [self.objects setObject:refId forKey:onDisconnectId];
@@ -336,14 +336,14 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.push() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
   FIRDatabaseReference *thenableRef = [ref childByAutoId];
-  
+
   NSString *newId = [options objectForKey:@"newId"];
   [self.objects setObject:thenableRef forKey:newId];
-  
+
   if ([options objectForKey:@"value"]) {
     id value = [self deserialize:[options objectForKey:@"value"]];
     [thenableRef setValue:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
@@ -371,17 +371,17 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.remove() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   [ref removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
     if (error) {
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
     } else {
       [self.objects removeObjectForKey:refId];
-      
+
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -398,10 +398,10 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.set() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   id value = [self deserialize:[options objectForKey:@"data"]];
   [ref setValue:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
@@ -409,7 +409,7 @@
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
     } else {
       [self.objects removeObjectForKey:refId];
-      
+
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -426,12 +426,12 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.setPriority() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   id priority = [options objectForKey:@"priority"];
-  
+
   [ref setPriority:priority withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
     if (error) {
@@ -451,13 +451,13 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.setWithPriority() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   id value = [self deserialize:[options objectForKey:@"data"]];
   id priority = [options objectForKey:@"priority"];
-  
+
   [ref setValue:value andPriority:priority withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
     if (error) {
@@ -478,21 +478,21 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.transaction() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   __block NSString *eventName = [options objectForKey:@"eventName"];
   __block NSString *transactionId = [options objectForKey:@"transactionId"];
   BOOL withLocalEvents = NO;
   if ([options objectForKey:@"applyLocally"]) {
     withLocalEvents = YES;
   }
-  
+
   [ref runTransactionBlock:^FIRTransactionResult * _Nonnull(FIRMutableData * _Nonnull currentData) {
     NSLog(@"--->currentData : %@", currentData);
     NSDictionary *currentValue = currentData.value;
-    
+
     // current value -> serialized json strings
     NSError *error;
     __block NSString *serializedStr = [self serialize: currentValue error:&error];
@@ -501,8 +501,8 @@
       [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
       return [FIRTransactionResult abort];
     }
-  
-    
+
+
     @synchronized (self.semaphore) {
       // Execute JS callback
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -514,59 +514,61 @@
         [self execJS:jsString];
 
       });
-    
+
       // wait the result
       dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, (uint64_t)(10 * NSEC_PER_SEC))); // Maximum wait 10sec
     }
-  
+
     // returned value -> currentData.value
     NSString *serializedValue = [self.jsCallbackHolder objectForKey:transactionId];
     currentData.value = [self deserialize: serializedValue];
-    
+
     if (serializedValue) {
       [self.jsCallbackHolder removeObjectForKey:transactionId];
       return [FIRTransactionResult successWithValue:currentData];
     } else {
       return [FIRTransactionResult abort];
     }
-      
+
   } andCompletionBlock:^(NSError * _Nullable error, BOOL committed, FIRDataSnapshot * _Nullable snapshot) {
-    
+
     CDVPluginResult* pluginResult;
     if (error) {
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-    } else if (!committed) {
-      // abort
-      pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     } else {
-    
+
+
       // Execute JS callback
       NSMutableDictionary *snapshotValues = [NSMutableDictionary dictionary];
       [snapshotValues setObject:snapshot.key forKey:@"key"];
-    
+
       // exportVal -> serialized json strings
       [snapshotValues setObject:[self serialize:[snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
 
       // value -> serialized json strings
       [snapshotValues setObject:[self serialize:[snapshot value] error:&error] forKey:@"val"];
 
-    
+
       [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
       [snapshotValues setObject:[NSNumber numberWithBool:snapshot.exists] forKey:@"exists"];
       [snapshotValues setObject:snapshot.priority forKey:@"getPriority"];
-    
-      pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:snapshotValues];
+
+      NSMutableDictionary *result = [NSMutableDictionary dictionary];
+      [result setObject:snapshotValues forKey:@"snapshot"];
+      [result setObject:[NSNumber numberWithBool:committed] forKey:@"committed"];
+
+      pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
     }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    
-    
+
+
   } withLocalEvents:withLocalEvents];
-  
+
 }
 
 - (void)reference_onTransactionCallback:(CDVInvokedUrlCommand*)command {
   NSString *transactionId = [command.arguments objectAtIndex:0];
-  
+
   @synchronized (self.jsCallbackHolder) {
     [self.jsCallbackHolder setObject:[NSString stringWithFormat:@"%@", [command.arguments objectAtIndex:1]] forKey:transactionId];
     dispatch_semaphore_signal(self.semaphore);
@@ -582,10 +584,10 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] reference.update() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   id value = [self deserialize:[options objectForKey:@"data"]];
   [ref updateChildValues:value withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
     CDVPluginResult* pluginResult;
@@ -593,7 +595,7 @@
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
     } else {
       [self.objects removeObjectForKey:refId];
-      
+
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -615,13 +617,13 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.endAt() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   NSString *key = [options objectForKey:@"key"];
-  
+
   NSString *valueStr = [options objectForKey:@"value"];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
@@ -634,7 +636,7 @@
     [self.objects setObject:query forKey:queryId];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   }
-  
+
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
 }
@@ -648,13 +650,13 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.equalTo() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   NSString *key = [options objectForKey:@"key"];
-  
+
   NSString *valueStr = [options objectForKey:@"value"];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;
@@ -680,16 +682,16 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.limitToFirst() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   NSInteger limit = (NSInteger)[[options objectForKey:@"limit"] intValue];
-  
+
   FIRDatabaseQuery *query = [ref queryLimitedToFirst:limit];
   [self.objects setObject:query forKey:queryId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -704,16 +706,16 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.limitToLast() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   NSInteger limit = (NSInteger)[[options objectForKey:@"limit"] intValue];
-  
+
   FIRDatabaseQuery *query = [ref queryLimitedToLast:limit];
   [self.objects setObject:query forKey:queryId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -727,10 +729,10 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.off() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *listenerId = [options objectForKey:@"listenerId"];
   NSString *eventType = [options objectForKey:@"eventType"];
   if (listenerId) {
@@ -738,9 +740,9 @@
     FIRDatabaseHandle handleId = [listenerNumber longValue];
     [ref removeObserverWithHandle:handleId];
     [self.objects removeObjectForKey:listenerId];
-  
+
   } else if (eventType) {
-  
+
     NSString *eventTypeStr = [options objectForKey:@"eventType"];
     FIRDataEventType eventType;
     if ([eventTypeStr isEqualToString:@"value"]) {
@@ -759,11 +761,11 @@
       return;
     }
     [ref removeObserverWithHandle:eventType];
-    
+
   } else {
     [ref removeAllObservers];
   }
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -778,10 +780,10 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.on() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *eventTypeStr = [options objectForKey:@"eventType"];
   FIRDataEventType eventType;
   if ([eventTypeStr isEqualToString:@"value"]) {
@@ -799,26 +801,26 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     return;
   }
-  
+
   FIRDatabaseHandle listener = [ref observeEventType:eventType withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
 
     // Execute JS callback
     [[NSOperationQueue mainQueue] addOperationWithBlock:^{
         NSMutableDictionary *snapshotValues = [NSMutableDictionary dictionary];
         [snapshotValues setObject:snapshot.key forKey:@"key"];
-      
+
         NSError *error;
-      
+
         // exportVal -> serialized json strings
         [snapshotValues setObject:[self serialize: [snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
-      
+
         // value -> serialized json strings
         [snapshotValues setObject:[self serialize: [snapshot value] error:&error] forKey:@"val"];
-      
+
         [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
         [snapshotValues setObject:[NSNumber numberWithBool:snapshot.exists] forKey:@"exists"];
         [snapshotValues setObject:snapshot.priority forKey:@"getPriority"];
-      
+
         // snapshotValues -> serialized json strings
         NSString* jsString = [NSString
                               stringWithFormat:@"javascript:window.plugin.firebase.database._nativeCallback('%@', '%@', '%@', '%@', '%@');",
@@ -830,10 +832,10 @@
 
     }];
   }];
-  
+
   NSString *listenerId = [options objectForKey:@"listenerId"];
   [self.objects setObject:[NSNumber numberWithLong:listener] forKey:listenerId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -849,10 +851,10 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.once() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *eventTypeStr = [options objectForKey:@"eventType"];
   FIRDataEventType eventType;
   if ([eventTypeStr isEqualToString:@"value"]) {
@@ -870,27 +872,27 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     return;
   }
-  
+
   [ref observeSingleEventOfType:eventType withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
 
     // Execute JS callback
     [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-    
+
       NSMutableDictionary *snapshotValues = [NSMutableDictionary dictionary];
       [snapshotValues setObject:snapshot.key forKey:@"key"];
-    
+
       NSError *error;
-    
+
       // exportVal -> serialized json strings
       [snapshotValues setObject:[self serialize: [snapshot valueInExportFormat] error:&error] forKey:@"exportVal"];
 
       // value -> serialized json strings
       [snapshotValues setObject:[self serialize: [snapshot value] error:&error] forKey:@"val"];
-    
+
       [snapshotValues setObject:[NSNumber numberWithInteger:snapshot.childrenCount] forKey:@"numChildren"];
       [snapshotValues setObject:[NSNumber numberWithBool:snapshot.exists] forKey:@"exists"];
       [snapshotValues setObject:snapshot.priority forKey:@"getPriority"];
-    
+
       CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:snapshotValues];
       [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -908,15 +910,15 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.orderByChild() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *path = [options objectForKey:@"path"];
   NSString *queryId = [options objectForKey:@"queryId"];
   FIRDatabaseQuery *query = [ref queryOrderedByChild:path];
   [self.objects setObject:query forKey:queryId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -931,14 +933,14 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.orderByKey() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   FIRDatabaseQuery *query = [ref queryOrderedByKey];
   [self.objects setObject:query forKey:queryId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -953,14 +955,14 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.orderByPriority() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   FIRDatabaseQuery *query = [ref queryOrderedByValue];
   [self.objects setObject:query forKey:queryId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -975,14 +977,14 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.orderByPriority() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   FIRDatabaseQuery *query = [ref queryOrderedByValue];
   [self.objects setObject:query forKey:queryId];
-  
+
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
@@ -996,13 +998,13 @@
 {
   NSDictionary *options = [command.arguments objectAtIndex:0];
   NSLog(@"---->[ios] query.startAt() %@", options);
-  
+
   NSString *refId = [options objectForKey:@"targetId"];
   FIRDatabaseReference *ref = [self.objects objectForKey:refId];
-  
+
   NSString *queryId = [options objectForKey:@"queryId"];
   NSString *key = [options objectForKey:@"key"];
-  
+
   NSString *valueStr = [options objectForKey:@"value"];
   NSData* jsonData = [valueStr dataUsingEncoding:NSUTF8StringEncoding];
   NSError *jsonError;

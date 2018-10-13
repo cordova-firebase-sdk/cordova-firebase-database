@@ -15,7 +15,7 @@ function Query(params) {
   var self = this,
     cmdQueue = new BaseArrayClass();
   BaseClass.apply(this);
-  window.plugin.firebase.database._DBs[params.pluginName].set(this.hashCode, this);
+  window.plugin.firebase.database._DBs[params.pluginName]._set(this.hashCode, this);
 
   Object.defineProperty(self, 'pluginName', {
     value: params.pluginName
@@ -38,6 +38,11 @@ function Query(params) {
   Object.defineProperty(self, 'url', {
     value: params.url,
     writable: true
+  });
+
+  Object.defineProperty(self, '_listeners', {
+    value: new BaseArrayClass(),
+    enumerable: false
   });
 
   cmdQueue._on('insert_at', function() {
@@ -253,27 +258,42 @@ Query.prototype.limitToLast = function(limit) {
 // Query.off
 // https://firebase.google.com/docs/reference/js/firebase.database.Query#on
 //---------------------------------------------------------------------------------
-Query.prototype.off = function(eventType, callback) {
+Query.prototype.off = function(eventType, callback, context) {
   var self = this;
-
-  var listenerId;
-  if (callback) {
-    listenerId = callback._hashCode;
-    if (!listenerId) {
-      throw new Error('Specified callback is not registered.');
-    }
+  var context_ = this;
+  if (arguments.length === 3) {
+    context_ = context;
   }
+
+  var targetListeners = [];
+  if (arguments.length > 1 && typeof callback === 'function') {
+    targetListeners = self._listeners.filter(function(info) {
+      return info.callback === callback &&
+              info.eventType === eventType &&
+              info.context === context_;
+    });
+  }
+  if (arguments.length === 1) {
+    targetListeners = self._listeners.filter(function(info) {
+      return info.callback === callback;
+    });
+  }
+  if (arguments.length === 0) {
+    targetListeners = self._listeners;
+  }
+
+
 
 
   self._exec(null, function(error) {
     throw new Error(error);
   }, self.pluginName, 'query_off', [{
     targetId: self.id,
-    listenerId: listenerId,
+    listenerIdSet: targetListeners.map(function(info) {
+      return info.listenerId;
+    }),
     eventType: eventType
   }]);
-
-  this._off(listenerId, callback);
 
 };
 
@@ -297,45 +317,44 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
   eventType = eventType.toLowerCase();
   if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
     var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
-    if (typeof cancelCallbackOrContext === 'function') {
-      cancelCallbackOrContext.call(context_, new Error(error));
-    } else {
-      throw new Error(error);
-    }
-    return;
+    throw new Error(error);
   }
 
-  var listener = function(result, key) {
+  var listenerId = self.id + '_' + eventType.toLowerCase() + Math.floor(Date.now() * Math.random());
+  self._listeners.push({
+    context: context_,
+    callback: callback,
+    eventType: eventType,
+    listenerId: listenerId
+  });
 
-    var snapshot = new DataSnapshot(self, result);
-    if (typeof callback === 'function') {
+  // Receive data from native side at once,
+  self._on(listenerId, function(params) {
+    if (params.eventType === 'cancelled') {
+      // permission error or something
+      throw new Error(LZString.decompressFromBase64(params.args[0]));
+    } else {
+      var snapshotValues = JSON.parse(LZString.decompressFromBase64(params.args[0])),
+        prevChildKey = params.args[1];
+
+      var snapshot = new DataSnapshot(self, snapshotValues);
       var args = [snapshot];
-      if (key) {
-        args.push(key);
+      if (prevChildKey) {
+        args.push(prevChildKey);
       }
+
+      // Then trigger an event as eventType
       callback.apply(context_, args);
     }
-  };
-  var listenerId = self.id + '_' + eventType.toLowerCase() + Math.floor(Date.now() * Math.random());
-  Object.defineProperty(listener, '_hashCode', {
-    value: listenerId,
-    enumerable: false
   });
 
 
-  self._on(listenerId, function(params) {
-    listener(params.values, params.key);
-  });
 
   self._exec(null, function(error) {
-    if (typeof cancelCallbackOrContext === 'function') {
-      cancelCallbackOrContext.call(context_, new Error(error));
+    if (error instanceof Error) {
+      throw error;
     } else {
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error(error);
-      }
+      throw new Error(error);
     }
   }, self.pluginName, 'query_on', [{
     targetId: self.id,
@@ -343,7 +362,7 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
     eventType: eventType
   }]);
 
-  return listener;
+  return callback;
 
 
 };
@@ -361,38 +380,35 @@ Query.prototype.once = function(eventType, successCallback, failureCallbackOrCon
     context_ = context;
   } else if (arguments.length === 3) {
     context_ = failureCallbackOrContext;
-  }
-
-  eventType = eventType || '';
-  eventType = eventType.toLowerCase();
-  if (['value','child_added', 'child_moved', 'child_removed', 'child_changed'].indexOf(eventType) === -1) {
-    var error = 'eventType must be one of \'value\',\'child_added\', \'child_moved\', \'child_removed\', or \'child_changed\'.';
-    if (typeof failureCallbackOrContext === 'function') {
-      failureCallbackOrContext.call(context_, new Error(error));
-    } else {
-      throw new Error(error);
-    }
-    return;
+    failureCallbackOrContext = null;
   }
 
   return new Promise(function(resolve, reject) {
-    self._exec(function(result) {
+    try {
+      var listener = self.on.call(self, eventType, function(snapshot, key) {
+        self.off(eventType, listener);
 
-      var snapshot = new DataSnapshot(self, result);
-      resolve.call(context_, snapshot);
-      if (typeof successCallback === 'function') {
-        successCallback.call(context_, snapshot);
-      }
+        var args = [snapshot];
+        if (key) {
+          args.push(key);
+        }
+        resolve.apply(context_, args);
+        if (typeof successCallback === 'function') {
+          successCallback.apply(context_, args);
+        }
+      }, function(e) {
+        // cancelled
+        self.off(listener);
+        reject(new Error(e));
+        if (typeof failureCallbackOrContext === 'function') {
+          failureCallbackOrContext.call(context_, new Error(e));
+        }
+      });
 
-    }, function(error) {
-      reject.call(context_, error);
-      if (typeof failureCallbackOrContext === 'function') {
-        failureCallbackOrContext.call(context_, error);
-      }
-    }, self.pluginName, 'query_once', [{
-      'targetId': self.id,
-      'eventType': eventType
-    }]);
+    } catch(e) {
+      reject(e);
+    }
+
   });
 
 };
