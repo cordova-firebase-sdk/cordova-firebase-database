@@ -26,7 +26,7 @@ matrix:
       - platform-tools
       - tools
       - build-tools-$ANDROID_BUILD_TOOLS_VERSION
-      - android-$ANDROID_API_LEVEL
+      # - android-$ANDROID_API_LEVEL
       - addon-google_apis-google-$ANDROID_API_LEVEL
       - extra-google-google_play_services
       - sys-img-armeabi-v7a-android-$ANDROID_API_LEVEL
@@ -52,11 +52,12 @@ before_install:
 
 before_script:
   #- if [[ "$PLATFORM" =~ android ]]; then
-  - mkdir -p ~/.android/avd > /dev/null 2>&1;
-  - yes | sdkmanager tools > /dev/null;
-  # echo yes | sdkmanager "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
-  - echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
-  - ${ANDROID_HOME}/tools/emulator -avd test > /dev/null;
+  - touch ~/.android/repositories.cfg > /dev/null 2>&1
+  - mkdir -p ~/.android/avd > /dev/null 2>&1
+  - yes | sdkmanager tools > /dev/null
+  - echo yes | sdkmanager "system-images;android-28;google_apis;x86"
+  - echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-28;google_apis;x86"
+  - ${ANDROID_HOME}/tools/emulator -avd test > /dev/null
   #  fi
 
 
