@@ -33,19 +33,23 @@ before_install:
     && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
     install ${TRAVIS_NODE_VERSION}
   - node --version
-  - npm install -g cordova@${CORDOVA_VERSION}
-  - npm install -g cordova-paramedic
+  - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
+  - npm install -g cordova-paramedic > /dev/null
   - cordova --version
-  - yes | sdkmanager "platforms;android-27"
 
 
 
 install:
-  - npm cache clean
-  - npm install
+  - npm cache clean > /dev/null
+  - npm install > /dev/null
 
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
+      yes | sdkmanager "platforms;android-27" > /dev/null;
+      yes | sdkmanager tools > /dev/null;
+      yes | sdkmanager --licenses > /dev/null;
+      echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a;
+      emulator -avd test -no-audio -no-window & android-wait-for-emulator;
       npm run paramedic_android;
     fi
