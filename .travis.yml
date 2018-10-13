@@ -47,10 +47,10 @@ install:
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
-      yes | sdkmanager "platforms;android-27" > /dev/null;
+      yes | sdkmanager "system-images;android-27;google_apis;x86" > /dev/null;
       yes | sdkmanager tools > /dev/null;
       yes | sdkmanager --licenses > /dev/null;
-      echo no | ${ANDROID_HOME}/tools/bin/avdmanager -v create avd --force -n $EMULATOR_NAME -k 'system-images;android-27;google_apis;x86';
+      avdmanager create avd -n test -k "system-images;android-27;google_apis;x86" -b x86 -c 100M -d 7 -f;
       android-wait-for-emulator;
       npm run paramedic_android;
     fi
