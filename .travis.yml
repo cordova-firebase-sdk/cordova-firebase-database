@@ -26,6 +26,7 @@ matrix:
       components:
       - tools
       - build-tools-26.0.2
+      - platform-tools
 
 before_install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
