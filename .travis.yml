@@ -29,7 +29,7 @@ matrix:
       # - android-$ANDROID_API_LEVEL
       - addon-google_apis-google-$ANDROID_API_LEVEL
       - extra-google-google_play_services
-      - sys-img-armeabi-v7a-android-$ANDROID_API_LEVEL
+      # - sys-img-armeabi-v7a-android-$ANDROID_API_LEVEL
     licenses:
       - 'android-sdk-preview-license-52d11cd2'
       - 'android-sdk-license-.+'
@@ -55,9 +55,9 @@ before_script:
   - touch ~/.android/repositories.cfg > /dev/null 2>&1
   - mkdir -p ~/.android/avd > /dev/null 2>&1
   - yes | sdkmanager tools > /dev/null
-  - echo yes | sdkmanager "system-images;android-28;google_apis;x86"
-  - echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-28;google_apis;x86"
-  - ${ANDROID_HOME}/emulator/emulator -avd test > /dev/null
+  - echo yes | sdkmanager "system-images;android-28;google_apis;x86_64"
+  - echo no | avdmanager create avd --force --name test --abi google_apis/x86_64 --package "system-images;android-28;google_apis;x86_64"
+  - ${ANDROID_HOME}/emulator/emulator -avd test
   #  fi
 
 
