@@ -36,7 +36,6 @@ before_install:
   - npm install -g cordova@${CORDOVA_VERSION}
   - npm install -g cordova-paramedic
   - cordova --version
-  - chmod +x gradlew
   - yes | sdkmanager "platforms;android-27"
 
 
