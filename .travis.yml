@@ -51,13 +51,13 @@ before_install:
   - cordova --version
 
 before_script:
-  - if [[ "$PLATFORM" =~ android ]]; then
-      mkdir -p ~/.android/avd > /dev/null 2>&1;
-      yes | sdkmanager tools > /dev/null;
-      echo yes | sdkmanager "system-images;android-$ANDROID_API_LEVEL;google_apis;x86_64";
-      echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
-      ${ANDROID_HOME}/tools/emulator -avd test > /dev/null;
-    fi
+  #- if [[ "$PLATFORM" =~ android ]]; then
+  - mkdir -p ~/.android/avd > /dev/null 2>&1;
+  - yes | sdkmanager tools > /dev/null;
+  # echo yes | sdkmanager "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
+  - echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-$ANDROID_API_LEVEL;google_apis;x86";
+  - ${ANDROID_HOME}/tools/emulator -avd test > /dev/null;
+  #  fi
 
 
 install:
