@@ -36,5 +36,6 @@ install:
 
 script:
   - npm test
-
-
+  - if [[ "$PLATFORM" =~ android ]]; then
+      npm run paramedic_android
+    fi
