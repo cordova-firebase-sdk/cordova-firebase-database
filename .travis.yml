@@ -3,6 +3,7 @@ sudo: false
 env:
   global:
   - TRAVIS_NODE_VERSION="5.5"
+  - EMULATOR_NAME="testdevice"
 
 notifications:
   email: false
