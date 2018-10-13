@@ -3,7 +3,7 @@ sudo: false
 env:
   global:
   - TRAVIS_NODE_VERSION="5.5"
-  - EMULATOR_NAME="Nexus5_API24"
+  - EMULATOR_NAME="Nexus5_API27"
 
 notifications:
   email: false
@@ -50,9 +50,8 @@ script:
       yes | sdkmanager "platforms;android-27" > /dev/null;
       yes | sdkmanager tools > /dev/null;
       yes | sdkmanager --licenses > /dev/null;
-      echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -n Nexus5_API24 -k "system-images;android-27;googl
-e_apis;x86" --tag "google_apis"
-      ${ANDROID_HOME}/tools/emulator -avd $EMULATOR_NAME -skin 450x800 -no-audio -no-window -netspeed full -netdelay none &
+      echo no | ${ANDROID_HOME}/tools/bin/avdmanager create avd -n $EMULATOR_NAME -k "system-images;android-27;googl
+e_apis;x86" --tag "google_apis";
       android-wait-for-emulator;
       npm run paramedic_android;
     fi
