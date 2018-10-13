@@ -256,7 +256,7 @@ Reference.prototype.transaction = function(transactionUpdate, onComplete, applyL
   var transactionId = Math.floor(Date.now() * Math.random()) + '_transaction';
   var eventName = self.pluginName + '-' + self.id + '-' + transactionId;
 
-  if (cordova.platformId === "browser") {
+  if (cordova.platformId === 'browser') {
     self._set(transactionId, transactionUpdate);
   } else {
     var onNativeCallback = function(args) {

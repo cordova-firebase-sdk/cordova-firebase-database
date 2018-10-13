@@ -27,7 +27,7 @@ CordovaFirebaseDatabase.prototype.newInstance = function(resolve, reject, args) 
 
     // Create a database instance
     //console.log('--->[browser] CordovaFirebaseDatabase.newInstance() : ' + options.id);
-    var appPlugin = window.plugin.firebase.app._APPs[options.appId];
+    //var appPlugin = window.plugin.firebase.app._APPs[options.appId];
 
     var database = firebase.database(require('cordova/exec/proxy').get(options.appId, '_getInstance')());
 

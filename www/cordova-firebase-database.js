@@ -4,7 +4,6 @@ var utils = require('cordova/utils'),
   BaseClass = require('cordova-firebase-core.BaseClass'),
   BaseArrayClass = require('cordova-firebase-core.BaseArrayClass'),
   ReferenceModule = require('./Reference'),
-  LZString = require('cordova-firebase-core.LZString'),
   common = require('cordova-firebase-core.Common'),
   execCmd = require('./FirebaseDatabaseCommandQueue');
 
