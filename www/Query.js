@@ -330,17 +330,22 @@ Query.prototype.on = function(eventType, callback, cancelCallbackOrContext, cont
 
   // Receive data from native side at once,
   self._on(listenerId, function(params) {
-    var snapshotValues = JSON.parse(LZString.decompressFromBase64(params.args[0])),
-      prevChildKey = params.args[1];
+    if (params.eventType === 'cancelled') {
+      // permission error or something
+      throw new Error(LZString.decompressFromBase64(params.args[0]));
+    } else {
+      var snapshotValues = JSON.parse(LZString.decompressFromBase64(params.args[0])),
+        prevChildKey = params.args[1];
 
-    var snapshot = new DataSnapshot(self, snapshotValues);
-    var args = [snapshot];
-    if (prevChildKey) {
-      args.push(prevChildKey);
+      var snapshot = new DataSnapshot(self, snapshotValues);
+      var args = [snapshot];
+      if (prevChildKey) {
+        args.push(prevChildKey);
+      }
+
+      // Then trigger an event as eventType
+      callback.apply(context_, args);
     }
-
-    // Then trigger an event as eventType
-    callback.apply(context_, args);
   });
 
 

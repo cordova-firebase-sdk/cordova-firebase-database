@@ -769,7 +769,6 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
     public void handle(JSONArray args, CallbackContext callbackContext) throws JSONException {
       String transactionId = args.getString(0);
       String valueStr = args.getString(1);
-      Log.d(TAG, "--->transactionId " +transactionId);
       synchronized (jsCallbackHolder) {
         jsCallbackHolder.put(transactionId, valueStr);
       }
@@ -995,6 +994,9 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
       for (int i = 0; i < listenerIdSet.length(); i++) {
         listenerId = listenerIdSet.getString(i);
         holder = listenerHolders.remove(listenerId);
+        if (holder == null) {
+          continue;
+        }
 
         if (holder.isValueEvent) {
           ref_or_query.removeEventListener(holder.valueEventListener);
@@ -1055,6 +1057,13 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
           @Override
           public void onCancelled(@NonNull DatabaseError databaseError) {
 
+            try {
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'cancelled', ['%s']);",
+                  getServiceName(), listenerId, FirebasePluginUtil.serialize(databaseError.getMessage())
+              ));
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
 
           }
         };
@@ -1162,9 +1171,14 @@ public class FirebaseDatabasePlugin extends CordovaPlugin {
           @Override
           public void onCancelled(@NonNull DatabaseError databaseError) {
 
-//            execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'cancelled');",
-//                    getServiceName(), listenerId
-//            ));
+            try {
+              execJS(String.format("javascript:window.plugin.firebase.database._nativeCallback('%s', '%s', 'cancelled', ['%s']);",
+                  getServiceName(), listenerId, FirebasePluginUtil.serialize(databaseError.getMessage())
+              ));
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+
           }
         };
         ref_or_query.addChildEventListener(childEventListener);
