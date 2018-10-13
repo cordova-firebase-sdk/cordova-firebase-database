@@ -19,6 +19,7 @@ matrix:
     node_js: '${TRAVIS_NODE_VERSION}'
   - env: PLATFORM=android-7.0
     os: linux
+    node_js: '${TRAVIS_NODE_VERSION}'
     language: android
     jdk: oraclejdk8
     android:
