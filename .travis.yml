@@ -43,11 +43,11 @@ install:
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
-      yes | sdkmanager "system-images;android-23;google_apis;x86" > /dev/null;
       yes | sdkmanager tools > /dev/null;
+      yes | sdkmanager "system-images;android-23;google_apis;x86" > /dev/null;
+      echo no | avdmanager create avd --force --name test --abi google_apis/x86_64 --package 'system-images;android-23;google_apis;x86_64';
       yes | sdkmanager --licenses > /dev/null;
-      echo no | avdmanager create avd --force --name testAVD --abi google_apis/x86_64 --package 'system-images;android-23;google_apis;x86_64';
-      cordova emulate android;
+      $ANDROID_HOME/tools emulator -avd test > /dev/null
       android-wait-for-emulator;
-      cordova-paramedic --platform android --plugin . --target testAVD;
+      cordova-paramedic --platform android --plugin . --target test;
     fi;
