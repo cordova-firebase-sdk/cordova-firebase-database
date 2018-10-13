@@ -46,6 +46,5 @@ script:
       echo no | avdmanager create avd --force --name test --abi google_apis/x86_64 --package 'system-images;android-23;google_apis;x86_64';
       yes | sdkmanager --licenses > /dev/null;
       $ANDROID_HOME/tools/emulator -avd test > /dev/null
-      android-wait-for-emulator;
       cordova-paramedic --platform android --plugin . --target test;
     fi;
