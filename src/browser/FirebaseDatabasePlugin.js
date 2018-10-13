@@ -295,8 +295,7 @@ FirebaseDatabasePlugin.prototype.reference_setWithPriority = function(onSuccess,
 // https://firebase.google.com/docs/reference/js/firebase.database.Reference#transaction
 //---------------------------------------------------------------------------------
 FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onError, args) {
-  var options = args[0],
-    self = this;
+  var options = args[0];
   //console.log('[broswer] reference.transaction()', options);
   var ref = this._get(options.targetId);
 
@@ -304,7 +303,7 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
   // Even if there is existing data in your remote database, it may not be locally cached when the transaction function is run, resulting in null for the initial value.
   (new Promise(function(resolve, reject) {
     ref.once('value')
-    .then(function(value) {
+    .then(function() {
       var jsDbInstance = window.plugin.firebase.database._DBs[options.pluginName];
       if (jsDbInstance) {
         var jsRefInstance = jsDbInstance._get(options.hashCode);
@@ -331,7 +330,7 @@ FirebaseDatabasePlugin.prototype.reference_transaction = function(onSuccess, onE
 
             }, options.applyLocally === false ? false : true);
           } else {
-            reject(new Error('can not find matched transactionUpdate with ' + transactionId));
+            reject(new Error('can not find matched transactionUpdate with ' + options.transactionId));
           }
         } else {
           reject(new Error('can not find matched reference instance with ' + options.hashCode));
