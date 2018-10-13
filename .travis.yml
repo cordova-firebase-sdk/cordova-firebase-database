@@ -14,10 +14,6 @@ branches:
 
 matrix:
   include:
-  - os: linux
-    env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser"
-    language: node_js
-    node_js: '${TRAVIS_NODE_VERSION}'
   - env: PLATFORM=android-7.0
     os: linux
     node_js: '${TRAVIS_NODE_VERSION}'
@@ -26,7 +22,7 @@ matrix:
     android:
       components:
       - tools
-      - build-tools-26.0.2
+      - build-tools
       - platform-tools
 
 before_install:
@@ -47,7 +43,7 @@ install:
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
-      echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a emulator -avd test -no-audio -no-window &
+      echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a emulator -no-audio -no-window;
       android-wait-for-emulator;
       npm run paramedic_android;
     fi
