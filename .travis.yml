@@ -47,10 +47,7 @@ install:
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
-      yes | sdkmanager "system-images;android-23;google_apis;x86" > /dev/null;
-      yes | sdkmanager tools > /dev/null;
-      yes | sdkmanager --licenses > /dev/null;
-      avdmanager create avd -n test -k "system-images;android-23;google_apis;x86" -b x86 -c 100M -d 7 -f;
+      echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a emulator -avd test -no-audio -no-window &
       android-wait-for-emulator;
       npm run paramedic_android;
     fi
