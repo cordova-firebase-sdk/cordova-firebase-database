@@ -57,7 +57,7 @@ before_script:
   - yes | sdkmanager tools > /dev/null
   - echo yes | sdkmanager "system-images;android-28;google_apis;x86"
   - echo no | avdmanager create avd --force --name test --abi google_apis/x86 --package "system-images;android-28;google_apis;x86"
-  - ${ANDROID_HOME}/tools/emulator -avd test > /dev/null
+  - ${ANDROID_HOME}/emulator/emulator -avd test > /dev/null
   #  fi
 
 
