@@ -87,8 +87,8 @@ install:
 
 before_script:
   # Create and start the emulator
-  - sdkmanager "system-images;android-"$EMULATOR_API_LEVEL";google_apis;armeabi-v7a"
-  - echo no | avdmanager -v create avd -f -n test -k "system-images;android-"$EMULATOR_API_LEVEL";google_apis;armeabi-v7a"
+  - sdkmanager "system-images;android-"$ANDROID_API_LEVEL";google_apis;armeabi-v7a"
+  - echo no | avdmanager -v create avd -f -n test -k "system-images;android-"$ANDROID_API_LEVEL";google_apis;armeabi-v7a"
   - $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window &
 
   - android-wait-for-emulator
