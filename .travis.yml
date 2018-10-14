@@ -1,116 +1,25 @@
-sudo: required
-dist: trusty
-group: edge  # Add this
-
+language: android
+jdk: oraclejdk8
 env:
   global:
-  - TRAVIS_NODE_VERSION="5.5"
-  - ANDROID_API_LEVEL=22
-  - ANDROID_BUILD_TOOLS_VERSION=28.0.3
-  - ANDROID_TAG=google_apis
-  - ANDROID_ABI=armeabi-v7a
-  - ANDROID_EMULATOR_IMAGE=sys-img-armeabi-v7a-android-22
-  # wait up to 10 minutes for adb to connect to emulator
-  - ADB_INSTALL_TIMEOUT=10
-  # switch glibc to a memory conserving mode
-  - MALLOC_ARENA_MAX=2
-    
+    - ANDROID_TARGET=android-23
+    - ANDROID_ABI=x86
 
-notifications:
-  email: false
-
-branches:
-  only:
-  - master
-
-matrix:
-  include:
-  - env: PLATFORM=android-7.0
-    os: linux
-    node_js: '${TRAVIS_NODE_VERSION}'
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-        - tools
-        - platform-tools
-        - build-tools-${ANDROID_BUILD_TOOLS_VERSION}
-        - android-${ANDROID_API_LEVEL}
-        - extra-android-m2repository
-        - extra-google-m2repository
-        - sys-img-x86-android-${ANDROID_API_LEVEL}
-        # Base components 
-        #- tools # to get the new `repository-11.xml`
-        #- tools # https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
-        #- platform-tools   
-        #- build-tools-$ANDROID_BUILD_TOOLS_VERSION # get the build tools version to build the project
-
-        # used sdk versions
-        #- android-$ANDROID_API_LEVEL # get the android sdk version to build the project
-        #- android-$EMULATOR_API_LEVEL # get the android sdk version for the emulator
-
-        # Get the latest version of additional components
-        #- extra-android-support
-        #- extra-google-m2repository
-        #- extra-android-m2repository
-        #- extra-google-google_play_services
-
-        # Specify the needed emulator
-        #- $ANDROID_EMULATOR_IMAGE
-    #licenses:
-      #- 'android-sdk-license-.+'
-      #- '.+'
-
-cache:
-  directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
-    - $HOME/.android/build-cache
-    
-before_install:
-  - export EMULATOR="system-images;android-${ANDROID_API_LEVEL};${ANDROID_TAG};${ANDROID_ABI}" # Used to install/create emulator
-  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
-    && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
-    install ${TRAVIS_NODE_VERSION} > /dev/null
-  - node --version
-  - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
-  - npm install -g cordova-paramedic > /dev/null
-  - cordova --version
-
-install:
-  #- if [[ "$PLATFORM" =~ android ]]; then
-  - touch ~/.android/repositories.cfg > /dev/null 2>&1
-  - mkdir -p ~/.android/avd > /dev/null 2>&1
-  
-  - sdkmanager --list || true # List all available targets, device definitions and AVDs.
-  #- echo yes | sdkmanager --licenses
-  # Create and start emulator
-  #- echo no | avdmanager create avd -n acib -k "$EMULATOR" -f --abi "${ANDROID_ABI}" --tag "${ANDROID_TAG}"
-  - echo no | android create avd --force -n test -t android-${ANDROID_API_LEVEL} --abi x86 -no-accel
-  - emulator -avd test -no-skin -no-audio -no-window &
-  
-  #  fi
-  - npm cache clean > /dev/null
-  - npm install > /dev/null
-
-before_script:
-  - android-wait-for-emulator
-
-  # Turn off animations
-  - adb shell settings put global window_animation_scale 0 &
-  - adb shell settings put global transition_animation_scale 0 &
-  - adb shell settings put global animator_duration_scale 0 &
-
-  # Wake up
-  - adb shell input keyevent 82 &
-  - adb shell input keyevent 1 &
-
-
+android:
+  components:
+  - tools
+  - platform-tools
+  - build-tools-25.0.1
+  - android-23
+  - extra-android-m2repository
+  - extra-google-m2repository
+  - sys-img-x86-android-23
 script:
-  - npm test
-  - adb shell settings put global window_animation_scale 0 &
-  - adb shell settings put global transition_animation_scale 0 &
-  - adb shell settings put global animator_duration_scale 0 &
-  - sleep 30
-  - adb shell input keyevent 82 &
-  - cordova-paramedic --platform android --plugin .
+  - android list targets
+  - echo no | android create avd --force -n test -t android-23 --abi x86 -no-accel
+  - emulator -avd test -no-skin -no-audio -no-window &
+  - android-wait-for-emulator
+  - adb shell setprop dalvik.vm.dexopt-flags v=n,o=v
+  - cordova run android
+after_success:
+  - bash echo "Yata!"
