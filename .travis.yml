@@ -1,7 +1,4 @@
-language: android
-sudo: required
-
-jdk: openjdk8
+sudo: false
 
 env:
   global:
@@ -9,49 +6,62 @@ env:
     - EMULATOR_API=24
     - ANDROID_BUILD_TOOLS=27.0.3
 
-android:
-  components:
-    - tools
-    - android-$EMULATOR_API
-    - platform-tools
-    - tools
-    # The BuildTools version used by your project
-    - build-tools-$ANDROID_BUILD_TOOLS
-    # The SDK version used to compile your project
-    - android-$ANDROID_API
-    # Additional components
-    - extra-android-m2repository
-    - extra-google-m2repository
-    - sys-img-armeabi-v7a-android-$EMULATOR_API
-  licenses:
-    - ".+"
+notifications:
+  email: false
 
-before_install:
-  - yes | sdkmanager "platforms;android-${ANDROID_API}"
+branches:
+  only:
+  - master
 
-# Emulator Management: Create, Start and Wait https://docs.travis-ci.com/user/languages/android#How-to-Create-and-Start-an-Emulator
-before_script:
-  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
-    && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
-    install 9.11.2 > /dev/null
+matrix:
+  include:
+  - env: PLATFORM=android-7.0
+    os: linux
+    node_js: '${TRAVIS_NODE_VERSION}'
+    language: android
+    jdk: oraclejdk8
+    android:
+      components:
+        - tools
+        - android-$EMULATOR_API
+        - platform-tools
+        # The BuildTools version used by your project
+        - build-tools-$ANDROID_BUILD_TOOLS
+        # The SDK version used to compile your project
+        - android-$ANDROID_API
+        # Additional components
+        - extra-android-m2repository
+        - extra-google-m2repository
+        - sys-img-armeabi-v7a-android-$EMULATOR_API
+      licenses:
+        - ".+"
+
+
+install:
+  #- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+  #  && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+  #  install ${TRAVIS_NODE_VERSION} > /dev/null
   - node --version
-  - npm install -g cordova@8.1.0 > /dev/null
-  - git clone https://github.com/apache/cordova-paramedic
-  - pushd cordova-paramedic
-  - npm i > /dev/null
-  - popd
+  - npm cache clean > /dev/null
+  - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
+  - npm install -g cordova-paramedic > /dev/null
   - cordova --version
-  - echo "y" | android update sdk -a --no-ui --filter android-$EMULATOR_API
-  - echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-$EMULATOR_API
-  - echo no | android create avd --force -n test -t android-$EMULATOR_API --abi armeabi-v7a
-  - emulator -avd test -no-skin -no-window &
-  - android-wait-for-emulator
-  - adb shell input keyevent 82 &
-  - adb wait-for-device get-serialno
-  - npm install -g cordova cordova-paramedic
+  - npm install > /dev/null
+
+before_script:
+  - if [[ "$PLATFORM" =~ android ]]; then
+      echo "y" | android update sdk -a --no-ui --filter android-$EMULATOR_API;
+      echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-$EMULATOR_API;
+      echo no | android create avd --force -n test -t android-$EMULATOR_API --abi armeabi-v7a;
+      emulator -avd test -no-skin -no-window;
+      android-wait-for-emulator;
+      adb shell input keyevent 82;
+      adb wait-for-device get-serialno;
+      npm install -g cordova cordova-paramedic;
+    fi
 
 script:
-  - echo "Travis branch is $TRAVIS_BRANCH"
-  # test demo flavour
-  # for me espresso test failed on `onView` check
-  - cordova-paramedic --platform android --plugin . --justbuild
+  - npm test
+  - if [[ "$PLATFORM" =~ android ]]; then
+      cordova-paramedic --platform android --plugin . --justbuild;
+    fi;
