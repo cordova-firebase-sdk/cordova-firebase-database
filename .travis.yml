@@ -3,7 +3,7 @@ jdk: oraclejdk8
 env:
   global:
     - ANDROID_TARGET=android-23
-    - ANDROID_ABI=x86
+    - ANDROID_ABI=armeabi-v7a
 
 android:
   components:
@@ -15,8 +15,9 @@ android:
   - extra-google-m2repository
   - sys-img-x86-android-23
 script:
+  - touch $HOME/.android/avd > /dev/null 2>&1
   - android list targets
-  - echo no | android create avd --force -n test -t android-23 --abi x86
+  - echo no | android create avd --force -n test -t android-23 --abi armeabi-v7a
   - emulator -avd test -no-skin -no-audio -no-window &
   - android-wait-for-emulator
   - adb shell setprop dalvik.vm.dexopt-flags v=n,o=v
