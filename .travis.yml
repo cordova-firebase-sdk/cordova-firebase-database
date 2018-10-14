@@ -38,9 +38,9 @@ matrix:
 
 
 install:
-  #- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
-  #  && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
-  #  install ${TRAVIS_NODE_VERSION} > /dev/null
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+    && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+    install ${TRAVIS_NODE_VERSION} > /dev/null
   - node --version
   - npm cache clean > /dev/null
   - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
