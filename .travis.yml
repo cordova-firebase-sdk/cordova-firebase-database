@@ -36,7 +36,10 @@ before_script:
     install 9.11.2 > /dev/null
   - node --version
   - npm install -g cordova@8.1.0 > /dev/null
-  - npm install -g cordova-paramedic > /dev/null
+  - git clone https://github.com/apache/cordova-paramedic
+  - pushd cordova-paramedic
+  - npm i > /dev/null
+  - popd
   - cordova --version
   - echo "y" | android update sdk -a --no-ui --filter android-$EMULATOR_API
   - echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-$EMULATOR_API
