@@ -30,8 +30,15 @@ matrix:
     node_js: '${TRAVIS_NODE_VERSION}'
     language: android
     jdk: oraclejdk8
-    #android:
-      #components:
+    android:
+      components:
+        - tools
+        - platform-tools
+        - build-tools-${ANDROID_BUILD_TOOLS_VERSION}
+        - android-${ANDROID_API_LEVEL}
+        - extra-android-m2repository
+        - extra-google-m2repository
+        - sys-img-x86-android-${ANDROID_API_LEVEL}
         # Base components 
         #- tools # to get the new `repository-11.xml`
         #- tools # https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
@@ -76,39 +83,11 @@ install:
   - mkdir -p ~/.android/avd > /dev/null 2>&1
   
   - sdkmanager --list || true # List all available targets, device definitions and AVDs.
-  # Update sdk tools to latest version and install/update components
-    # List and delete unnecessary components to free space
-  - sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-16;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-17;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-18;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-19;default;armeabi-v7a"
-  - sdkmanager --uninstall "system-images;android-21;default;armeabi-v7a"
-  - sdkmanager --uninstall "extras;google;google_play_services"
-  - sdkmanager --uninstall "extras;android;support"
-  - sdkmanager --uninstall "platforms;android-10"
-  - sdkmanager --uninstall "platforms;android-15"
-  - sdkmanager --uninstall "platforms;android-16"
-  - sdkmanager --uninstall "platforms;android-17"
-  - sdkmanager --uninstall "platforms;android-18"
-  - sdkmanager --uninstall "platforms;android-19"
-  - sdkmanager --uninstall "platforms;android-20"
-  - sdkmanager --uninstall "platforms;android-21"
-  - sdkmanager --uninstall "build-tools;21.1.2"
-  # Update sdk tools to latest version and install/update components
-  - echo yes | sdkmanager "tools"
-  - echo yes | sdkmanager "platforms;android-${ANDROID_API_LEVEL}" # Android platform required by emulator
-  - echo yes | sdkmanager "extras;android;m2repository"
-  - echo yes | sdkmanager "extras;google;m2repository"
-  - echo yes | sdkmanager "build-tools;${ANDROID_BUILD_TOOLS_VERSION}"
-
-  #- echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
-  #- echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
-  - echo yes | sdkmanager "${EMULATOR}" # Install emulator system image
   - echo yes | sdkmanager --licenses
   # Create and start emulator
-  - echo no | avdmanager create avd -n acib -k "$EMULATOR" -f --abi "${ANDROID_ABI}" --tag "${ANDROID_TAG}"
-  - emulator -avd acib -engine classic -no-window -camera-back none -camera-front none -verbose -qemu -m 512 &
+  #- echo no | avdmanager create avd -n acib -k "$EMULATOR" -f --abi "${ANDROID_ABI}" --tag "${ANDROID_TAG}"
+  - echo no | android create avd --force -n test -t android-${ANDROID_API_LEVEL} --abi x86 -no-accel
+  - emulator -avd test -no-skin -no-audio -no-window &
   
   #  fi
   - npm cache clean > /dev/null
