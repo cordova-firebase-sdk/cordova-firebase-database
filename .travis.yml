@@ -5,6 +5,7 @@ env:
     - ANDROID_API=27
     - EMULATOR_API=24
     - ANDROID_BUILD_TOOLS=27.0.3
+    - TRAVIS_NODE_VERSION=9.11.2
 
 notifications:
   email: false
