@@ -31,6 +31,13 @@ before_install:
 
 # Emulator Management: Create, Start and Wait https://docs.travis-ci.com/user/languages/android#How-to-Create-and-Start-an-Emulator
 before_script:
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+    && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+    install ${TRAVIS_NODE_VERSION} > /dev/null
+  - node --version
+  - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
+  - npm install -g cordova-paramedic > /dev/null
+  - cordova --version
   - echo "y" | android update sdk -a --no-ui --filter android-$EMULATOR_API
   - echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-$EMULATOR_API
   - echo no | android create avd --force -n test -t android-$EMULATOR_API --abi armeabi-v7a
