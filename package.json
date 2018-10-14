@@ -14,7 +14,8 @@
     "test": "npm run eslint",
     "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src",
     "paramedic_ios": "cordova-paramedic --platform ios --plugin .",
-    "paramedic_android": "cordova-paramedic --platform android --plugin ."
+    "paramedic_android": "cordova-paramedic --platform android --plugin .",
+    "test_on_circleci": "cordova-paramedic --platform android@6.0 --plugin . --verbose"
   },
   "keywords": [
     "ecosystem:cordova",
