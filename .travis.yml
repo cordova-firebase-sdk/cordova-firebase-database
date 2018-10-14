@@ -1,13 +1,20 @@
-sudo: false
+sudo: required
+dist: trusty
+group: edge  # Add this
 
 env:
   global:
   - TRAVIS_NODE_VERSION="5.5"
   - ANDROID_API_LEVEL=22
   - ANDROID_BUILD_TOOLS_VERSION=28.0.3
-  - ANDROID_ABI=google_apis/armeabi-v7a
+  - ANDROID_TAG=google_apis
+  - ANDROID_ABI=armeabi-v7a
   - ANDROID_EMULATOR_IMAGE=sys-img-armeabi-v7a-android-22
-  - ADB_INSTALL_TIMEOUT=20
+  # wait up to 10 minutes for adb to connect to emulator
+  - ADB_INSTALL_TIMEOUT=10
+  # switch glibc to a memory conserving mode
+  - MALLOC_ARENA_MAX=2
+    
 
 notifications:
   email: false
@@ -23,29 +30,29 @@ matrix:
     node_js: '${TRAVIS_NODE_VERSION}'
     language: android
     jdk: oraclejdk8
-    android:
-      components:
+    #android:
+      #components:
         # Base components 
-        - tools # to get the new `repository-11.xml`
-        - tools # https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
-        - platform-tools   
-        - build-tools-$ANDROID_BUILD_TOOLS_VERSION # get the build tools version to build the project
+        #- tools # to get the new `repository-11.xml`
+        #- tools # https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
+        #- platform-tools   
+        #- build-tools-$ANDROID_BUILD_TOOLS_VERSION # get the build tools version to build the project
 
         # used sdk versions
-        - android-$ANDROID_API_LEVEL # get the android sdk version to build the project
-        - android-$EMULATOR_API_LEVEL # get the android sdk version for the emulator
+        #- android-$ANDROID_API_LEVEL # get the android sdk version to build the project
+        #- android-$EMULATOR_API_LEVEL # get the android sdk version for the emulator
 
         # Get the latest version of additional components
-        - extra-android-support
-        - extra-google-m2repository
-        - extra-android-m2repository
-        - extra-google-google_play_services
+        #- extra-android-support
+        #- extra-google-m2repository
+        #- extra-android-m2repository
+        #- extra-google-google_play_services
 
         # Specify the needed emulator
-        - $ANDROID_EMULATOR_IMAGE
-    licenses:
-      - 'android-sdk-license-.+'
-      - '.+'
+        #- $ANDROID_EMULATOR_IMAGE
+    #licenses:
+      #- 'android-sdk-license-.+'
+      #- '.+'
 
 cache:
   directories:
@@ -54,6 +61,7 @@ cache:
     - $HOME/.android/build-cache
     
 before_install:
+  - export EMULATOR="system-images;android-${ANDROID_API_LEVEL};${ANDROID_TAG};${ANDROID_ABI}" # Used to install/create emulator
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
     && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
     install ${TRAVIS_NODE_VERSION} > /dev/null
@@ -69,30 +77,45 @@ install:
   
   - sdkmanager --list || true # List all available targets, device definitions and AVDs.
   # Update sdk tools to latest version and install/update components
+    # List and delete unnecessary components to free space
+  - sdkmanager --list || true
+  - sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-16;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-17;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-18;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-19;default;armeabi-v7a"
+  - sdkmanager --uninstall "system-images;android-21;default;armeabi-v7a"
+  - sdkmanager --uninstall "extras;google;google_play_services"
+  - sdkmanager --uninstall "extras;android;support"
+  - sdkmanager --uninstall "platforms;android-10"
+  - sdkmanager --uninstall "platforms;android-15"
+  - sdkmanager --uninstall "platforms;android-16"
+  - sdkmanager --uninstall "platforms;android-17"
+  - sdkmanager --uninstall "platforms;android-18"
+  - sdkmanager --uninstall "platforms;android-19"
+  - sdkmanager --uninstall "platforms;android-20"
+  - sdkmanager --uninstall "platforms;android-21"
+  - sdkmanager --uninstall "build-tools;21.1.2"
+  # Update sdk tools to latest version and install/update components
   - echo yes | sdkmanager "tools"
-  - echo yes | sdkmanager "platform-tools"
-  - echo yes | sdkmanager "build-tools;"$ANDROID_BUILD_TOOLS_VERSION
-  - echo yes | sdkmanager "platforms;android-"$ANDROID_API_LEVEL # Latest platform required by SDK tools
-
+  - echo yes | sdkmanager "platforms;android-${ANDROID_API_LEVEL}" # Android platform required by emulator
   - echo yes | sdkmanager "extras;android;m2repository"
   - echo yes | sdkmanager "extras;google;m2repository"
-  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
-  - echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
+  - echo yes | sdkmanager "build-tools;${ANDROID_BUILD_TOOLS_VERSION}"
 
-  - echo yes | sdkmanager --update
+  #- echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2"
+  #- echo yes | sdkmanager "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"
+  - echo yes | sdkmanager "${EMULATOR}" # Install emulator system image
   - echo yes | sdkmanager --licenses
-  - sdkmanager --list || true
+  # Create and start emulator
+  - echo no | avdmanager create avd -n acib -k "$EMULATOR" -f --abi "${ANDROID_ABI}" --tag "${ANDROID_TAG}"
+  - emulator -avd acib -engine classic -no-window -camera-back none -camera-front none -verbose -qemu -m 512 &
+  
   #  fi
   - npm cache clean > /dev/null
   - npm install > /dev/null
 
 before_script:
-  # Create and start the emulator
-  - sdkmanager "system-images;android-"$ANDROID_API_LEVEL";google_apis;armeabi-v7a"
-  - echo no | avdmanager -v create avd -f -n test -k "system-images;android-"$ANDROID_API_LEVEL";google_apis;armeabi-v7a"
-  - $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window &
-
-  - android-wait-for-emulator
 
   # Turn off animations
   - adb shell settings put global window_animation_scale 0 &
@@ -107,5 +130,11 @@ before_script:
 script:
   - npm test
   - if [[ "$PLATFORM" =~ android ]]; then
+      android-wait-for-emulator;
+      adb shell settings put global window_animation_scale 0 &;
+      adb shell settings put global transition_animation_scale 0 &;
+      adb shell settings put global animator_duration_scale 0 &;
+      sleep 30;
+      adb shell input keyevent 82 &;
       cordova-paramedic --platform android --plugin .;
     fi
