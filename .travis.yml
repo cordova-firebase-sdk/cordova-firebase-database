@@ -78,7 +78,6 @@ install:
   - sdkmanager --list || true # List all available targets, device definitions and AVDs.
   # Update sdk tools to latest version and install/update components
     # List and delete unnecessary components to free space
-  - sdkmanager --list || true
   - sdkmanager --uninstall "system-images;android-15;default;armeabi-v7a"
   - sdkmanager --uninstall "system-images;android-16;default;armeabi-v7a"
   - sdkmanager --uninstall "system-images;android-17;default;armeabi-v7a"
@@ -116,6 +115,7 @@ install:
   - npm install > /dev/null
 
 before_script:
+  - android-wait-for-emulator
 
   # Turn off animations
   - adb shell settings put global window_animation_scale 0 &
@@ -129,7 +129,6 @@ before_script:
 
 script:
   - npm test
-  - android-wait-for-emulator
   - adb shell settings put global window_animation_scale 0 &
   - adb shell settings put global transition_animation_scale 0 &
   - adb shell settings put global animator_duration_scale 0 &
