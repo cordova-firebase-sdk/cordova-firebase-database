@@ -83,7 +83,7 @@ install:
   - mkdir -p ~/.android/avd > /dev/null 2>&1
   
   - sdkmanager --list || true # List all available targets, device definitions and AVDs.
-  - echo yes | sdkmanager --licenses
+  #- echo yes | sdkmanager --licenses
   # Create and start emulator
   #- echo no | avdmanager create avd -n acib -k "$EMULATOR" -f --abi "${ANDROID_ABI}" --tag "${ANDROID_TAG}"
   - echo no | android create avd --force -n test -t android-${ANDROID_API_LEVEL} --abi x86 -no-accel
