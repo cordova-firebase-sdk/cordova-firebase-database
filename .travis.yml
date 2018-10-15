@@ -3,8 +3,8 @@ sudo: false
 env:
   global:
   - NODE_VERSION="9.11.2"
-  - ANDROID_API=27
-  - ANDROID_BUILD_TOOLS=27.0.3
+  - ANDROID_API="27"
+  - ANDROID_BUILD_TOOLS="27.0.3"
 
 notifications:
   email: false
@@ -42,15 +42,14 @@ matrix:
         - ".+"
 
 install:
-  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
-    && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
-    install ${NODE_VERSION} > /dev/null
+  #- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+  #  && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+  #  install ${NODE_VERSION} > /dev/null
+  - nvm install ${NODE_VERSION}
+  - nvm use ${NODE_VERSION}
   - node --version
   - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
   - cordova --version
-  - if [[ "${CORDOVA_PLATFORM}" =~ android ]]; then
-      yes | sdkmanager "platforms;android-${ANDROID_API}"; > /dev/null;
-    fi
   - npm install
 
 before_script:
@@ -59,21 +58,7 @@ before_script:
   - npm i > /dev/null
   - popd
   - cordova --version
-  - if [[ "${CORDOVA_PLATFORM}" =~ android ]]; then
-      echo "y" | android update sdk -a --no-ui --filter android-${ANDROID_API} > /dev/null;
-      echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-${ANDROID_API} > /dev/null;
-      echo no | android create avd --force -n test -t android-${ANDROID_API} --abi armeabi-v7a > /dev/null;
-      emulator -avd test -no-skin -no-window;
-      android-wait-for-emulator ;
-      adb shell input keyevent 82;
-      adb wait-for-device get-serialno;
-    fi
 
 script:
   - npm test
-  - if [[ "${CORDOVA_PLATFORM}" =~ android ]]; then
-      cordova-paramedic --platform android --plugin . --justbuild;
-    fi
-  - if [[ "${CORDOVA_PLATFORM}" =~ browser ]]; then
-      cordova-paramedic --platform browser --plugin . --justbuild;
-    fi
+  - /bin/bash tests/travis.sh

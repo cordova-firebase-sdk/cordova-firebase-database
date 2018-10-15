@@ -13,9 +13,8 @@
   "scripts": {
     "test": "npm run eslint",
     "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src",
-    "paramedic_ios": "cordova-paramedic --platform ios --plugin .",
-    "paramedic_android": "cordova-paramedic --platform android --plugin .",
-    "test_on_circleci": "cordova-paramedic --platform android@6.0 --plugin . --verbose"
+    "test:android": "cordova-paramedic --cleanUpAfterRun --verbose --platform android --plugin .",
+    "test:browser": "cordova-paramedic --cleanUpAfterRun --verbose --platform browser --plugin ."
   },
   "keywords": [
     "ecosystem:cordova",
@@ -26,6 +25,7 @@
   "author": "Masashi Katsumata<wf9a5m75@gmail.com>",
   "license": "Apache-2.0",
   "devDependencies": {
+    "cordova-paramedic": "git+https://github.com/apache/cordova-paramedic.git",
     "eslint": "^3.19.0"
   }
 }
