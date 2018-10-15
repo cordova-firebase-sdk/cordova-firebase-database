@@ -3,15 +3,18 @@ set -o nounset
 set -o errexit
 
 # run tests appropriate for platform
-if [[ "${CORDOVA_PLATFORM}" == "browser" ]]; then
-    npm run test:browser
-fi
+#if [[ "${CORDOVA_PLATFORM}" == "browser" ]]; then
+#    npm run test:browser
+#fi
 if [[ "${CORDOVA_PLATFORM}" == "ios" ]]; then
     sudo gem install cocoapods
     npm install -g ios-sim ios-deploy
     npm run test:ios
 fi
-if [[ "${CORDOVA_PLATFORM}" == "linux" ]]; then
+echo "CORDOVA_PLATFORM=${CORDOVA_PLATFORM}"
+echo "TRAVIS_OS_NAME=${TRAVIS_OS_NAME}"
+
+if [[ "${CORDOVA_PLATFORM}" == "android" ]]; then
     echo "y" | sdkmanager "platforms;android-${ANDROID_API}"; > /dev/null;
     echo "y" | android update sdk -a --no-ui --filter android-${ANDROID_API} > /dev/null
     echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-${ANDROID_API} > /dev/null
