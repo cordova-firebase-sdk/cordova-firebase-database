@@ -1,4 +1,4 @@
-![](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database.svg?branch=master)
+[![](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database.svg?branch=master)](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database)
 
 **THIS PLUGIN IS NOT READY TO SHIP. DO NOT USE THIS PLUGIN IN YOUR APP YET.**
 
