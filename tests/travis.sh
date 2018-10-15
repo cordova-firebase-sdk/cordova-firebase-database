@@ -2,12 +2,6 @@
 set -o nounset
 set -o errexit
 
-npm install -g cordova
-npm install
-
-# lint
-npm run lint
-
 # run tests appropriate for platform
 if [[ "${CORDOVA_PLATFORM}" == "browser" ]]; then
     npm run test:browser
