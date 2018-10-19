@@ -87,7 +87,7 @@ install:
       echo "y" | ${ANDROID_HOME}/tools/bin/sdkmanager "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null;
     fi
   - if [[ "${CORDOVA_PLATFORM}" == "android" ]]; then
-      echo "y" | ${ANDROID_HOME}/tools/bin/sdkmanager android-${ANDROID_API};
+      echo "y" | android update sdk -a --no-ui --filter android-${ANDROID_API} > /dev/null;
       echo "y" | android update sdk -a --no-ui --filter android-25 > /dev/null;
       echo "y" | android update sdk -a --no-ui --filter android-26 > /dev/null;
       echo "y" | android update sdk -a --no-ui --filter android-27 > /dev/null;
