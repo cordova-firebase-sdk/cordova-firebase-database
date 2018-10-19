@@ -6,13 +6,14 @@ machine:
 dependencies:
   override:
     - npm install
+    - npm install -g cordova cordova-paramedic
 test:
   pre:
-    - echo y | android update sdk --no-ui --all --filter "addon-google_apis-google-19, sys-img-armeabi-v7a-addon-google_apis-google-19"
-    - android create avd --force -n test -t "Google Inc.:Google APIs:19" --abi armeabi-v7a
+    - echo y | android update sdk --no-ui --all --filter "addon-google_apis-google-24, sys-img-armeabi-v7a-addon-google_apis-google-24"
+    - android create avd --force -n test -t "Google Inc.:Google APIs:24" --abi armeabi-v7a
     - emulator -avd test -no-audio -no-window:
         background: true
         parallel: true
     - circle-android wait-for-boot
   override:
-    - cordova-paramedic --platform android --plugin . --verbose
+    - npm run test:android
