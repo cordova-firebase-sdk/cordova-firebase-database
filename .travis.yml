@@ -3,8 +3,8 @@ sudo: false
 env:
   global:
   - NODE_VERSION="9.11.2"
-  - ANDROID_API="24"
-  - ANDROID_BUILD_TOOLS="27.0.3"
+  - ANDROID_API="28"
+  - ANDROID_BUILD_TOOLS="28.0.3"
 
 notifications:
   email: false
@@ -19,9 +19,8 @@ matrix:
     env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser"
     language: node_js
     node_js: '${NODE_VERSION}'
-    script:
-      - npm test
-  - env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="android-7.0"
+
+  - env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="android"
     os: linux
     node_js: '${NODE_VERSION}'
     language: android
@@ -31,7 +30,6 @@ matrix:
         - tools
         - android-${ANDROID_API}
         - platform-tools
-        - tools
         # The BuildTools version used by your project
         - build-tools-${ANDROID_BUILD_TOOLS}
         # The SDK version used to compile your project
@@ -42,9 +40,6 @@ matrix:
         - sys-img-armeabi-v7a-android-${ANDROID_API}
       licenses:
         - ".+"
-    script:
-      - npm test
-      - cordova-paramedic --cleanUpAfterRun --verbose --platform android --plugin . --justBuild;
 
 install:
   #- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
@@ -57,3 +52,7 @@ install:
   - npm -g install https://github.com/apache/cordova-paramedic
   - cordova --version
   - npm install
+
+script:
+  - npm test
+  - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin '. --variable API_KEY_FOR_ANDROID=test --variable API_KEY_FOR_IOS=test'
