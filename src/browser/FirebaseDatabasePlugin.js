@@ -29,7 +29,7 @@ utils.extend(FirebaseDatabasePlugin, BaseClass);
 
 Object.defineProperty(FirebaseDatabasePlugin.prototype, '_getInstance', {
   value: function() {
-    return this.database;
+    return this;
   },
   enumerable: false
 });

@@ -13,8 +13,8 @@
   "scripts": {
     "test": "npm run eslint",
     "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src",
-    "test:android": "cordova-paramedic --cleanUpAfterRun --verbose --platform android --plugin .",
-    "test:browser": "cordova-paramedic --cleanUpAfterRun --verbose --platform browser --plugin ."
+    "test:android": "cordova-paramedic --cleanUpAfterRun --verbose --platform android --plugin . --useTunnel",
+    "test:browser": "cordova-paramedic --cleanUpAfterRun --verbose --platform browser --plugin . --useTunnel"
   },
   "keywords": [
     "ecosystem:cordova",
