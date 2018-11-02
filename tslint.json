@@ -1,0 +1,30 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:latest"
+    ],
+    "linterOptions": {
+        "exclude": [
+            "node_modules/**",
+            "dist/**"
+        ]
+    },
+    "jsRules": {},
+    "rules": {
+      "no-consecutive-blank-lines": false,
+      "no-console": false,
+      "variable-name": [
+        "allow-leading-underscore"
+      ],
+      "no-implicit-dependencies": false,
+      "max-classes-per-file": [
+        true,
+        "src/www/App.ts"
+      ],
+      "no-submodule-imports": false,
+      "array-type": [true, "generic"],
+      "max-line-length": [true, 150]
+    },
+    "interface-name": [true, "never-prefix"],
+    "rulesDirectory": []
+}

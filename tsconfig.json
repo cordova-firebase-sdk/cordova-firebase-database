@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist/src/",
+    "rootDir": "src/",
+    "target": "es5",
+    "declaration": true
+  },
+  "exclude": [
+    "www",
+    "src/**/__test__/*.spec.ts",
+    "node_modules"
+  ],
+  "rules": {
+    "no-implicit-dependencies": [true, "dev"],
+    "array-type": [true, "generic"],
+    "max-line-length": [true, 150]
+  }
+}
