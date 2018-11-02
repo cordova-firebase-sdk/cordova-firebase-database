@@ -14,7 +14,7 @@
   <js-module name="FirebaseDatabaseCommandQueue" src="www/firebase-database-command-queue.js" />
   <js-module name="OnDisconnect" src="www/OnDisconnect.js" />
 -->
-
+<!--
   <dependency id="cordova-firebase-core" url="https://github.com/cordova-firebase-sdk/cordova-firebase-core"/>
 <!--
   <platform name="browser">
