@@ -13,15 +13,14 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var Core = require("cordova-firebase-core/index");
-var BaseClass = Core.BaseClass;
+var BaseClass_1 = require("cordova-firebase-core/BaseClass");
 var Database = /** @class */ (function (_super) {
     __extends(Database, _super);
     function Database() {
         return _super.call(this) || this;
     }
     return Database;
-}(BaseClass));
+}(BaseClass_1.BaseClass));
 exports.Database = Database;
 var instance = new Database();
 console.log(instance);

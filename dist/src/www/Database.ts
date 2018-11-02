@@ -1,6 +1,4 @@
-import Core = require("cordova-firebase-core/index");
-
-const BaseClass = Core.BaseClass;
+import { BaseClass } from "cordova-firebase-core/BaseClass";
 
 export class Database extends BaseClass {
   constructor() {
@@ -8,7 +6,7 @@ export class Database extends BaseClass {
   }
 }
 
-const instance: any = new Database();
+const instance: Database = new Database();
 console.log(instance);
 
 //

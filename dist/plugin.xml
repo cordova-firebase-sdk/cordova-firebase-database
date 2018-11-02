@@ -1,9 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin id="cordova-firebase-database" version="0.0.3" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>cordova-firebase-database</name>
-  <js-module name="Database" src="src/www/Database.js">
-    <runs />
-  </js-module>
+  <js-module name="Database" src="src/www/Database.js" />
 <!--
   <js-module name="cordova-firebase-database" src="www/cordova-firebase-database.js">
     <runs />
@@ -16,7 +14,6 @@
 -->
 <!--
   <dependency id="cordova-firebase-core" url="https://github.com/cordova-firebase-sdk/cordova-firebase-core"/>
-
   <platform name="browser">
     <js-module name="CordovaFirebaseDatabase" src="src/browser/CordovaFirebaseDatabase.js">
       <runs/>
