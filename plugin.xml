@@ -16,7 +16,6 @@
 -->
 <!--
   <dependency id="cordova-firebase-core" url="https://github.com/cordova-firebase-sdk/cordova-firebase-core"/>
-<!--
   <platform name="browser">
     <js-module name="CordovaFirebaseDatabase" src="src/browser/CordovaFirebaseDatabase.js">
       <runs/>
