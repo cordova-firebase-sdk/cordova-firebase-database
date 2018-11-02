@@ -13,11 +13,42 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+var cordova_1 = require("cordova");
 var index_1 = require("cordova-firebase-core/index");
+var CommandQueue_1 = require("./CommandQueue");
 var Database = /** @class */ (function (_super) {
     __extends(Database, _super);
     function Database(app, options) {
-        return _super.call(this, "database") || this;
+        var _this = _super.call(this, "database") || this;
+        _this._queue = new index_1.BaseArrayClass();
+        _this._app = app;
+        _this._options = options;
+        _this._queue._on("insert_at", function () {
+            if (!_this._isReady) {
+                return;
+            }
+            var cmd = _this._queue._removeAt(0, true);
+            if (cmd && cmd.context && cmd.methodName) {
+                CommandQueue_1.execCmd(cmd).then(cmd.resolve).catch(cmd.reject);
+            }
+            if (_this._queue._getLength() > 0) {
+                _this._queue._trigger("insert_at");
+            }
+        });
+        // Create one new instance in native side.
+        _this._one("fireAppReady", function () {
+            cordova_1.exec(function () {
+                _this._isReady = true;
+                _this._queue._trigger("insert_at");
+            }, function (error) {
+                throw new Error(error);
+            }, "CordovaFirebaseDatabase", "newInstance", [{
+                    appName: _this._app.name,
+                    id: _this.id,
+                    options: _this._options,
+                }]);
+        });
+        return _this;
     }
     Object.defineProperty(Database.prototype, "app", {
         /**
@@ -32,7 +63,18 @@ var Database = /** @class */ (function (_super) {
         configurable: true
     });
     Database.prototype.hello = function () {
-        return "world";
+        return this.exec({
+            context: this,
+            methodName: "hello",
+        });
+    };
+    Database.prototype.exec = function (params) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            params.resolve = resolve;
+            params.reject = reject;
+            _this._queue._push(params);
+        });
     };
     return Database;
 }(index_1.PluginBase));
