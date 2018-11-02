@@ -2,15 +2,16 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "dist/src/",
-    "rootDir": "src/",
+    "outDir": "dist/",
+    "rootDir": "src/www/",
     "target": "es5",
+    "baseUrl": ".",
     "declaration": true
   },
   "exclude": [
-    "www",
+    "dist/**",
     "src/**/__test__/*.spec.ts",
-    "node_modules"
+    "node_modules/**"
   ],
   "rules": {
     "no-implicit-dependencies": [true, "dev"],
