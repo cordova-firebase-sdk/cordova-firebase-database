@@ -15,16 +15,17 @@ declare let window: any;
 
 export class Database extends PluginBase {
 
+  protected _queue: BaseArrayClass = new BaseArrayClass();
+
   private _app: App;
 
   private _options: IAppInitializeOptions;
-
-  private _queue: BaseArrayClass = new BaseArrayClass();
 
   constructor(app: App, options: IAppInitializeOptions) {
     super("database");
     this._app = app;
     this._options = options;
+
 
     this._queue._on("insert_at", (): void => {
       if (!this._isReady) {
@@ -71,14 +72,6 @@ export class Database extends PluginBase {
   }
 
 
-  private exec(params: IExecCmdParams): Promise<any> {
-    return new Promise((resolve, reject) => {
-      params.resolve = resolve;
-      params.reject = reject;
-      this._queue._push(params);
-    });
-  }
-
   /**
    * Database.goOffline
    */
@@ -122,7 +115,7 @@ export class Database extends PluginBase {
     });
 
     // Bubbling native events
-    this._on("nativeEvent", function(params) {
+    this._on("nativeEvent", ((params: any) => {
       reference._trigger("nativeEvent", params);
     });
 
@@ -186,6 +179,15 @@ export class Database extends PluginBase {
     });
 
     return reference;
+  }
+
+
+  private exec(params: IExecCmdParams): Promise<any> {
+    return new Promise((resolve, reject) => {
+      params.resolve = resolve;
+      params.reject = reject;
+      this._queue._push(params);
+    });
   }
 
 }
