@@ -44,16 +44,16 @@ export class Database extends PluginBase {
 
     // Create one new instance in native side.
     this._one("fireAppReady", (): void => {
-      exec(() => {
+      const onSuccess = (): void => {
         this._isReady = true;
         this._queue._trigger("insert_at");
         this._trigger("ready");
-      },
-      (error: any) => {
+      };
+      const onError = (error: any): void => {
         throw new Error(error);
-      },
-      "CordovaFirebaseDatabase",
-      "newInstance",
+      };
+      exec(onSuccess, onError,
+      "CordovaFirebaseDatabase", "newInstance",
       [{
         appName: this._app.name,
         id: this.id,
@@ -75,9 +75,12 @@ export class Database extends PluginBase {
   /**
    * Database.goOffline
    */
-  public goOffline(): Promise<void> {
+  public goOffline(): void {
     return this.exec({
       context: this,
+      execOptions: {
+        sync: true,
+      },
       methodName: "goOffline",
     });
   }
@@ -85,9 +88,12 @@ export class Database extends PluginBase {
   /**
    * Database.goOnline
    */
-  public goOnline(): Promise<void> {
-    return this.exec({
+  public goOnline(): void {
+    this.exec({
       context: this,
+      execOptions: {
+        sync: true,
+      },
       methodName: "goOnline",
     });
   }
@@ -108,21 +114,22 @@ export class Database extends PluginBase {
 
     // Create a reference instance.
     const reference: Reference = new Reference({
-      pluginName: this.id,
-      parent: null,
       key,
+      parent: null,
+      pluginName: this.id,
       url: this.url,
     });
 
     // Bubbling native events
-    this._on("nativeEvent", ((params: any) => {
-      reference._trigger("nativeEvent", params);
+    this._on("nativeEvent", (...parameters: Array<any>) {
+      parameters.unshift("nativeEvent");
+      reference._trigger.apply(reference, parameters);
     });
 
     this.exec({
       args: [{
-        path,
         id: reference.id,
+        path,
       }],
       context: this,
       methodName: "database_ref",
@@ -144,7 +151,7 @@ export class Database extends PluginBase {
     let path: string = null;
     if (typeof url === "string") {
       if (/^https:\/\/(.+?).firebaseio.com/) {
-        path = url.replace( ^ https: \/\/.+?.firebaseio.com\/?/, "");
+        path = url.replace(/^https:\/\/.+?.firebaseio.com\/?/, "");
         path = path.replace(/\/$/, "");
         key = path.replace(/^.*\//, "") || null;
       } else {
@@ -156,21 +163,22 @@ export class Database extends PluginBase {
 
     // Create a reference instance.
     const reference: Reference = new Reference({
-      pluginName: this.id,
-      parent: null,
       key,
-      url,
+      parent: null,
+      pluginName: this.id,
+      url: this.url,
     });
 
     // Bubbling native events
-    this._on("nativeEvent", function(params) {
-      reference._trigger("nativeEvent", params);
+    this._on("nativeEvent", (...parameters: Array<any>) {
+      parameters.unshift("nativeEvent");
+      reference._trigger.apply(reference, parameters);
     });
 
     this.exec({
       args: [{
-        url,
         id: reference.id,
+        path,
       }],
       context: this,
       methodName: "database_refFromURL",
