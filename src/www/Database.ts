@@ -102,16 +102,16 @@ export class Database extends PluginBase {
 
     let key: string = null;
     if (typeof url === "string") {
-      path = path.replace(/\/$/, '');
-      key = path.replace(/^.*\//, '') || null;
+      path = path.replace(/\/$/, "");
+      key = path.replace(/^.*\//, "") || null;
     }
 
     // Create a reference instance.
     const reference: Reference = new Reference({
       pluginName: this.id,
       parent: null,
-      key: key,
-      url: this.url
+      key,
+      url: this.url,
     });
 
     // Bubbling native events
@@ -121,11 +121,11 @@ export class Database extends PluginBase {
 
     this.exec({
       args: [{
-        path: path,
-        id: reference.id
+        path,
+        id: reference.id,
       }],
       context: this,
-      methodName: "database_ref"
+      methodName: "database_ref",
     }).then((result: any) => {
       reference._privateInit(result);
     });
@@ -144,9 +144,9 @@ export class Database extends PluginBase {
     let path: string = null;
     if (typeof url === "string") {
       if (/^https:\/\/(.+?).firebaseio.com/) {
-        path = url.replace(^https:\/\/.+?.firebaseio.com\/?/, "");
-        path = path.replace(/\/$/, '');
-        key = path.replace(/^.*\//, '') || null;
+        path = url.replace( ^ https: \/\/.+?.firebaseio.com\/?/, "");
+        path = path.replace(/\/$/, "");
+        key = path.replace(/^.*\//, "") || null;
       } else {
         throw new Error("url must be started with https://(project id).firebaseio.com");
       }
@@ -155,11 +155,11 @@ export class Database extends PluginBase {
     }
 
     // Create a reference instance.
-    let reference: Reference = new Reference({
+    const reference: Reference = new Reference({
       pluginName: this.id,
       parent: null,
-      key: key,
-      url: url
+      key,
+      url,
     });
 
     // Bubbling native events
@@ -169,11 +169,11 @@ export class Database extends PluginBase {
 
     this.exec({
       args: [{
-        url: url,
-        id: reference.id
+        url,
+        id: reference.id,
       }],
       context: this,
-      methodName: "database_refFromURL"
+      methodName: "database_refFromURL",
     }).then((result: any) => {
       reference._privateInit(result);
     });
