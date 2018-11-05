@@ -813,7 +813,7 @@ export class Reference extends Query {
    * Reference.transaction
    */
   public transaction(
-      transactionUpdate: (...args: Array<any>) => any,
+      transactionUpdate: (currentValue: any) => any,
       onComplete?: (error: any, committed: boolean, snapshot: DataSnapshot) => void,
       applyLocally?: boolean): Promise<void> {
 
@@ -821,18 +821,44 @@ export class Reference extends Query {
     const eventName: string = this.pluginName + "-" + self.id + "-" + transactionId;
 
     if (cordova.platformId === "browser") {
-      this._set(transactionId, transactionUpdate);
-    } else {
-      const onNativeCallback = (...args: Array<any>): void {
-        const newValue: any = transactionUpdate.call(this, JSON.parse(LZString.decompressFromBase64(args[0])));
-        exec(null, null, this.pluginName,
-            "reference_onTransactionCallback",
-            [transactionId, LZString.compressToBase64(JSON.stringify(newValue))]);
-      };
-      document.addEventListener(eventName, onNativeCallback, {
-        once: true,
+      // ------------------------
+      //       Browser
+      // ------------------------
+      return new Promise((resolve: () => void, reject: (error: any) => void): void => {
+        const proxy: any = require("cordova/exec/proxy");
+        const fbDbPlugin: any = proxy.get(this.pluginName);
+        const ref: any = fbDbPlugin._get(this.id);
+        ref.transaction(transactionUpdate, (error: any, committed: boolean, snapshot: any): void => {
+
+          if (error) {
+            onComplete(error, committed);
+          } else {
+            const dataSnapshot: DataSnapshot = new DataSnapshot(this, {
+              exists: snapshot.exists(),
+              exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
+              key: snapshot.key,
+              getPriority: LZString.compressToBase64(snapshot.getPriority()),
+              numChildren: snapshot.numChildren(),
+              val: LZString.compressToBase64(JSON.stringify(snapshot.val()))
+            });
+            onComplete(null, committed, dataSnapshot);
+          }
+        }, applyLocally);
       });
+
     }
+    // ------------------------
+    //    Android, iOS
+    // ------------------------
+    const onNativeCallback = (...args: Array<any>): void {
+      const newValue: any = transactionUpdate.call(this, JSON.parse(LZString.decompressFromBase64(args[0])));
+      exec(null, null, this.pluginName,
+          "reference_onTransactionCallback",
+          [transactionId, LZString.compressToBase64(JSON.stringify(newValue))]);
+    };
+    document.addEventListener(eventName, onNativeCallback, {
+      once: true,
+    });
 
 
     return new Promise((resolve: () => void, reject: (error: any) => void): void => {

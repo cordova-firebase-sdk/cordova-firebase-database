@@ -128,4 +128,85 @@ export class FirebaseDatabasePlugin extends BaseClass {
       onError(e);
     }
   }
+
+  public reference_push(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    try {
+      const options: any = args[0];
+      const ref: any = this._get(options.targetId);
+      let thenableRef;
+      if (options.value) {
+        thenableRef = ref.push(JSON.parse(LZString.decompressFromBase64(options.value)));
+      } else {
+        thenableRef = ref.push();
+      }
+      this._set(options.onDisconnectId, thenableRef);
+      thenableRef.then(function() {
+        onSuccess({
+          key: thenableRef.key,
+          url: thenableRef.toString(),
+        });
+      }).catch(onError);
+    } catch(e: Error) {
+      onError(e);
+    }
+  }
+
+  public reference_remove(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    try {
+      const options: any = args[0];
+      const ref: any = this._get(options.targetId);
+      ref.remove().then(function() {
+        this._delete(options.targetId);
+        onSuccess();
+      }).catch(onError);
+    } catch(e: Error) {
+      onError(e);
+    }
+  }
+
+  public reference_set(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    try {
+      const options: any = args[0];
+      const ref: any = this._get(options.targetId);
+      ref.set(JSON.parse(LZString.decompressFromBase64(options.data)))
+          .then(onSuccess).catch(onError);
+    } catch(e: Error) {
+      onError(e);
+    }
+  }
+
+  public reference_setPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    try {
+      const options: any = args[0];
+      const ref: any = this._get(options.targetId);
+      ref.setPriority(JSON.parse(LZString.decompressFromBase64(options.priority)))
+          .then(onSuccess).catch(onError);
+    } catch(e: Error) {
+      onError(e);
+    }
+  }
+
+  public reference_setWithPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    try {
+      const options: any = args[0];
+      const ref: any = this._get(options.targetId);
+      const value: any = JSON.parse(LZString.decompressFromBase64(options.data));
+      const priority: any = JSON.parse(LZString.decompressFromBase64(options.priority));
+      ref.setWithPriority(data, priority)
+          .then(onSuccess).catch(onError);
+    } catch(e: Error) {
+      onError(e);
+    }
+  }
+
+  public reference_update(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    try {
+      const options: any = args[0];
+      const ref: any = this._get(options.targetId);
+      ref.update(JSON.parse(LZString.decompressFromBase64(options.data)))
+          .then(onSuccess).catch(onError);
+    } catch(e: Error) {
+      onError(e);
+    }
+  }
 }
