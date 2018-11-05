@@ -121,7 +121,7 @@ export class Database extends PluginBase {
     });
 
     // Bubbling native events
-    this._on("nativeEvent", (...parameters: Array<any>) {
+    this._on("nativeEvent", (...parameters: Array<any>): void => {
       parameters.unshift("nativeEvent");
       reference._trigger.apply(reference, parameters);
     });
@@ -133,7 +133,7 @@ export class Database extends PluginBase {
       }],
       context: this,
       methodName: "database_ref",
-    }).then((result: any) => {
+    }).then((result: any): void => {
       reference._privateInit(result);
     });
 
@@ -170,7 +170,7 @@ export class Database extends PluginBase {
     });
 
     // Bubbling native events
-    this._on("nativeEvent", (...parameters: Array<any>) {
+    this._on("nativeEvent", (...parameters: Array<any>): void => {
       parameters.unshift("nativeEvent");
       reference._trigger.apply(reference, parameters);
     });
@@ -182,7 +182,7 @@ export class Database extends PluginBase {
       }],
       context: this,
       methodName: "database_refFromURL",
-    }).then((result: any) => {
+    }).then((result: any): void => {
       reference._privateInit(result);
     });
 
@@ -191,7 +191,7 @@ export class Database extends PluginBase {
 
 
   private exec(params: IExecCmdParams): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve: (result: any) => void, reject: (error: any) => void) => {
       params.resolve = resolve;
       params.reject = reject;
       this._queue._push(params);

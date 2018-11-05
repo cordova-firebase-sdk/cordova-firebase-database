@@ -9,12 +9,12 @@ export class CordovaFirebaseDatabase extends BaseClass {
     super();
   }
 
-  public newInstance(resolve, reject, args: Array<any>): void {
+  public newInstance(resolve: () => void, reject: (error: any) => void, args: Array<any>): void {
     loadJsPromise({
       package: "firebase.database",
       url: "https://www.gstatic.com/firebasejs/5.5.0/firebase-database.js",
     })
-    .then(() => {
+    .then((): void => {
       // args[0]
       // {
       //   id: this.id,
@@ -22,11 +22,10 @@ export class CordovaFirebaseDatabase extends BaseClass {
       //   options: options,
       // }
       const options: any = args[0] || {};
-      console.log(options);
 
       // Get the application instance
       let apps: Array<any> = window.firebase.apps.slice(0);
-      apps = apps.filter((app: any) => {
+      apps = apps.filter((app: any): boolean => {
         return app.name === options.appName;
       });
 
@@ -37,10 +36,11 @@ export class CordovaFirebaseDatabase extends BaseClass {
       // Create Database plugin instance
       const instance: FirebaseDatabasePlugin = new FirebaseDatabasePlugin(options.id, database);
       const dummyObj: any = {};
-      const keys: Array<string> = Object.getOwnPropertyNames(FirebaseDatabasePlugin.prototype).filter((p: string) => {
+      const keys: Array<string> = Object.getOwnPropertyNames(FirebaseDatabasePlugin.prototype)
+                                        .filter((p: string): boolean => {
         return typeof FirebaseDatabasePlugin.prototype[p] === "function";
       });
-      keys.forEach((key: string) => {
+      keys.forEach((key: string): void => {
         dummyObj[key] = instance[key].bind(instance);
       });
       const proxy: any = require("cordova/exec/proxy");
@@ -58,10 +58,11 @@ if ((window as any).cordova && (window as any).cordova.version) {
   (() => {
     const instance: any = new CordovaFirebaseDatabase();
     const dummyObj = {};
-    const keys: Array<string> = Object.getOwnPropertyNames(CordovaFirebaseDatabase.prototype).filter((p: string) => {
+    const keys: Array<string> = Object.getOwnPropertyNames(CordovaFirebaseDatabase.prototype)
+                                      .filter((p: string): boolean => {
       return typeof CordovaFirebaseDatabase.prototype[p] === "function";
     });
-    keys.forEach((key: string) => {
+    keys.forEach((key: string): void => {
       dummyObj[key] = instance[key].bind(instance);
     });
 
