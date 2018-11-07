@@ -33,7 +33,6 @@ var CordovaFirebaseDatabase = /** @class */ (function (_super) {
             //   options: options,
             // }
             var options = args[0] || {};
-            console.log(options);
             // Get the application instance
             var apps = window.firebase.apps.slice(0);
             apps = apps.filter(function (app) {
@@ -45,7 +44,8 @@ var CordovaFirebaseDatabase = /** @class */ (function (_super) {
             // Create Database plugin instance
             var instance = new FirebaseDatabasePlugin_1.FirebaseDatabasePlugin(options.id, database);
             var dummyObj = {};
-            var keys = Object.getOwnPropertyNames(FirebaseDatabasePlugin_1.FirebaseDatabasePlugin.prototype).filter(function (p) {
+            var keys = Object.getOwnPropertyNames(FirebaseDatabasePlugin_1.FirebaseDatabasePlugin.prototype)
+                .filter(function (p) {
                 return typeof FirebaseDatabasePlugin_1.FirebaseDatabasePlugin.prototype[p] === "function";
             });
             keys.forEach(function (key) {
@@ -65,7 +65,8 @@ if (window.cordova && window.cordova.version) {
     (function () {
         var instance = new CordovaFirebaseDatabase();
         var dummyObj = {};
-        var keys = Object.getOwnPropertyNames(CordovaFirebaseDatabase.prototype).filter(function (p) {
+        var keys = Object.getOwnPropertyNames(CordovaFirebaseDatabase.prototype)
+            .filter(function (p) {
             return typeof CordovaFirebaseDatabase.prototype[p] === "function";
         });
         keys.forEach(function (key) {

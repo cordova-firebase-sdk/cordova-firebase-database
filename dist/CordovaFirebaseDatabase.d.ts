@@ -1,5 +1,5 @@
 import { BaseClass } from "cordova-firebase-core/index";
 export declare class CordovaFirebaseDatabase extends BaseClass {
     constructor();
-    newInstance(resolve: any, reject: any, args: Array<any>): void;
+    newInstance(resolve: () => void, reject: (error: any) => void, args: Array<any>): void;
 }

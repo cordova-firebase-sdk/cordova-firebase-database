@@ -7,7 +7,7 @@ import {
   PluginBase,
 } from "cordova-firebase-core/index";
 import { execCmd, IExecCmdParams } from "./CommandQueue";
-import { Reference } from "./Reference";
+import { Reference } from "./DataClasses";
 
 
 declare let Promise: any;
@@ -21,10 +21,22 @@ export class Database extends PluginBase {
 
   private _options: IAppInitializeOptions;
 
+  private _url: string;
+
   constructor(app: App, options: IAppInitializeOptions) {
     super("database");
+    if (!app) {
+      throw new Error("app must be FirebaseApp instance");
+    }
+    if (!options) {
+      throw new Error("options must be passed");
+    }
+    if (!options.databaseURL) {
+      throw new Error("options.databaseURL must be passed");
+    }
     this._app = app;
     this._options = options;
+    this._url = options.databaseURL.replace(/(firebaseio.com).*$/, "$1");
 
 
     this._queue._on("insert_at", (): void => {
@@ -62,13 +74,13 @@ export class Database extends PluginBase {
     });
   }
 
-  /**
-   * The app associated with the Database service instance.
-   *
-   * @link https://firebase.google.com/docs/reference/js/firebase.database.Database#app
-   */
   public get app(): App {
     return this._app;
+  }
+
+
+  public get url(): string {
+    return this._url;
   }
 
 
@@ -76,7 +88,7 @@ export class Database extends PluginBase {
    * Database.goOffline
    */
   public goOffline(): void {
-    return this.exec({
+    this.exec({
       context: this,
       execOptions: {
         sync: true,
@@ -107,7 +119,7 @@ export class Database extends PluginBase {
   public ref(path?: string): Reference {
 
     let key: string = null;
-    if (typeof url === "string") {
+    if (typeof path === "string") {
       path = path.replace(/\/$/, "");
       key = path.replace(/^.*\//, "") || null;
     }
@@ -117,6 +129,7 @@ export class Database extends PluginBase {
       key,
       parent: null,
       pluginName: this.id,
+      ref: null,
       url: this.url,
     });
 
@@ -133,8 +146,8 @@ export class Database extends PluginBase {
       }],
       context: this,
       methodName: "database_ref",
-    }).then((result: any): void => {
-      reference._privateInit(result);
+    }).then((): void => {
+      reference._privateInit();
     });
 
     return reference;
@@ -166,6 +179,7 @@ export class Database extends PluginBase {
       key,
       parent: null,
       pluginName: this.id,
+      ref: null,
       url: this.url,
     });
 
@@ -182,8 +196,8 @@ export class Database extends PluginBase {
       }],
       context: this,
       methodName: "database_refFromURL",
-    }).then((result: any): void => {
-      reference._privateInit(result);
+    }).then((): void => {
+      reference._privateInit();
     });
 
     return reference;
@@ -226,6 +240,22 @@ if (window.cordova && window.cordova.version) {
         manager._databases[app.name] = database;
       }
       return database;
+    },
+  });
+
+  Object.defineProperty(window.plugin.firebase.database, "_nativeCallback", {
+    enumerable: false,
+    value: (dbId: string, listenerId: string, eventType: string, args: Array<any>): void => {
+
+      const dbInstance = window.plugin.firebase.database._DBs[dbId];
+
+      if (dbInstance) {
+        dbInstance._trigger("nativeEvent", {
+          args,
+          eventType,
+          listenerId,
+        });
+      }
     },
   });
 }

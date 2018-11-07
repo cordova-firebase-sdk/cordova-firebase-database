@@ -73,7 +73,7 @@ export const execCmd = (params: IExecCmdParams): Promise<any> => {
     return Promise.resolve();
   }
 
-  return new Promise((resolve: (...params?: Array<any>) => void, reject: (...params?: Array<any>) => void) => {
+  return new Promise((resolve: (...params: Array<any>) => void, reject: (...params: Array<any>) => void) => {
     commandQueue.push({
       request: params,
 

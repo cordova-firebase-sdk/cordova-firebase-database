@@ -48,7 +48,7 @@ let executingCnt: number = 0;
 const MAX_EXECUTE_CNT: number = 10;
 
 let stopRequested: boolean = false;
-window.addEventListener("unload", () => {
+window.addEventListener("unload", (): void => {
   stopRequested = true;
 }, {
   once: true,
@@ -73,11 +73,11 @@ export const execCmd = (params: IExecCmdParams): Promise<any> => {
     return Promise.resolve();
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: (...params: Array<any>) => void, reject: (...params: Array<any>) => void) => {
     commandQueue.push({
       request: params,
 
-      onSuccess: (...results: Array<any>) => {
+      onSuccess: (...results: Array<any>): void => {
         // -------------------------------
         // success callback
         // -------------------------------
@@ -100,7 +100,7 @@ export const execCmd = (params: IExecCmdParams): Promise<any> => {
         nextTick(privateExec);
       },
 
-      onError: (...results: Array<any>) => {
+      onError: (...results: Array<any>): void => {
         // -------------------------------
         // error callback
         // -------------------------------
@@ -140,7 +140,7 @@ export const execCmd = (params: IExecCmdParams): Promise<any> => {
 };
 
 
-const privateExec = () => {
+const privateExec = (): void => {
 
   // You probably wonder why there is this code because it's already simular code at the end of the execCmd function.
   //

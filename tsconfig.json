@@ -6,7 +6,8 @@
     "rootDir": "src/www/",
     "target": "es5",
     "baseUrl": ".",
-    "declaration": true
+    "declaration": true,
+    "lib": ["es5", "es6", "DOM"]
   },
   "exclude": [
     "dist/**",

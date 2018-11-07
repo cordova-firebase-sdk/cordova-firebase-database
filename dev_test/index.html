@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://www.gstatic.com/firebasejs/5.5.7/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  // TODO: Replace with your project's customized code snippet
+  var config = {
+    apiKey: "AIzaSyA898h_Ez99cQUfmhkAVKT2BmivNhHm_3Y",
+    databaseURL: "https://geofire-test-34492.firebaseio.com"
+  };
+  firebase.initializeApp(config);
+
+  var database = firebase.database();
+  var ref = database.ref();
+  var child = database.ref("user");
+  console.log(child.toString());
+  console.log(child.ref.toString());
+</script>
+</head>
+<body>
+</body>
+</html>

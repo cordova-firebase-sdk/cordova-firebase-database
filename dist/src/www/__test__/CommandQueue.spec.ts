@@ -1,6 +1,6 @@
 // import { Promise } from "es6-promise";
-import { execCmd, IExecCmdParams } from "../FirebaseCoreCommandQueue";
-import { PluginBase } from "../PluginBase";
+import { execCmd, IExecCmdParams } from "../CommandQueue";
+import { PluginBase } from "cordova-firebase-core/index";
 declare let Promise: any;
 
 describe("[commandQueue]", () => {
