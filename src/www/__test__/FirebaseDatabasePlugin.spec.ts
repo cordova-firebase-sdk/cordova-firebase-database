@@ -1,8 +1,6 @@
 import { FirebaseDatabasePlugin } from "../FirebaseDatabasePlugin";
 import { LZString } from "cordova-firebase-core/index";
 
-declare const Promise: any;
-
 describe("[FirebaseDatabasePlugin(native side)]", () => {
 
   it("should return the same id and same database with init parameters", () => {
