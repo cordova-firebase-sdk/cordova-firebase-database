@@ -1,197 +1,173 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    }
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var index_1 = require("cordova-firebase-core/index");
-var CommandQueue_1 = require("./CommandQueue");
-var OnDisconnect = /** @class */ (function (_super) {
-    __extends(OnDisconnect, _super);
-    function OnDisconnect(pluginName) {
-        var _this = _super.call(this, "OnDisconnect") || this;
-        _this._queue = new index_1.BaseArrayClass();
-        _this._pluginName = pluginName;
-        _this._queue._on("insert_at", function () {
-            if (!_this._isReady) {
+const index_1 = require("cordova-firebase-core/index");
+const CommandQueue_1 = require("./CommandQueue");
+class OnDisconnect extends index_1.PluginBase {
+    constructor(pluginName) {
+        super("OnDisconnect");
+        this._queue = new index_1.BaseArrayClass();
+        this._pluginName = pluginName;
+        this._queue._on("insert_at", () => {
+            if (!this._isReady) {
                 return;
             }
-            if (_this._queue._getLength() > 0) {
-                var cmd = _this._queue._removeAt(0, true);
+            if (this._queue._getLength() > 0) {
+                const cmd = this._queue._removeAt(0, true);
                 if (cmd && cmd.context && cmd.methodName) {
                     CommandQueue_1.execCmd(cmd).then(cmd.resolve).catch(cmd.reject);
                 }
             }
-            if (_this._queue._getLength() > 0) {
-                _this._queue._trigger("insert_at");
+            if (this._queue._getLength() > 0) {
+                this._queue._trigger("insert_at");
             }
         });
-        return _this;
     }
-    Object.defineProperty(OnDisconnect.prototype, "pluginName", {
-        get: function () {
-            return this._pluginName;
-        },
-        enumerable: true,
-        configurable: true
-    });
+    get pluginName() {
+        return this._pluginName;
+    }
     /**
      * Internal use only. Don't execute this method.
      * @hidden
      */
-    OnDisconnect.prototype._privateInit = function () {
-        this._isReady = true;
-        this._queue._trigger("insert_at");
-    };
-    OnDisconnect.prototype.cancel = function (onComplete) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.exec({
+    _privateInit() {
+        if (!this._isReady) {
+            this._isReady = true;
+            this._queue._trigger("insert_at");
+        }
+    }
+    cancel(onComplete) {
+        return new Promise((resolve, reject) => {
+            this.exec({
                 args: [{
-                        targetId: _this.id,
+                        targetId: this.id,
                     }],
-                context: _this,
+                context: this,
                 methodName: "onDisconnect_cancel",
-                pluginName: _this.pluginName,
+                pluginName: this.pluginName,
             })
-                .then(function () {
+                .then(() => {
                 resolve();
                 if (typeof onComplete === "function") {
                     onComplete();
                 }
             })
-                .catch(function (error) {
+                .catch((error) => {
                 reject(error);
                 if (typeof onComplete === "function") {
                     onComplete(error);
                 }
             });
         });
-    };
-    OnDisconnect.prototype.remove = function (onComplete) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.exec({
+    }
+    remove(onComplete) {
+        return new Promise((resolve, reject) => {
+            this.exec({
                 args: [{
-                        targetId: _this.id,
+                        targetId: this.id,
                     }],
-                context: _this,
+                context: this,
                 methodName: "onDisconnect_remove",
-                pluginName: _this.pluginName,
+                pluginName: this.pluginName,
             })
-                .then(function () {
+                .then(() => {
                 resolve();
                 if (typeof onComplete === "function") {
                     onComplete();
                 }
             })
-                .catch(function (error) {
+                .catch((error) => {
                 reject(error);
                 if (typeof onComplete === "function") {
                     onComplete(error);
                 }
             });
         });
-    };
-    OnDisconnect.prototype.set = function (value, onComplete) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.exec({
+    }
+    set(value, onComplete) {
+        return new Promise((resolve, reject) => {
+            this.exec({
                 args: [{
-                        targetId: _this.id,
+                        targetId: this.id,
                         value: index_1.LZString.compressToBase64(JSON.stringify(value)),
                     }],
-                context: _this,
+                context: this,
                 methodName: "onDisconnect_set",
-                pluginName: _this.pluginName,
+                pluginName: this.pluginName,
             })
-                .then(function () {
+                .then(() => {
                 resolve();
                 if (typeof onComplete === "function") {
                     onComplete();
                 }
             })
-                .catch(function (error) {
+                .catch((error) => {
                 reject(error);
                 if (typeof onComplete === "function") {
                     onComplete(error);
                 }
             });
         });
-    };
-    OnDisconnect.prototype.setWithPriority = function (value, property, onComplete) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.exec({
+    }
+    setWithPriority(value, property, onComplete) {
+        return new Promise((resolve, reject) => {
+            this.exec({
                 args: [{
                         priority: index_1.LZString.compressToBase64(JSON.stringify(property)),
-                        targetId: _this.id,
+                        targetId: this.id,
                         value: index_1.LZString.compressToBase64(JSON.stringify(value)),
                     }],
-                context: _this,
+                context: this,
                 methodName: "onDisconnect_setWithPriority",
-                pluginName: _this.pluginName,
+                pluginName: this.pluginName,
             })
-                .then(function () {
+                .then(() => {
                 resolve();
                 if (typeof onComplete === "function") {
                     onComplete();
                 }
             })
-                .catch(function (error) {
+                .catch((error) => {
                 reject(error);
                 if (typeof onComplete === "function") {
                     onComplete(error);
                 }
             });
         });
-    };
-    OnDisconnect.prototype.update = function (values, onComplete) {
-        var _this = this;
+    }
+    update(values, onComplete) {
         if (!values || typeof values !== "object" || Array.isArray(values)) {
             throw new Error("values must be key-value object");
         }
-        return new Promise(function (resolve, reject) {
-            _this.exec({
+        return new Promise((resolve, reject) => {
+            this.exec({
                 args: [{
-                        targetId: _this.id,
+                        targetId: this.id,
                         values: index_1.LZString.compressToBase64(JSON.stringify(values)),
                     }],
-                context: _this,
+                context: this,
                 methodName: "onDisconnect_update",
-                pluginName: _this.pluginName,
+                pluginName: this.pluginName,
             })
-                .then(function () {
+                .then(() => {
                 resolve();
                 if (typeof onComplete === "function") {
-                    onComplete.call(_this);
+                    onComplete.call(this);
                 }
             })
-                .catch(function (error) {
+                .catch((error) => {
                 reject(error);
                 if (typeof onComplete === "function") {
-                    onComplete.call(_this, error);
+                    onComplete.call(this, error);
                 }
             });
         });
-    };
-    OnDisconnect.prototype.exec = function (params) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
+    }
+    exec(params) {
+        return new Promise((resolve, reject) => {
             params.resolve = resolve;
             params.reject = reject;
-            _this._queue._push(params);
+            this._queue._push(params);
         });
-    };
-    return OnDisconnect;
-}(index_1.PluginBase));
+    }
+}
 exports.OnDisconnect = OnDisconnect;

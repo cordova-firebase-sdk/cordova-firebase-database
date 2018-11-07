@@ -2,6 +2,9 @@ import { BaseClass, LZString } from "cordova-firebase-core/index";
 
 declare let window: any;
 
+const STUB_SUCCESS = (...params: Array<any>): void => { return; };
+const STUB_ERROR = (e: any): void => { console.error(e); };
+
 /**
  * This is implementation of the code for browser native side.
  * Don't use this in user code.
@@ -27,6 +30,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public database_goOffline(onSuccess: () => void, onError: (error: Error) => void): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       this.database.goOffline();
       onSuccess();
@@ -36,6 +41,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public database_goOnline(onSuccess: () => void, onError: (error: Error) => void): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       this.database.goOnline();
       onSuccess();
@@ -45,6 +52,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public database_ref(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this.database.ref(options.path);
@@ -56,6 +65,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public onDisconnect_cancel(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const onDisconnect: any = this._get(options.targetId);
@@ -66,6 +77,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public onDisconnect_remove(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const onDisconnect: any = this._get(options.targetId);
@@ -76,6 +89,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public onDisconnect_set(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const onDisconnect: any = this._get(options.targetId);
@@ -87,6 +102,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public onDisconnect_setWithPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const onDisconnect: any = this._get(options.targetId);
@@ -99,6 +116,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public onDisconnect_update(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const onDisconnect: any = this._get(options.targetId);
@@ -113,6 +132,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
       onSuccess: (results: {key: string, url: string}) => void,
       onError: (error: Error) => void,
       args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -128,6 +149,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_onDisconnect(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -140,13 +163,15 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_push(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
       const thenableRef = (options.value) ?
         ref.push(JSON.parse(LZString.decompressFromBase64(options.value))) : ref.push();
 
-      this._set(options.onDisconnectId, thenableRef);
+      this._set(options.newId, thenableRef);
       thenableRef.then((): void => {
         onSuccess();
         // onSuccess({
@@ -160,10 +185,12 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_remove(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
-      ref.remove().then(function() {
+      ref.remove().then((): void => {
         this._delete(options.targetId);
         onSuccess();
       }).catch(onError);
@@ -173,6 +200,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_set(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -184,6 +213,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_setPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -195,6 +226,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_setWithPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -208,6 +241,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public reference_update(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -221,6 +256,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
 
 
   public query_endAt(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -236,6 +273,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
 
 
   public query_equalTo(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -250,6 +289,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
 
 
   public query_limitToFirst(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -264,6 +305,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
 
 
   public query_limitToLast(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
@@ -276,6 +319,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public query_off(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
@@ -290,6 +335,8 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public query_on(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
@@ -323,11 +370,13 @@ export class FirebaseDatabasePlugin extends BaseClass {
 
 
   public query_orderByChild(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
       const query: any = refOrQuery.orderByChild(options.path);
-      this._set(options.listenerId, query);
+      this._set(options.queryId, query);
 
       onSuccess();
     } catch (e) {
@@ -336,11 +385,13 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public query_orderByKey(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
       const query: any = refOrQuery.orderByKey();
-      this._set(options.listenerId, query);
+      this._set(options.queryId, query);
 
       onSuccess();
     } catch (e) {
@@ -349,11 +400,13 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public query_orderByPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
       const query: any = refOrQuery.orderByPriority();
-      this._set(options.listenerId, query);
+      this._set(options.queryId, query);
 
       onSuccess();
     } catch (e) {
@@ -362,11 +415,13 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public query_orderByValue(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
       const query: any = refOrQuery.orderByValue();
-      this._set(options.listenerId, query);
+      this._set(options.queryId, query);
 
       onSuccess();
     } catch (e) {
@@ -375,13 +430,15 @@ export class FirebaseDatabasePlugin extends BaseClass {
   }
 
   public query_startAt(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
       const value: any = JSON.parse(LZString.decompressFromBase64(options.value));
 
       const query: any = ref.startAt(value, options.key);
-      this._set(options.listenerId, query);
+      this._set(options.queryId, query);
 
       onSuccess();
     } catch (e) {

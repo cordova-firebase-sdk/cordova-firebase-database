@@ -1,20 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var cordova_1 = require("cordova");
+const cordova_1 = require("cordova");
 // import { Promise } from "es6-promise";
-var index_1 = require("cordova-firebase-core/index");
-var commandQueue = [];
-var isWaitMethod;
-var isExecuting;
-var executingCnt = 0;
-var MAX_EXECUTE_CNT = 10;
-var stopRequested = false;
-window.addEventListener("unload", function () {
+const index_1 = require("cordova-firebase-core/index");
+const commandQueue = [];
+let isWaitMethod;
+let isExecuting;
+let executingCnt = 0;
+const MAX_EXECUTE_CNT = 10;
+let stopRequested = false;
+window.addEventListener("unload", () => {
     stopRequested = true;
 }, {
     once: true,
 });
-exports.execCmd = function (params) {
+exports.execCmd = (params) => {
     params.execOptions = params.execOptions || {};
     params.args = params.args || [];
     params.pluginName = params.pluginName || params.context.id;
@@ -30,17 +30,13 @@ exports.execCmd = function (params) {
         console.error("[ignore]" + params.context.id + "." + params.methodName + ", because it's not ready.");
         return Promise.resolve();
     }
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
         commandQueue.push({
             request: params,
-            onSuccess: function () {
+            onSuccess: (...results) => {
                 // -------------------------------
                 // success callback
                 // -------------------------------
-                var results = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    results[_i] = arguments[_i];
-                }
                 // Even if the method was successful,
                 // but the _stopRequested flag is true,
                 // do not execute further code.
@@ -57,11 +53,7 @@ exports.execCmd = function (params) {
                 executingCnt--;
                 index_1.nextTick(privateExec);
             },
-            onError: function () {
-                var results = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    results[_i] = arguments[_i];
-                }
+            onError: (...results) => {
                 // -------------------------------
                 // error callback
                 // -------------------------------
@@ -95,7 +87,7 @@ exports.execCmd = function (params) {
         privateExec();
     });
 };
-var privateExec = function () {
+const privateExec = () => {
     // You probably wonder why there is this code because it's already simular code at the end of the execCmd function.
     //
     // Because the commandQueue might change after the last code of the execCmd.
@@ -106,7 +98,7 @@ var privateExec = function () {
     }
     isExecuting = true;
     // Execute some execution requests (up to 10) from the commandQueue
-    var task;
+    let task;
     while (commandQueue.length > 0 && executingCnt < MAX_EXECUTE_CNT) {
         if (!stopRequested) {
             executingCnt++;

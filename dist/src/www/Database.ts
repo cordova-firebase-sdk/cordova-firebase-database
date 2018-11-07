@@ -25,6 +25,15 @@ export class Database extends PluginBase {
 
   constructor(app: App, options: IAppInitializeOptions) {
     super("database");
+    if (!app) {
+      throw new Error("app must be FirebaseApp instance");
+    }
+    if (!options) {
+      throw new Error("options must be passed");
+    }
+    if (!options.databaseURL) {
+      throw new Error("options.databaseURL must be passed");
+    }
     this._app = app;
     this._options = options;
     this._url = options.databaseURL.replace(/(firebaseio.com).*$/, "$1");

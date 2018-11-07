@@ -10,6 +10,9 @@ export class OnDisconnect extends PluginBase {
   constructor(pluginName: string) {
     super("OnDisconnect");
 
+
+
+
     this._pluginName = pluginName;
 
     this._queue._on("insert_at", (): void => {
@@ -38,8 +41,10 @@ export class OnDisconnect extends PluginBase {
    * @hidden
    */
   public _privateInit(): void {
-    this._isReady = true;
-    this._queue._trigger("insert_at");
+    if (!this._isReady) {
+      this._isReady = true;
+      this._queue._trigger("insert_at");
+    }
   }
 
   public cancel(onComplete?: (error?: any) => void): Promise<void> {

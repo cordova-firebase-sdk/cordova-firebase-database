@@ -76,8 +76,10 @@ export class Query extends PluginBase {
    * Internal methods. Don't use it from your code
    */
   public _privateInit(): void {
-    this._isReady = true;
-    this._queue._trigger("insert_at");
+    if (!this._isReady) {
+      this._isReady = true;
+      this._queue._trigger("insert_at");
+    }
   }
 
   /**

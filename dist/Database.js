@@ -1,80 +1,66 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    }
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var cordova_1 = require("cordova");
-var index_1 = require("cordova-firebase-core/index");
-var CommandQueue_1 = require("./CommandQueue");
-var DataClasses_1 = require("./DataClasses");
-var Database = /** @class */ (function (_super) {
-    __extends(Database, _super);
-    function Database(app, options) {
-        var _this = _super.call(this, "database") || this;
-        _this._queue = new index_1.BaseArrayClass();
-        _this._app = app;
-        _this._options = options;
-        _this._url = options.databaseURL.replace(/(firebaseio.com).*$/, "$1");
-        _this._queue._on("insert_at", function () {
-            if (!_this._isReady) {
+const cordova_1 = require("cordova");
+const index_1 = require("cordova-firebase-core/index");
+const CommandQueue_1 = require("./CommandQueue");
+const DataClasses_1 = require("./DataClasses");
+class Database extends index_1.PluginBase {
+    constructor(app, options) {
+        super("database");
+        this._queue = new index_1.BaseArrayClass();
+        if (!app) {
+            throw new Error("app must be FirebaseApp instance");
+        }
+        if (!options) {
+            throw new Error("options must be passed");
+        }
+        if (!options.databaseURL) {
+            throw new Error("options.databaseURL must be passed");
+        }
+        this._app = app;
+        this._options = options;
+        this._url = options.databaseURL.replace(/(firebaseio.com).*$/, "$1");
+        this._queue._on("insert_at", () => {
+            if (!this._isReady) {
                 return;
             }
-            if (_this._queue._getLength() > 0) {
-                var cmd = _this._queue._removeAt(0, true);
+            if (this._queue._getLength() > 0) {
+                const cmd = this._queue._removeAt(0, true);
                 if (cmd && cmd.context && cmd.methodName) {
                     CommandQueue_1.execCmd(cmd).then(cmd.resolve).catch(cmd.reject);
                 }
             }
-            if (_this._queue._getLength() > 0) {
-                _this._queue._trigger("insert_at");
+            if (this._queue._getLength() > 0) {
+                this._queue._trigger("insert_at");
             }
         });
         // Create one new instance in native side.
-        _this._one("fireAppReady", function () {
-            var onSuccess = function () {
-                _this._isReady = true;
-                _this._queue._trigger("insert_at");
-                _this._trigger("ready");
+        this._one("fireAppReady", () => {
+            const onSuccess = () => {
+                this._isReady = true;
+                this._queue._trigger("insert_at");
+                this._trigger("ready");
             };
-            var onError = function (error) {
+            const onError = (error) => {
                 throw new Error(error);
             };
             cordova_1.exec(onSuccess, onError, "CordovaFirebaseDatabase", "newInstance", [{
-                    appName: _this._app.name,
-                    id: _this.id,
-                    options: _this._options,
+                    appName: this._app.name,
+                    id: this.id,
+                    options: this._options,
                 }]);
         });
-        return _this;
     }
-    Object.defineProperty(Database.prototype, "app", {
-        get: function () {
-            return this._app;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Database.prototype, "url", {
-        get: function () {
-            return this._url;
-        },
-        enumerable: true,
-        configurable: true
-    });
+    get app() {
+        return this._app;
+    }
+    get url() {
+        return this._url;
+    }
     /**
      * Database.goOffline
      */
-    Database.prototype.goOffline = function () {
+    goOffline() {
         this.exec({
             context: this,
             execOptions: {
@@ -82,11 +68,11 @@ var Database = /** @class */ (function (_super) {
             },
             methodName: "goOffline",
         });
-    };
+    }
     /**
      * Database.goOnline
      */
-    Database.prototype.goOnline = function () {
+    goOnline() {
         this.exec({
             context: this,
             execOptions: {
@@ -94,55 +80,51 @@ var Database = /** @class */ (function (_super) {
             },
             methodName: "goOnline",
         });
-    };
+    }
     /**
      * Database.ref
      * @param [path] - Optional path representing the location the returned Reference will point.
      * If not provided, the returned Reference will point to the root of the Database.
      * @returns Reference
      */
-    Database.prototype.ref = function (path) {
-        var key = null;
+    ref(path) {
+        let key = null;
         if (typeof path === "string") {
             path = path.replace(/\/$/, "");
             key = path.replace(/^.*\//, "") || null;
         }
         // Create a reference instance.
-        var reference = new DataClasses_1.Reference({
-            key: key,
+        const reference = new DataClasses_1.Reference({
+            key,
             parent: null,
             pluginName: this.id,
             ref: null,
             url: this.url,
         });
         // Bubbling native events
-        this._on("nativeEvent", function () {
-            var parameters = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                parameters[_i] = arguments[_i];
-            }
+        this._on("nativeEvent", (...parameters) => {
             parameters.unshift("nativeEvent");
             reference._trigger.apply(reference, parameters);
         });
         this.exec({
             args: [{
                     id: reference.id,
-                    path: path,
+                    path,
                 }],
             context: this,
             methodName: "database_ref",
-        }).then(function () {
+        }).then(() => {
             reference._privateInit();
         });
         return reference;
-    };
+    }
     /**
      * Database.refFromURL
      * https://firebase.google.com/docs/reference/js/firebase.database.Database#refFromURL
      */
-    Database.prototype.refFromURL = function (url) {
-        var key = null;
-        var path = null;
+    refFromURL(url) {
+        let key = null;
+        let path = null;
         if (typeof url === "string") {
             if (/^https:\/\/(.+?).firebaseio.com/) {
                 path = url.replace(/^https:\/\/.+?.firebaseio.com\/?/, "");
@@ -157,78 +139,71 @@ var Database = /** @class */ (function (_super) {
             throw new Error("url must be string");
         }
         // Create a reference instance.
-        var reference = new DataClasses_1.Reference({
-            key: key,
+        const reference = new DataClasses_1.Reference({
+            key,
             parent: null,
             pluginName: this.id,
             ref: null,
             url: this.url,
         });
         // Bubbling native events
-        this._on("nativeEvent", function () {
-            var parameters = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                parameters[_i] = arguments[_i];
-            }
+        this._on("nativeEvent", (...parameters) => {
             parameters.unshift("nativeEvent");
             reference._trigger.apply(reference, parameters);
         });
         this.exec({
             args: [{
                     id: reference.id,
-                    path: path,
+                    path,
                 }],
             context: this,
             methodName: "database_refFromURL",
-        }).then(function () {
+        }).then(() => {
             reference._privateInit();
         });
         return reference;
-    };
-    Database.prototype.exec = function (params) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
+    }
+    exec(params) {
+        return new Promise((resolve, reject) => {
             params.resolve = resolve;
             params.reject = reject;
-            _this._queue._push(params);
+            this._queue._push(params);
         });
-    };
-    return Database;
-}(index_1.PluginBase));
+    }
+}
 exports.Database = Database;
-var SecretDatabaseManager = /** @class */ (function () {
-    function SecretDatabaseManager() {
+class SecretDatabaseManager {
+    constructor() {
         this._databases = {};
     }
-    return SecretDatabaseManager;
-}());
+}
 if (window.cordova && window.cordova.version) {
-    var manager_1 = new SecretDatabaseManager();
+    const manager = new SecretDatabaseManager();
     Object.defineProperty(window.plugin.firebase, "database", {
-        value: function (app) {
+        value: (app) => {
             if (!app) {
                 // Obtains default app
                 app = window.plugin.firebase.app();
             }
             // If database is created for the app, returns it.
             // Otherwise, create a new instance.
-            var database = manager_1._databases[app.name];
+            let database = manager._databases[app.name];
             if (!database) {
                 database = new Database(app, app.options);
-                manager_1._databases[app.name] = database;
+                manager._databases[app.name] = database;
             }
             return database;
         },
     });
     Object.defineProperty(window.plugin.firebase.database, "_nativeCallback", {
         enumerable: false,
-        value: function (dbId, listenerId, eventType, args) {
-            var dbInstance = window.plugin.firebase.database._DBs[dbId];
+        value: (dbId, listenerId, eventType, args) => {
+            const dbInstance = window.plugin.firebase.database._DBs[dbId];
             if (dbInstance) {
                 dbInstance._trigger("nativeEvent", {
-                    args: args,
-                    eventType: eventType,
-                    listenerId: listenerId,
+                    args,
+                    eventType,
+                    listenerId,
                 });
             }
         },

@@ -7,6 +7,7 @@ describe("[Database]", () => {
 
     const app: App = new App("hello", {
       hello: "world",
+      databaseURL: "https://dummy.firebaseio.com/"
     });
     app._one("ready", () => {
       const db: Database = new Database(app, app.options);
