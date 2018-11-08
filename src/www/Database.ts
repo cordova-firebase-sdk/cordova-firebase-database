@@ -119,9 +119,13 @@ export class Database extends PluginBase {
   public ref(path?: string): Reference {
 
     let key: string = null;
+    let url: string = this.url;
     if (typeof path === "string") {
       path = path.replace(/\/$/, "");
       key = path.replace(/^.*\//, "") || null;
+      url += "/" + path;
+      url = url.replace(/\/+/, "/");
+      url = url.replace(/https:\//, "https://");
     }
 
     // Create a reference instance.
@@ -130,7 +134,7 @@ export class Database extends PluginBase {
       parent: null,
       pluginName: this.id,
       ref: null,
-      url: this.url,
+      url,
     });
 
     // Bubbling native events
