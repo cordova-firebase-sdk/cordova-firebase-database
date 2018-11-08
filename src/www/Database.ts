@@ -56,7 +56,7 @@ export class Database extends PluginBase {
 
     // Create one new instance in native side.
     this._one("fireAppReady", (): void => {
-      const onSuccess = (): void => {
+      const onSuccess = (result?: any): void => {
         this._isReady = true;
         this._queue._trigger("insert_at");
         this._trigger("ready");

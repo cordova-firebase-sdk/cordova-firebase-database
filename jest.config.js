@@ -23,7 +23,6 @@ module.exports = {
     window: {},
   },
   moduleNameMapper: {
-    "^cordova$": "<rootDir>/node_modules/cordova-firebase-core/src/www/__test__/cordova",
     "CommandQueue$": "<rootDir>/src/www/__mocks__/CommandQueue"
   }
 };
