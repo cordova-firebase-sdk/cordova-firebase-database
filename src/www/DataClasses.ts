@@ -20,6 +20,9 @@ export type ON_CALLBACK = (snapshot: DataSnapshot, key: string) => void;
 
 export class Query extends PluginBase {
 
+
+  protected _ref: Reference;
+
   private _url: string;
 
   private _queue: BaseArrayClass = new BaseArrayClass();
@@ -27,8 +30,6 @@ export class Query extends PluginBase {
   private _listeners: Array<any> = [];
 
   private _pluginName: string;
-
-  private _ref: Reference;
 
   constructor(params: IQueryParams) {
     super("queryOrReference");
@@ -560,26 +561,35 @@ export class Query extends PluginBase {
       this._queue._push(params);
     });
   }
-
-  protected _forceRefUpdate(ref: Reference): void {
-    this._ref = ref;
-  }
-
 }
 
 
 export class Reference extends Query {
 
-  private _parent: Reference;
   private _key: string;
+  private _parent: Reference;
+  private _rootRef: Reference;
 
-  constructor(params: IQueryParams) {
+  constructor(params: IQueryParams, _rootRef: Reference) {
     super(params);
     this._parent = params.parent;
     this._key = params.key;
-    this._forceRefUpdate(this);
+    this._ref = params.ref || this;
+    this._rootRef = _rootRef || this;
+
+    // Bubbling native events
+    const parentRef: Reference = this._parent || this._rootRef;
+    if (parentRef) {
+      parentRef._on("nativeEvent", (data: INativeEventParams): void => {
+        this._trigger.call(this, "nativeEvent", data);
+      });
+    }
+
   }
 
+  public get root(): Reference {
+    return this._rootRef;
+  }
   public get parent(): Reference {
     return this._parent;
   }
@@ -607,7 +617,7 @@ export class Reference extends Query {
       pluginName: this.pluginName,
       ref: null,
       url: this.url + "/" + path,
-    });
+    }, this.root);
 
     this._on("nativeEvent", (eventData: INativeEventParams) => {
       reference._trigger.call(reference, "nativeEvent", eventData);
@@ -662,7 +672,7 @@ export class Reference extends Query {
       pluginName: this.pluginName,
       ref: this,
       url: this.url,
-    });
+    }, this.root);
 
     this.exec({
       args: [{
@@ -962,8 +972,8 @@ export class ThenableReference extends Reference {
   public resolve: any;
   public reject: any;
 
-  constructor(params: IQueryParams) {
-    super(params);
+  constructor(params: IQueryParams, _rootRef: Reference) {
+    super(params, _rootRef);
   }
 
   public then(

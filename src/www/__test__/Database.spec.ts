@@ -45,10 +45,10 @@ describe("[Database]", () => {
           expect(exec.mock.calls[1][4][0].appName).toBe("hello");
           expect(exec.mock.calls[1][4][0].id).toBe(db.id);
           expect(exec.mock.calls[1][4][0].options.databaseURL).toEqual("https://dummy.firebaseio.com/");
+
           done();
         });
       });
-
     });
   });
 
@@ -89,5 +89,62 @@ describe("[Database]", () => {
         done();
       }, 5);
     });
+
+    it (".root.toString() should be the same as the current database", () => {
+      expect(commonDb.ref().root.toString()).toBe("https://dummy.firebaseio.com/");
+    });
+
+    it (".root.key should be null", () => {
+      expect(commonDb.ref().root.key).toBe(null);
+    });
+
+    it (".root.parent should be null", () => {
+      expect(commonDb.ref().root.parent).toBe(null);
+    });
+
+    it ("should reject empty string", () => {
+      expect(() => {
+        commonDb.ref("");
+      }).toThrowErrorMatchingSnapshot();
+    });
+
+    it ("should reject invalid path", () => {
+      expect(() => {
+        commonDb.ref("hello/../world/");
+      }).toThrowErrorMatchingSnapshot();
+    });
   });
+  // describe(".refFromURL", () => {
+  //   it ("should involve native code with correct parameters.", (done) => {
+  //
+  //     const ref = commonDb.refFromURL("https://dummy.firebaseio.com/users/test?awrewqar=www");
+  //     setTimeout(() => {
+  //       expect(execCmd).toHaveBeenCalledTimes(1);
+  //       const params: any = execCmd.mock.calls[0][0];
+  //       expect(params.methodName).toEqual("database_refFromURL");
+  //       expect(params.args[0].path).toEqual("users/test");
+  //       expect(ref.toString()).toEqual("https://dummy.firebaseio.com/users/test");
+  //       expect(ref.key).toEqual("test");
+  //       expect(ref.parent.key).toEqual("users");
+  //       done();
+  //     }, 5);
+  //   });
+  //
+  //   it ("should reject empty string", () => {
+  //     expect(() => {
+  //       commonDb.refFromURL("");
+  //     }).toThrowErrorMatchingSnapshot();
+  //   })
+  //
+  //   it ("should reject invalid url", () => {
+  //     expect(() => {
+  //       commonDb.refFromURL("http://hello.com/users/../world/");
+  //     }).toThrowErrorMatchingSnapshot();
+  //   })
+  //   it ("should reject if hostname does not match with the currend database", () => {
+  //     expect(() => {
+  //       commonDb.refFromURL("http://hello.com/users/../world/");
+  //     }).toThrowErrorMatchingSnapshot();
+  //   })
+  // });
 });

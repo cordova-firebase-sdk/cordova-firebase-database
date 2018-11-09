@@ -23,6 +23,8 @@ export class Database extends PluginBase {
 
   private _url: string;
 
+  private _rootRef: Reference;
+
   constructor(app: App, options: IAppInitializeOptions) {
     super("database");
     if (!app) {
@@ -37,7 +39,23 @@ export class Database extends PluginBase {
     this._app = app;
     this._options = options;
     this._url = options.databaseURL.replace(/(firebaseio.com).*$/, "$1");
+    if (this._url.substr(-1) !== "/") {
+      this._url += "/";
+    }
 
+    this._rootRef = new Reference({
+      key: null,
+      parent: null,
+      pluginName: this.id,
+      ref: null,
+      url: this._url,
+    }, null);
+    this._rootRef._privateInit();
+
+    // Bubbling native events
+    this._on("nativeEvent", (data: INativeEventParams): void => {
+      this._rootRef._trigger.call(this._rootRef, "nativeEvent", data);
+    });
 
     this._queue._on("insert_at", (): void => {
       if (!this._isReady) {
@@ -120,11 +138,23 @@ export class Database extends PluginBase {
 
     let key: string = null;
     let url: string = this.url;
+
     if (typeof path === "string") {
+
+      if (path === "") {
+        throw new Error("First argument must not be empty string");
+      }
+
+      if (/[\.#$\[\]]/.test(path)) {
+        throw new Error("First argument must be a valid firebase URL and the path can't contain \".\", \"#\", \"$\", \"[\", or \"]\".");
+      }
+
       path = path.replace(/\/$/, "");
       key = path.replace(/^.*\//, "") || null;
-      url += "/" + path;
-      url = url.replace(/\/+/, "/");
+      if (url.substr(0, 1) !== "/") {
+        url += "/" + path;
+      }
+      url = url.replace(/\/+/g, "/");
       url = url.replace(/https:\//, "https://");
     }
 
@@ -135,13 +165,8 @@ export class Database extends PluginBase {
       pluginName: this.id,
       ref: null,
       url,
-    });
+    }, this._rootRef);
 
-    // Bubbling native events
-    this._on("nativeEvent", (...parameters: Array<any>): void => {
-      parameters.unshift("nativeEvent");
-      reference._trigger.apply(reference, parameters);
-    });
 
     this.exec({
       args: [{
@@ -164,45 +189,77 @@ export class Database extends PluginBase {
    */
   public refFromURL(url: string): Reference {
 
-    let key: string = null;
-    let path: string = null;
-    if (typeof url === "string") {
-      if (/^https:\/\/(.+?).firebaseio.com/) {
-        path = url.replace(/^https:\/\/.+?.firebaseio.com\/?/, "");
-        path = path.replace(/\/$/, "");
-        key = path.replace(/^.*\//, "") || null;
-      } else {
-        throw new Error("url must be started with https://(project id).firebaseio.com");
-      }
-    } else {
-      throw new Error("url must be string");
+    if (typeof url !== "string") {
+      throw new Error("First argument must be string");
     }
 
-    // Create a reference instance.
-    const reference: Reference = new Reference({
-      key,
-      parent: null,
-      pluginName: this.id,
-      ref: null,
-      url: this.url,
-    });
+    if (url === "") {
+      throw new Error("First argument must not be empty string");
+    }
 
-    // Bubbling native events
-    this._on("nativeEvent", (...parameters: Array<any>): void => {
-      parameters.unshift("nativeEvent");
-      reference._trigger.apply(reference, parameters);
-    });
+    const tmp: Array<any> = this.url.match(/:\/\/(.+?.firebaseio.com)/);
+    if (url.indexOf(tmp[1]) === -1) {
+      throw new Error("First argument must be with the current database");
+    }
+    url = url.replace(/\?.*$/, "");
 
-    this.exec({
-      args: [{
-        id: reference.id,
-        path,
-      }],
-      context: this,
-      methodName: "database_refFromURL",
-    }).then((): void => {
-      reference._privateInit();
+    const tmpUrl: string = url.replace(/https:\/\/[a-z0-9]+\.firebaseio\.com\//i, "");
+    if (/[\.#$\[\]]/.test(tmpUrl)) {
+      throw new Error("First argument must be a valid firebase URL and the path can't contain \".\", \"#\", \"$\", \"[\", or \"]\".");
+    }
+
+
+    let path: string = url.replace(/^https:\/\/.+?.firebaseio.com\/?/, "");
+    path = path.replace(/\/$/, "");
+    path = path.replace(/^\//, "");
+
+    let reference: Reference = null;
+    let currentUrl: string = this.url;
+    let newRef: Reference = null;
+    const refs: Array<Reference> = (path.split(/\//)).map((key: string) => {
+
+      currentUrl += "/" + key;
+
+      newRef = new Reference({
+        key,
+        parent: reference,
+        pluginName: this.id,
+        ref: null,
+        url: currentUrl,
+      }, this._rootRef);
+
+      // Bubbling native events
+      this._on("nativeEvent", (...parameters: Array<any>): void => {
+        parameters.unshift("nativeEvent");
+        newRef._trigger.apply(newRef, parameters);
+      });
+
+      this.exec({
+        args: [{
+          id: newRef.id,
+          path,
+        }],
+        context: this,
+        methodName: "database_ref",
+      }).then((): void => {
+        newRef._privateInit();
+      });
+
+      reference = newRef;
+
+      return newRef;
     });
+    //
+    // this.exec({
+    //   args: [{
+    //     id: reference.id,
+    //     path,
+    //   }],
+    //   context: this,
+    //   methodName: "database_refFromURL",
+    // }).then((): void => {
+    //   reference._privateInit();
+    // });
 
     return reference;
   }

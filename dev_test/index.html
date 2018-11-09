@@ -12,10 +12,9 @@
   firebase.initializeApp(config);
 
   var database = firebase.database();
-  var ref = database.ref();
-  var child = database.ref("users");
-  console.log(child.toString());
-  console.log(child.ref.toString());
+  var ref = database.ref("users"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
+  console.log(ref.parent.toString());
+  console.log(ref.root.toString());
 </script>
 </head>
 <body>
