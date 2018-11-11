@@ -212,57 +212,10 @@ export class Database extends PluginBase {
 
 
     let path: string = url.replace(/^https:\/\/.+?.firebaseio.com\/?/, "");
-    path = path.replace(/\/$/, "");
+    path = path.replace(/\/+$/, "");
     path = path.replace(/^\//, "");
 
-    let reference: Reference = null;
-    let currentUrl: string = this.url;
-    let newRef: Reference = null;
-    const refs: Array<Reference> = (path.split(/\//)).map((key: string) => {
-
-      currentUrl += "/" + key;
-
-      newRef = new Reference({
-        key,
-        parent: reference,
-        pluginName: this.id,
-        ref: null,
-        url: currentUrl,
-      }, this._rootRef);
-
-      // Bubbling native events
-      this._on("nativeEvent", (...parameters: Array<any>): void => {
-        parameters.unshift("nativeEvent");
-        newRef._trigger.apply(newRef, parameters);
-      });
-      //
-      // this.exec({
-      //   args: [{
-      //     id: newRef.id,
-      //     path,
-      //   }],
-      //   context: this,
-      //   methodName: "database_ref",
-      // }).then((): void => {
-      // });
-
-      reference = newRef;
-
-      return newRef;
-    });
-    //
-    // this.exec({
-    //   args: [{
-    //     id: reference.id,
-    //     path,
-    //   }],
-    //   context: this,
-    //   methodName: "database_refFromURL",
-    // }).then((): void => {
-    //   reference._privateInit();
-    // });
-
-    return reference;
+    return this.ref(path);
   }
 
 

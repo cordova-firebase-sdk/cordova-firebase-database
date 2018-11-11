@@ -82,15 +82,15 @@ describe("[Database]", () => {
       const ref = commonDb.ref("users/user01");
       expect(ref.toString()).toEqual("https://dummy.firebaseio.com/users/user01");
       expect(ref.parent.toString()).toEqual("https://dummy.firebaseio.com/users");
-      expect(ref.parent.parent.toString()).toEqual("https://dummy.firebaseio.com");
-      expect(ref.parent.root.toString()).toEqual("https://dummy.firebaseio.com");
+      expect(ref.parent.parent.toString()).toEqual("https://dummy.firebaseio.com/");
       done();
     });
+
+    it (".root.toString() should be the same as the current database", () => {
+      expect(commonDb.ref().toString()).toBe("https://dummy.firebaseio.com/");
+      expect(commonDb.ref().root.toString()).toBe("https://dummy.firebaseio.com/");
+    });
   });
-  //
-  //   it (".root.toString() should be the same as the current database", () => {
-  //     expect(commonDb.ref().root.toString()).toBe("https://dummy.firebaseio.com/");
-  //   });
   //
   //   it (".root.key should be null", () => {
   //     expect(commonDb.ref().root.key).toBe(null);

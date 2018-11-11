@@ -36,7 +36,8 @@ export class Query extends PluginBase {
     this._pluginName = params.pluginName;
     this._ref = params.ref;
 
-    params.url = params.url.replace(/\/+$/, "");
+    params.url = params.url.replace(/\/+/g, "/");
+    params.url = params.url.replace(/https:\//, "https://");
     this._url = params.url;
 
     // Bubbling native events
