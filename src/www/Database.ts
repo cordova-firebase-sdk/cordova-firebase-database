@@ -8,6 +8,7 @@ import {
 } from "cordova-firebase-core/index";
 import { execCmd, IExecCmdParams } from "./CommandQueue";
 import { Reference } from "./DataClasses";
+import { INativeEventParams } from "./INativeEventParams";
 
 
 declare let Promise: any;
@@ -50,7 +51,6 @@ export class Database extends PluginBase {
       ref: null,
       url: this._url,
     }, null);
-    this._rootRef._privateInit();
 
     // Bubbling native events
     this._on("nativeEvent", (data: INativeEventParams): void => {
@@ -139,11 +139,7 @@ export class Database extends PluginBase {
     let key: string = null;
     let url: string = this.url;
 
-    if (typeof path === "string") {
-
-      if (path === "") {
-        throw new Error("First argument must not be empty string");
-      }
+    if (typeof path === "string" && path !== "") {
 
       if (/[\.#$\[\]]/.test(path)) {
         throw new Error("First argument must be a valid firebase URL and the path can't contain \".\", \"#\", \"$\", \"[\", or \"]\".");
@@ -156,30 +152,36 @@ export class Database extends PluginBase {
       }
       url = url.replace(/\/+/g, "/");
       url = url.replace(/https:\//, "https://");
+    } else {
+      path = "/";
     }
 
-    // Create a reference instance.
-    const reference: Reference = new Reference({
-      key,
-      parent: null,
-      pluginName: this.id,
-      ref: null,
-      url,
-    }, this._rootRef);
+    let reference: Reference = this._rootRef;
+    let currentUrl: string = this.url;
+    if (currentUrl.substr(-1) === "/") {
+      currentUrl = currentUrl.substr(0, currentUrl.length - 1);
+    }
+    let currentPath: string = "";
+    let newRef: Reference;
 
+    const refs: Array<Reference> = (path.split(/\//)).map((key: string) => {
 
-    this.exec({
-      args: [{
-        id: reference.id,
-        path,
-      }],
-      context: this,
-      methodName: "database_ref",
-    }).then((): void => {
-      reference._privateInit();
+      currentUrl += "/" + key;
+      currentPath += (currentPath ? "/" : "") + key;
+
+      newRef = new Reference({
+        key,
+        parent: reference,
+        pluginName: this.id,
+        ref: null,
+        url: currentUrl,
+      }, this._rootRef);
+
+      reference = newRef;
+
+      return newRef;
     });
-
-    return reference;
+    return refs.pop();
   }
 
 
@@ -233,17 +235,16 @@ export class Database extends PluginBase {
         parameters.unshift("nativeEvent");
         newRef._trigger.apply(newRef, parameters);
       });
-
-      this.exec({
-        args: [{
-          id: newRef.id,
-          path,
-        }],
-        context: this,
-        methodName: "database_ref",
-      }).then((): void => {
-        newRef._privateInit();
-      });
+      //
+      // this.exec({
+      //   args: [{
+      //     id: newRef.id,
+      //     path,
+      //   }],
+      //   context: this,
+      //   methodName: "database_ref",
+      // }).then((): void => {
+      // });
 
       reference = newRef;
 

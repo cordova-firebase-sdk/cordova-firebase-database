@@ -35,6 +35,8 @@ export class Query extends PluginBase {
     super("queryOrReference");
     this._pluginName = params.pluginName;
     this._ref = params.ref;
+
+    params.url = params.url.replace(/\/+$/, "");
     this._url = params.url;
 
     // Bubbling native events
@@ -42,6 +44,21 @@ export class Query extends PluginBase {
       this._trigger.call(this, data.listenerId, data);
     });
 
+    this._queue._one("insert_at", (): void => {
+
+      this.exec({
+        args: [{
+          id: this.ref.id,
+          path: this.url.replace(/^.+firebaseio.com\//i, ""),
+        }],
+        context: this,
+        methodName: "database_ref",
+      }).then((): void => {
+        this._isReady = true;
+        this._queue._trigger("insert_at");
+      });
+
+    });
 
     this._queue._on("insert_at", (): void => {
       if (!this._isReady) {
@@ -72,16 +89,6 @@ export class Query extends PluginBase {
     return this._url;
   }
 
-  /**
-   * @hidden
-   * Internal methods. Don't use it from your code
-   */
-  public _privateInit(): void {
-    if (!this._isReady) {
-      this._isReady = true;
-      this._queue._trigger("insert_at");
-    }
-  }
 
   /**
    * Query.endAt
@@ -106,9 +113,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_endAt",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -137,9 +144,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_equalTo",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -176,9 +183,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_limitToFirst",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -208,9 +215,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_limitToLast",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -412,9 +419,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByChild",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -442,9 +449,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByKey",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -472,9 +479,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByPriority",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -501,9 +508,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByValue",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -532,9 +539,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_startAt",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -632,9 +639,9 @@ export class Reference extends Query {
       context: this,
       methodName: "reference_child",
       pluginName: this.pluginName,
-    })
-    .then((): void => {
-      reference._privateInit();
+    // })
+    // .then((): void => {
+    //   reference._privateInit();
     });
 
     return reference;
@@ -685,7 +692,7 @@ export class Reference extends Query {
       pluginName: this.pluginName,
     })
     .then((result: any): void => {
-      reference._privateInit();
+      //reference._privateInit();
 
       if (typeof reference.resolve === "function") {
         Promise.resolve(result).then(reference.resolve);
