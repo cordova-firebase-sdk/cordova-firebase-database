@@ -587,7 +587,7 @@ export class Reference extends Query {
 
     // Bubbling native events
     const parentRef: Reference = this._parent || this._rootRef;
-    if (parentRef) {
+    if (parentRef && parentRef !== this) {
       parentRef._on("nativeEvent", (data: INativeEventParams): void => {
         this._trigger.call(this, "nativeEvent", data);
       });
@@ -612,12 +612,19 @@ export class Reference extends Query {
   public child(path: string): Reference {
 
     let key: string = null;
-    if (path && typeof path === "string") {
-      path = path.replace(/\/$/, "");
-      key = path.replace(/^.*\//, "") || this.key;
-    } else {
+    if (typeof path !== "string") {
       throw new Error("Reference.child failed: Was called with 0 arguments. Expects at least 1.");
     }
+    if (path === "") {
+      throw new Error("First argument was an invalid path = "". Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"");
+    }
+
+    if (/[\.#$\[\]]/.test(path)) {
+      throw new Error("First argument was an invalid path = \"" + path + "\". Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"");
+    }
+
+    path = path.replace(/\/$/, "");
+    const key: string = path.replace(/^.*\//, "") || this.key;
 
     const reference: Reference = new Reference({
       key,
@@ -626,24 +633,24 @@ export class Reference extends Query {
       ref: null,
       url: this.url + "/" + path,
     }, this.root);
+    //
+    // this._on("nativeEvent", (eventData: INativeEventParams) => {
+    //   reference._trigger.call(reference, "nativeEvent", eventData);
+    // });
 
-    this._on("nativeEvent", (eventData: INativeEventParams) => {
-      reference._trigger.call(reference, "nativeEvent", eventData);
-    });
-
-    this.exec({
-      args: [{
-        childId: reference.id,
-        path,
-        targetId: this.id,
-      }],
-      context: this,
-      methodName: "reference_child",
-      pluginName: this.pluginName,
-    // })
-    // .then((): void => {
-    //   reference._privateInit();
-    });
+    // this.exec({
+    //   args: [{
+    //     childId: reference.id,
+    //     path,
+    //     targetId: this.id,
+    //   }],
+    //   context: this,
+    //   methodName: "reference_child",
+    //   pluginName: this.pluginName,
+    // // })
+    // // .then((): void => {
+    // //   reference._privateInit();
+    // });
 
     return reference;
   }

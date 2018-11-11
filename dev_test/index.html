@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://www.gstatic.com/firebasejs/5.5.7/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.7/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.7/firebase-database.js"></script>
 <script>
   // Initialize Firebase
   // TODO: Replace with your project's customized code snippet
@@ -12,9 +13,10 @@
   firebase.initializeApp(config);
 
   var database = firebase.database();
-  var ref = database.ref("users"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
-  console.log(ref.parent.toString());
-  console.log(ref.root.toString());
+  var ref = database.ref("parent"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
+  var grandChildRef = ref.child("./test"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
+  console.log(grandChildRef.toString());
+  console.log(grandChildRef.parent.toString());
 </script>
 </head>
 <body>
