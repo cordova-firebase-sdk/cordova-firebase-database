@@ -1,7 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`[Database] .ref should reject empty string 1`] = `"First argument must not be empty string"`;
-
 exports[`[Database] .ref should reject invalid path 1`] = `"First argument must be a valid firebase URL and the path can't contain \\".\\", \\"#\\", \\"$\\", \\"[\\", or \\"]\\"."`;
 
 exports[`[Database] .refFromURL should reject empty string 1`] = `"First argument must not be empty string"`;
