@@ -48,9 +48,10 @@ export class Database extends PluginBase {
       key: null,
       parent: null,
       pluginName: this.id,
-      ref: null,
       url: this._url,
-    }, null);
+    }, {
+      root: null,
+    });
 
     // Bubbling native events
     this._on("nativeEvent", (data: INativeEventParams): void => {
@@ -164,18 +165,19 @@ export class Database extends PluginBase {
     let currentPath: string = "";
     let newRef: Reference;
 
-    const refs: Array<Reference> = (path.split(/\//)).map((key: string) => {
+    const refs: Array<Reference> = (path.split(/\//)).map((pathStep: string) => {
 
-      currentUrl += "/" + key;
-      currentPath += (currentPath ? "/" : "") + key;
+      currentUrl += "/" + pathStep;
+      currentPath += (currentPath ? "/" : "") + pathStep;
 
       newRef = new Reference({
-        key,
+        key: pathStep,
         parent: reference,
         pluginName: this.id,
-        ref: null,
         url: currentUrl,
-      }, this._rootRef);
+      }, {
+        root: this._rootRef,
+      });
 
       reference = newRef;
 

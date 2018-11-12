@@ -9,9 +9,20 @@ declare const Promise: any;
 interface IQueryParams {
   key?: string;
   url: string;
-  ref: Reference;
   parent?: Reference;
   pluginName: string;
+  ref?: Reference;
+}
+interface IReferenceParams {
+  key?: string;
+  url: string;
+  parent?: Reference;
+  pluginName: string;
+}
+
+interface InternalOpts {
+  noInit?: boolean;
+  root: Reference;
 }
 
 export type CANCEL_CALLBACK = (error: any) => void;
@@ -31,7 +42,7 @@ export class Query extends PluginBase {
 
   private _pluginName: string;
 
-  constructor(params: IQueryParams) {
+  constructor(params: IQueryParams, _opts?: InternalOpts) {
     super("queryOrReference");
     this._pluginName = params.pluginName;
     this._ref = params.ref;
@@ -45,21 +56,22 @@ export class Query extends PluginBase {
       this._trigger.call(this, data.listenerId, data);
     });
 
-    this._queue._one("insert_at", (): void => {
-
-      this.exec({
-        args: [{
-          id: this.ref.id,
+    if (_opts && !_opts.noInit) {
+      this._queue._one("insert_at", (): void => {
+        if (this._isReady) {
+          return;
+        }
+        exec(() => {
+          this._isReady = true;
+          this._queue._trigger("insert_at");
+        }, (error) => {
+          console.error(error);
+        }, this.pluginName, "database_ref", [{
+          id: this.id,
           path: this.url.replace(/^.+firebaseio.com\//i, ""),
-        }],
-        context: this,
-        methodName: "database_ref",
-      }).then((): void => {
-        this._isReady = true;
-        this._queue._trigger("insert_at");
+        }]);
       });
-
-    });
+    }
 
     this._queue._on("insert_at", (): void => {
       if (!this._isReady) {
@@ -578,12 +590,15 @@ export class Reference extends Query {
   private _parent: Reference;
   private _rootRef: Reference;
 
-  constructor(params: IQueryParams, _rootRef: Reference) {
-    super(params);
+  constructor(params: IReferenceParams, _opts?: InternalOpts) {
+    super(params, _opts);
     this._parent = params.parent;
     this._key = params.key;
-    this._ref = params.ref || this;
-    this._rootRef = _rootRef || this;
+
+    this._rootRef = this;
+    if (_opts && _opts.root) {
+      this._rootRef = _opts.root;
+    }
 
     // Bubbling native events
     const parentRef: Reference = this._parent || this._rootRef;
@@ -592,6 +607,7 @@ export class Reference extends Query {
         this._trigger.call(this, "nativeEvent", data);
       });
     }
+
 
   }
 
@@ -611,16 +627,14 @@ export class Reference extends Query {
    */
   public child(path: string): Reference {
 
-    let key: string = null;
     if (typeof path !== "string") {
       throw new Error("Reference.child failed: Was called with 0 arguments. Expects at least 1.");
     }
-    if (path === "") {
-      throw new Error("First argument was an invalid path = "". Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"");
-    }
-
-    if (/[\.#$\[\]]/.test(path)) {
-      throw new Error("First argument was an invalid path = \"" + path + "\". Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"");
+    if (path === "" || /[\.#$\[\]]/.test(path)) {
+      throw new Error([
+        "First argument was an invalid path = \"" + path + "\".",
+        "Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"",
+      ].join(" "));
     }
 
     path = path.replace(/\/$/, "");
@@ -630,9 +644,10 @@ export class Reference extends Query {
       key,
       parent: this,
       pluginName: this.pluginName,
-      ref: null,
       url: this.url + "/" + path,
-    }, this.root);
+    }, {
+      root: this._rootRef,
+    });
     //
     // this._on("nativeEvent", (eventData: INativeEventParams) => {
     //   reference._trigger.call(reference, "nativeEvent", eventData);
@@ -685,37 +700,31 @@ export class Reference extends Query {
     const reference: ThenableReference = new ThenableReference({
       key: this.key,
       pluginName: this.pluginName,
-      ref: this,
       url: this.url,
-    }, this.root);
+    }, {
+      noInit: true,
+      root: this.root,
+    });
 
-    this.exec({
-      args: [{
-        newId: reference.id,
-        targetId: this.id,
-        value: LZString.compressToBase64(JSON.stringify(value)),
-      }],
-      context: this,
-      methodName: "reference_push",
-      pluginName: this.pluginName,
-    })
-    .then((result: any): void => {
-      //reference._privateInit();
-
+    exec((result: any): void => {
       if (typeof reference.resolve === "function") {
         Promise.resolve(result).then(reference.resolve);
       }
       if (typeof onComplete === "function") {
         onComplete.call(this);
       }
-    }).catch((error: any): void => {
+    }, (error: any): void => {
       if (typeof reference.reject === "function") {
         Promise.reject(error).then(reference.reject);
       }
       if (typeof onComplete === "function") {
         onComplete.call(this, error);
       }
-    });
+    }, this.pluginName, "reference_push", [{
+      newId: reference.id,
+      targetId: this.id,
+      value: LZString.compressToBase64(JSON.stringify(value)),
+    }]);
 
     return reference;
   }
@@ -987,8 +996,9 @@ export class ThenableReference extends Reference {
   public resolve: any;
   public reject: any;
 
-  constructor(params: IQueryParams, _rootRef: Reference) {
-    super(params, _rootRef);
+  constructor(params: IQueryParams, _opts: InternalOpts) {
+    super(params, _opts);
+    this._isReady = true;
   }
 
   public then(

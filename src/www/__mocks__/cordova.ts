@@ -1,8 +1,9 @@
-export const exec = jest.fn((onSuccess, onError, pluginName, methodName, args): any => {
-  setTimeout(onSuccess, 1);
-  return {
-    args,
-    methodName,
-    pluginName,
-  };
+export let platformId: string = "browser";
+
+export const setPlatformId = (pId: string): void => {
+  platformId = pId;
+};
+
+export const exec = jest.fn((onSuccess, onError, pluginName, methodName, args): void => {
+  onSuccess();
 });
