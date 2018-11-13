@@ -23,6 +23,7 @@ module.exports = {
     window: {},
   },
   moduleNameMapper: {
-    "CommandQueue$": "<rootDir>/src/www/__mocks__/CommandQueue"
+    "CommandQueue$": "<rootDir>/src/www/__mocks__/CommandQueue",
+    "^cordova/(.+)$": "<rootDir>/node_modules/cordova-js/src/common/$1"
   }
 };

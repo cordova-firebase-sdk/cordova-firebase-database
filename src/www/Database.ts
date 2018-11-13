@@ -102,6 +102,15 @@ export class Database extends PluginBase {
     return this._url;
   }
 
+  /**
+   * @hidden
+   * This method is for `Reference.transcation` implementation
+   */
+  public getSelf(): Database {
+    console.log("--->getSelf", this);
+    return this;
+  }
+
 
   /**
    * Database.goOffline

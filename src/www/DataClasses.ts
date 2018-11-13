@@ -264,8 +264,7 @@ export class Query extends PluginBase {
     if (typeof callback === "function") {
       targetListeners = this._listeners.filter((info: any): boolean => {
         return info.callback === callback &&
-          info.eventType === eventType &&
-          info.context === context_;
+          info.eventType === eventType;
       });
     } else if (eventType) {
       targetListeners = this._listeners.filter((info: any): boolean => {
@@ -274,6 +273,12 @@ export class Query extends PluginBase {
     } else {
       targetListeners = this._listeners;
     }
+    this._listeners = this._listeners.filter((info: any): boolean => {
+      return targetListeners.indexOf(info) === -1;
+    });
+    targetListeners.forEach((info: any): void => {
+      this._off(info.listenerId);
+    });
 
     this.exec({
       args: [{
@@ -324,7 +329,7 @@ export class Query extends PluginBase {
     });
 
     // Receive data from native side at once,
-    this._on(listenerId, (params: any): void => {
+    this._on(listenerId, (params: INativeEventParams): void => {
       if (params.eventType === "cancelled") {
         // permission error or something
         throw new Error(LZString.decompressFromBase64(params.args[0]));
@@ -444,7 +449,7 @@ export class Query extends PluginBase {
   /**
    * Query.orderByKey
    */
-  public orderByKey(path: string): Query {
+  public orderByKey(): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -474,7 +479,7 @@ export class Query extends PluginBase {
   /**
    * Query.orderByPriority
    */
-  public orderByPriority(path: string): Query {
+  public orderByPriority(): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -503,7 +508,7 @@ export class Query extends PluginBase {
   /**
    * Query.orderByValue
    */
-  public orderByValue(path: string): Query {
+  public orderByValue(): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -800,7 +805,7 @@ export class Reference extends Query {
     return new Promise((resolve: () => void, reject: (error: any) => void) => {
       this.exec({
         args: [{
-          priority: LZString.compressToBase64(JSON.stringify(priority)),
+          priority,
           targetId: this.id,
         }],
         context: this,
@@ -831,7 +836,7 @@ export class Reference extends Query {
     return new Promise((resolve: () => void, reject: (error: any) => void): void => {
       this.exec({
         args: [{
-          priority: LZString.compressToBase64(JSON.stringify(newPriority)),
+          priority: newPriority,
           targetId: this.id,
           value: LZString.compressToBase64(JSON.stringify(newVal)),
         }],
@@ -865,6 +870,7 @@ export class Reference extends Query {
     const transactionId: string = Math.floor(Date.now() * Math.random()) + "_transaction";
     const eventName: string = this.pluginName + "-" + this.id + "-" + transactionId;
 
+
     if (cordova.platformId === "browser") {
       // ------------------------
       //       Browser
@@ -873,7 +879,7 @@ export class Reference extends Query {
         (resolve: any, reject: any): void => {
 
           const proxy: any = require("cordova/exec/proxy");
-          const fbDbPlugin: any = proxy.get(this.pluginName);
+          const fbDbPlugin: any = (proxy.get(this.pluginName, "getSelf"))();
           const ref: any = fbDbPlugin._get(this.id);
           ref.transaction(transactionUpdate, (error: any, committed: boolean, snapshot: any): Promise<any> => {
             if (error) {
@@ -882,7 +888,7 @@ export class Reference extends Query {
               const dataSnapshot: DataSnapshot = new DataSnapshot(this, {
                 exists: snapshot.exists(),
                 exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-                getPriority: LZString.compressToBase64(snapshot.getPriority()),
+                getPriority: snapshot.getPriority(),
                 key: snapshot.key,
                 numChildren: snapshot.numChildren(),
                 val: LZString.compressToBase64(JSON.stringify(snapshot.val())),
@@ -958,7 +964,7 @@ export class Reference extends Query {
   /**
    * Reference.update
    */
-  public update(values: any, onComplete?: (error?: any) => void): Promise<void> {
+  public update(values: object, onComplete?: (error?: any) => void): Promise<void> {
 
     if (!values || typeof values !== "object") {
       throw new Error("values must contain key-value");
@@ -1031,7 +1037,7 @@ export class ThenableReference extends Reference {
 
 
 
-class DataSnapshot {
+export class DataSnapshot {
 
   public _nativeResults: any;
   private _ref: Reference;
