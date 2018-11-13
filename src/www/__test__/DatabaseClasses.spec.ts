@@ -200,61 +200,61 @@ describe("[Reference]", () => {
       });
     });
   });
-});
 
-describe("[Query]", () => {
 
-  const commonApp: App = new App("dummyApp", {
-    hello: "world",
-    databaseURL: "https://dummy.firebaseio.com/"
-  });
-
-  const commonDb: Database = new Database(commonApp, commonApp.options);
-  commonDb._trigger("fireAppReady");
-
-  beforeEach(() => {
-    // Clear all instances and calls to constructor and all methods:
-    exec.mockClear();
-    execCmd.mockClear();
-  });
-
-  describe("endAt", () => {
-    it("should involve native side with correct parameters", (done) => {
-      const ref: Reference = commonDb.ref("");
-      const value: any = {
-        hello: "world",
-      };
-      const query: Query = ref.endAt(value, "key");
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
-        done();
-      }, 5);
-    });
-    it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
-      const ref: Reference = commonDb.ref("");
-      const value: any = {
-        hello: "world",
-      };
-      const query: Query = ref.endAt(value, "key");
-
-      query._one("listenerId", (data: INativeEventParams): void => {
-        expect(data).toEqual({
-          args: ["0", "1"],
-          eventType: "eventType",
-          listenerId: "listenerId",
-        });
-        done();
-      });
-      ref.root._trigger("nativeEvent", {
-        args: ["0", "1"],
-        eventType: "eventType",
-        listenerId: "listenerId",
-      });
-    });
-  });
+// describe("[Query]", () => {
+//
+//   const commonApp: App = new App("dummyApp", {
+//     hello: "world",
+//     databaseURL: "https://dummy.firebaseio.com/"
+//   });
+//
+//   const commonDb: Database = new Database(commonApp, commonApp.options);
+//   commonDb._trigger("fireAppReady");
+//
+//   beforeEach(() => {
+//     // Clear all instances and calls to constructor and all methods:
+//     exec.mockClear();
+//     execCmd.mockClear();
+//   });
+//
+//   describe("endAt", () => {
+//     it("should involve native side with correct parameters", (done) => {
+//       const ref: Reference = commonDb.ref("");
+//       const value: any = {
+//         hello: "world",
+//       };
+//       const query: Query = ref.endAt(value, "key");
+//       setTimeout(() => {
+//         expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
+//         expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+//         expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
+//         expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
+//         done();
+//       }, 5);
+//     });
+//     it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
+//       const ref: Reference = commonDb.ref("");
+//       const value: any = {
+//         hello: "world",
+//       };
+//       const query: Query = ref.endAt(value, "key");
+//
+//       query._one("listenerId", (data: INativeEventParams): void => {
+//         expect(data).toEqual({
+//           args: ["0", "1"],
+//           eventType: "eventType",
+//           listenerId: "listenerId",
+//         });
+//         done();
+//       });
+//       ref.root._trigger("nativeEvent", {
+//         args: ["0", "1"],
+//         eventType: "eventType",
+//         listenerId: "listenerId",
+//       });
+//     });
+//   });
   describe("equalTo", () => {
     it("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
