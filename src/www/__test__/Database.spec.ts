@@ -22,7 +22,7 @@ describe("[Database]", () => {
   });
 
   describe("constructor", () => {
-    it ("should create a new instance in native side", (done) => {
+    it("should create a new instance in native side", (done) => {
 
       const app: App = new App("hello", {
         hello: "world",
@@ -53,7 +53,7 @@ describe("[Database]", () => {
   });
 
   describe(".goOffline", () => {
-    it ("should involve native code with correct parameters.", (done) => {
+    it("should involve native code with correct parameters.", (done) => {
 
       commonDb.goOffline();
       setTimeout(() => {
@@ -65,7 +65,7 @@ describe("[Database]", () => {
     });
   });
   describe(".goOnline", () => {
-    it ("should involve native code with correct parameters.", (done) => {
+    it("should involve native code with correct parameters.", (done) => {
 
       commonDb.goOnline();
       setTimeout(() => {
@@ -77,7 +77,7 @@ describe("[Database]", () => {
     });
   });
   describe(".ref", () => {
-    it ("should create correct references.", (done) => {
+    it("should create correct references.", (done) => {
 
       const ref = commonDb.ref("users/user01");
       expect(ref.toString()).toEqual("https://dummy.firebaseio.com/users/user01");
@@ -86,20 +86,20 @@ describe("[Database]", () => {
       done();
     });
 
-    it (".root.toString() should be the same as the current database", () => {
+    it(".root.toString() should be the same as the current database", () => {
       expect(commonDb.ref().toString()).toBe("https://dummy.firebaseio.com/");
       expect(commonDb.ref().root.toString()).toBe("https://dummy.firebaseio.com/");
     });
 
-    it (".root.key should be null", () => {
+    it(".root.key should be null", () => {
       expect(commonDb.ref().root.key).toBe(null);
     });
 
-    it (".root.parent should be null", () => {
+    it(".root.parent should be null", () => {
       expect(commonDb.ref().root.parent).toBe(null);
     });
 
-    it ("should reject invalid path", () => {
+    it("should reject invalid path", () => {
       expect(() => {
         commonDb.ref("hello/../world/");
       }).toThrowErrorMatchingSnapshot();
@@ -107,7 +107,7 @@ describe("[Database]", () => {
   });
   describe(".refFromURL", () => {
 
-    it ("should create correct references.", () => {
+    it("should create correct references.", () => {
 
       const ref = commonDb.refFromURL("https://dummy.firebaseio.com/users/test?awrewqar=www");
       expect(ref.toString()).toEqual("https://dummy.firebaseio.com/users/test");
@@ -117,18 +117,18 @@ describe("[Database]", () => {
       expect(ref.parent.parent.toString()).toEqual("https://dummy.firebaseio.com/");
     });
 
-    it ("should reject empty string", () => {
+    it("should reject empty string", () => {
       expect(() => {
         commonDb.refFromURL("");
       }).toThrowErrorMatchingSnapshot();
     })
 
-    it ("should reject invalid url", () => {
+    it("should reject invalid url", () => {
       expect(() => {
         commonDb.refFromURL("http://hello.com/users/../world/");
       }).toThrowErrorMatchingSnapshot();
     })
-    it ("should reject if hostname does not match with the currend database", () => {
+    it("should reject if hostname does not match with the currend database", () => {
       expect(() => {
         commonDb.refFromURL("http://hello.com/users/../world/");
       }).toThrowErrorMatchingSnapshot();

@@ -223,8 +223,8 @@ describe("[FirebaseDatabasePlugin(native side)]", () => {
       };
       const _: FirebaseDatabasePlugin = new FirebaseDatabasePlugin("id", null);
       const ref: any = {
-        push: jest.fn((): string => {
-          return Promise.resolve("OK");
+        push: jest.fn((): Promise<void> => {
+          return Promise.resolve();
         }),
       };
       _._set("targetId", ref);
@@ -245,7 +245,7 @@ describe("[FirebaseDatabasePlugin(native side)]", () => {
     it("should remove specified reference correctly", (done) => {
       const _: FirebaseDatabasePlugin = new FirebaseDatabasePlugin("id", null);
       const ref: any = {
-        remove: jest.fn((): string => {
+        remove: jest.fn((): Promise<void> => {
           return Promise.resolve();
         }),
       };
@@ -268,7 +268,7 @@ describe("[FirebaseDatabasePlugin(native side)]", () => {
       };
       const _: FirebaseDatabasePlugin = new FirebaseDatabasePlugin("id", null);
       const ref: any = {
-        set: jest.fn((): string => {
+        set: jest.fn((): Promise<void> => {
           return Promise.resolve();
         }),
       };
@@ -289,7 +289,7 @@ describe("[FirebaseDatabasePlugin(native side)]", () => {
     it("should set specified property", (done) => {
       const _: FirebaseDatabasePlugin = new FirebaseDatabasePlugin("id", null);
       const ref: any = {
-        setPriority: jest.fn((): string => {
+        setPriority: jest.fn((): Promise<void> => {
           return Promise.resolve();
         }),
       };
@@ -313,7 +313,7 @@ describe("[FirebaseDatabasePlugin(native side)]", () => {
       };
       const _: FirebaseDatabasePlugin = new FirebaseDatabasePlugin("id", null);
       const ref: any = {
-        setWithPriority: jest.fn((): string => {
+        setWithPriority: jest.fn((): Promise<void> => {
           return Promise.resolve();
         }),
       };
@@ -340,7 +340,7 @@ describe("[FirebaseDatabasePlugin(native side)]", () => {
       };
       const _: FirebaseDatabasePlugin = new FirebaseDatabasePlugin("id", null);
       const ref: any = {
-        update: jest.fn((): string => {
+        update: jest.fn((): Promise<void> => {
           return Promise.resolve();
         }),
       };

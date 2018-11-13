@@ -5,17 +5,35 @@ const index_1 = require("cordova-firebase-core/index");
 const CommandQueue_1 = require("./CommandQueue");
 const OnDisconnect_1 = require("./OnDisconnect");
 class Query extends index_1.PluginBase {
-    constructor(params) {
+    constructor(params, _opts) {
         super("queryOrReference");
         this._queue = new index_1.BaseArrayClass();
         this._listeners = [];
         this._pluginName = params.pluginName;
         this._ref = params.ref;
+        params.url = params.url.replace(/\/+/g, "/");
+        params.url = params.url.replace(/https:\//, "https://");
         this._url = params.url;
         // Bubbling native events
         this._on("nativeEvent", (data) => {
             this._trigger.call(this, data.listenerId, data);
         });
+        if (_opts && !_opts.noInit) {
+            this._queue._one("insert_at", () => {
+                if (this._isReady) {
+                    return;
+                }
+                cordova_1.exec(() => {
+                    this._isReady = true;
+                    this._queue._trigger("insert_at");
+                }, (error) => {
+                    console.error(error);
+                }, this.pluginName, "database_ref", [{
+                        id: this.id,
+                        path: this.url.replace(/^.+firebaseio.com\//i, ""),
+                    }]);
+            });
+        }
         this._queue._on("insert_at", () => {
             if (!this._isReady) {
                 return;
@@ -41,16 +59,6 @@ class Query extends index_1.PluginBase {
         return this._url;
     }
     /**
-     * @hidden
-     * Internal methods. Don't use it from your code
-     */
-    _privateInit() {
-        if (!this._isReady) {
-            this._isReady = true;
-            this._queue._trigger("insert_at");
-        }
-    }
-    /**
      * Query.endAt
      */
     endAt(value, key) {
@@ -71,9 +79,6 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_endAt",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
@@ -98,9 +103,6 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_equalTo",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
@@ -113,7 +115,7 @@ class Query extends index_1.PluginBase {
     /**
      * Query.limitToFirst
      */
-    limitToFirst(value, key) {
+    limitToFirst(limit) {
         const query = new Query({
             pluginName: this.pluginName,
             ref: this.ref,
@@ -124,23 +126,19 @@ class Query extends index_1.PluginBase {
         });
         this.exec({
             args: [{
-                    key,
+                    limit,
                     queryId: query.id,
                     targetId: this.id,
-                    value: index_1.LZString.compressToBase64(JSON.stringify(value)),
                 }],
             context: this,
             methodName: "query_limitToFirst",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
     /**
      * Query.limitToLast
      */
-    limitToLast(value, key) {
+    limitToLast(limit) {
         const query = new Query({
             pluginName: this.pluginName,
             ref: this.ref,
@@ -151,16 +149,12 @@ class Query extends index_1.PluginBase {
         });
         this.exec({
             args: [{
-                    key,
+                    limit,
                     queryId: query.id,
                     targetId: this.id,
-                    value: index_1.LZString.compressToBase64(JSON.stringify(value)),
                 }],
             context: this,
             methodName: "query_limitToLast",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
@@ -185,8 +179,7 @@ class Query extends index_1.PluginBase {
         if (typeof callback === "function") {
             targetListeners = this._listeners.filter((info) => {
                 return info.callback === callback &&
-                    info.eventType === eventType &&
-                    info.context === context_;
+                    info.eventType === eventType;
             });
         }
         else if (eventType) {
@@ -197,6 +190,12 @@ class Query extends index_1.PluginBase {
         else {
             targetListeners = this._listeners;
         }
+        this._listeners = this._listeners.filter((info) => {
+            return targetListeners.indexOf(info) === -1;
+        });
+        targetListeners.forEach((info) => {
+            this._off(info.listenerId);
+        });
         this.exec({
             args: [{
                     eventType,
@@ -330,16 +329,13 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByChild",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
     /**
      * Query.orderByKey
      */
-    orderByKey(path) {
+    orderByKey() {
         const query = new Query({
             pluginName: this.pluginName,
             ref: this.ref,
@@ -355,16 +351,13 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByKey",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
     /**
      * Query.orderByPriority
      */
-    orderByPriority(path) {
+    orderByPriority() {
         const query = new Query({
             pluginName: this.pluginName,
             ref: this.ref,
@@ -380,16 +373,13 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByPriority",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
     /**
      * Query.orderByValue
      */
-    orderByValue(path) {
+    orderByValue() {
         const query = new Query({
             pluginName: this.pluginName,
             ref: this.ref,
@@ -405,9 +395,6 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByValue",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
@@ -432,9 +419,6 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_startAt",
-        })
-            .then(() => {
-            query._privateInit();
         });
         return query;
     }
@@ -457,17 +441,27 @@ class Query extends index_1.PluginBase {
             this._queue._push(params);
         });
     }
-    _forceRefUpdate(ref) {
-        this._ref = ref;
-    }
 }
 exports.Query = Query;
 class Reference extends Query {
-    constructor(params) {
-        super(params);
+    constructor(params, _opts) {
+        super(params, _opts);
         this._parent = params.parent;
         this._key = params.key;
-        this._forceRefUpdate(this);
+        this._rootRef = this;
+        if (_opts && _opts.root) {
+            this._rootRef = _opts.root;
+        }
+        // Bubbling native events
+        const parentRef = this._parent || this._rootRef;
+        if (parentRef && parentRef !== this) {
+            parentRef._on("nativeEvent", (data) => {
+                this._trigger.call(this, "nativeEvent", data);
+            });
+        }
+    }
+    get root() {
+        return this._rootRef;
     }
     get parent() {
         return this._parent;
@@ -479,37 +473,42 @@ class Reference extends Query {
      * Reference.child
      */
     child(path) {
-        let key = null;
-        if (path && typeof path === "string") {
-            path = path.replace(/\/$/, "");
-            key = path.replace(/^.*\//, "") || this.key;
-        }
-        else {
+        if (typeof path !== "string") {
             throw new Error("Reference.child failed: Was called with 0 arguments. Expects at least 1.");
         }
+        if (path === "" || /[\.#$\[\]]/.test(path)) {
+            throw new Error([
+                "First argument was an invalid path = \"" + path + "\".",
+                "Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"",
+            ].join(" "));
+        }
+        path = path.replace(/\/$/, "");
+        const key = path.replace(/^.*\//, "") || this.key;
         const reference = new Reference({
             key,
             parent: this,
             pluginName: this.pluginName,
-            ref: null,
             url: this.url + "/" + path,
+        }, {
+            root: this._rootRef,
         });
-        this._on("nativeEvent", (eventData) => {
-            reference._trigger.call(reference, "nativeEvent", eventData);
-        });
-        this.exec({
-            args: [{
-                    childId: reference.id,
-                    path,
-                    targetId: this.id,
-                }],
-            context: this,
-            methodName: "reference_child",
-            pluginName: this.pluginName,
-        })
-            .then(() => {
-            reference._privateInit();
-        });
+        //
+        // this._on("nativeEvent", (eventData: INativeEventParams) => {
+        //   reference._trigger.call(reference, "nativeEvent", eventData);
+        // });
+        // this.exec({
+        //   args: [{
+        //     childId: reference.id,
+        //     path,
+        //     targetId: this.id,
+        //   }],
+        //   context: this,
+        //   methodName: "reference_child",
+        //   pluginName: this.pluginName,
+        // // })
+        // // .then((): void => {
+        // //   reference._privateInit();
+        // });
         return reference;
     }
     /**
@@ -538,35 +537,30 @@ class Reference extends Query {
         const reference = new ThenableReference({
             key: this.key,
             pluginName: this.pluginName,
-            ref: this,
             url: this.url,
+        }, {
+            noInit: true,
+            root: this.root,
         });
-        this.exec({
-            args: [{
-                    newId: reference.id,
-                    targetId: this.id,
-                    value: index_1.LZString.compressToBase64(JSON.stringify(value)),
-                }],
-            context: this,
-            methodName: "reference_push",
-            pluginName: this.pluginName,
-        })
-            .then((result) => {
-            reference._privateInit();
+        cordova_1.exec((result) => {
             if (typeof reference.resolve === "function") {
                 Promise.resolve(result).then(reference.resolve);
             }
             if (typeof onComplete === "function") {
                 onComplete.call(this);
             }
-        }).catch((error) => {
+        }, (error) => {
             if (typeof reference.reject === "function") {
                 Promise.reject(error).then(reference.reject);
             }
             if (typeof onComplete === "function") {
                 onComplete.call(this, error);
             }
-        });
+        }, this.pluginName, "reference_push", [{
+                newId: reference.id,
+                targetId: this.id,
+                value: index_1.LZString.compressToBase64(JSON.stringify(value)),
+            }]);
         return reference;
     }
     /**
@@ -631,7 +625,7 @@ class Reference extends Query {
         return new Promise((resolve, reject) => {
             this.exec({
                 args: [{
-                        priority: index_1.LZString.compressToBase64(JSON.stringify(priority)),
+                        priority,
                         targetId: this.id,
                     }],
                 context: this,
@@ -659,7 +653,7 @@ class Reference extends Query {
         return new Promise((resolve, reject) => {
             this.exec({
                 args: [{
-                        priority: index_1.LZString.compressToBase64(JSON.stringify(newPriority)),
+                        priority: newPriority,
                         targetId: this.id,
                         value: index_1.LZString.compressToBase64(JSON.stringify(newVal)),
                     }],
@@ -693,7 +687,7 @@ class Reference extends Query {
             // ------------------------
             return new Promise((resolve, reject) => {
                 const proxy = require("cordova/exec/proxy");
-                const fbDbPlugin = proxy.get(this.pluginName);
+                const fbDbPlugin = (proxy.get(this.pluginName, "getSelf"))();
                 const ref = fbDbPlugin._get(this.id);
                 ref.transaction(transactionUpdate, (error, committed, snapshot) => {
                     if (error) {
@@ -703,7 +697,7 @@ class Reference extends Query {
                         const dataSnapshot = new DataSnapshot(this, {
                             exists: snapshot.exists(),
                             exportVal: index_1.LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-                            getPriority: index_1.LZString.compressToBase64(snapshot.getPriority()),
+                            getPriority: snapshot.getPriority(),
                             key: snapshot.key,
                             numChildren: snapshot.numChildren(),
                             val: index_1.LZString.compressToBase64(JSON.stringify(snapshot.val())),
@@ -800,8 +794,9 @@ class Reference extends Query {
 }
 exports.Reference = Reference;
 class ThenableReference extends Reference {
-    constructor(params) {
-        super(params);
+    constructor(params, _opts) {
+        super(params, _opts);
+        this._isReady = true;
     }
     then(onResolve, onReject) {
         return (new Promise((_resolve, _reject) => {
@@ -867,3 +862,4 @@ class DataSnapshot {
         throw new Error("This method is not implemented");
     }
 }
+exports.DataSnapshot = DataSnapshot;

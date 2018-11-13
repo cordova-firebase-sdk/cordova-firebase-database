@@ -324,7 +324,7 @@ class FirebaseDatabasePlugin extends index_1.BaseClass {
                 const snapshotValues = {
                     exists: snapshot.exists(),
                     exportVal: index_1.LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-                    getPriority: snapshot.getPriority(),
+                    getPriority: index_1.LZString.compressToBase64(JSON.stringify(snapshot.getPriority())),
                     key: snapshot.key,
                     numChildren: snapshot.numChildren(),
                     val: index_1.LZString.compressToBase64(JSON.stringify(snapshot.val())),

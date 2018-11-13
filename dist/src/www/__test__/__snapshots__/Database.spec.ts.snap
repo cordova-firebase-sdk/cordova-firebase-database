@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[Database] .ref should reject invalid path 1`] = `"First argument must be a valid firebase URL and the path can't contain \\".\\", \\"#\\", \\"$\\", \\"[\\", or \\"]\\"."`;
+
+exports[`[Database] .refFromURL should reject empty string 1`] = `"First argument must not be empty string"`;
+
+exports[`[Database] .refFromURL should reject if hostname does not match with the currend database 1`] = `"First argument must be with the current database"`;
+
+exports[`[Database] .refFromURL should reject invalid url 1`] = `"First argument must be with the current database"`;

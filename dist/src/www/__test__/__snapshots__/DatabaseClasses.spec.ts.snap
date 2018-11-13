@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[Reference] .child() should reject empty string 1`] = `"First argument was an invalid path = \\"\\". Paths must be non-empty strings and can't contain \\".\\", \\"#\\", \\"$\\", \\"[\\", or \\"]\\""`;
+
+exports[`[Reference] .child() should reject invalid path 1`] = `"First argument was an invalid path = \\"users/../test\\". Paths must be non-empty strings and can't contain \\".\\", \\"#\\", \\"$\\", \\"[\\", or \\"]\\""`;

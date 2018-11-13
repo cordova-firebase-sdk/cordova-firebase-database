@@ -4,27 +4,32 @@ import { OnDisconnect } from "./OnDisconnect";
 interface IQueryParams {
     key?: string;
     url: string;
-    ref: Reference;
     parent?: Reference;
     pluginName: string;
+    ref?: Reference;
+}
+interface IReferenceParams {
+    key?: string;
+    url: string;
+    parent?: Reference;
+    pluginName: string;
+}
+interface InternalOpts {
+    noInit?: boolean;
+    root: Reference;
 }
 export declare type CANCEL_CALLBACK = (error: any) => void;
 export declare type ON_CALLBACK = (snapshot: DataSnapshot, key: string) => void;
 export declare class Query extends PluginBase {
+    protected _ref: Reference;
     private _url;
     private _queue;
     private _listeners;
     private _pluginName;
-    private _ref;
-    constructor(params: IQueryParams);
+    constructor(params: IQueryParams, _opts?: InternalOpts);
     readonly pluginName: string;
     readonly ref: Reference;
     readonly url: string;
-    /**
-     * @hidden
-     * Internal methods. Don't use it from your code
-     */
-    _privateInit(): void;
     /**
      * Query.endAt
      */
@@ -40,11 +45,11 @@ export declare class Query extends PluginBase {
     /**
      * Query.limitToFirst
      */
-    limitToFirst(value: any, key: string): Query;
+    limitToFirst(limit: number): Query;
     /**
      * Query.limitToLast
      */
-    limitToLast(value: any, key: string): Query;
+    limitToLast(limit: number): Query;
     /**
      * Query.off
      */
@@ -64,15 +69,15 @@ export declare class Query extends PluginBase {
     /**
      * Query.orderByKey
      */
-    orderByKey(path: string): Query;
+    orderByKey(): Query;
     /**
      * Query.orderByPriority
      */
-    orderByPriority(path: string): Query;
+    orderByPriority(): Query;
     /**
      * Query.orderByValue
      */
-    orderByValue(path: string): Query;
+    orderByValue(): Query;
     /**
      * Query.startAt
      */
@@ -86,12 +91,13 @@ export declare class Query extends PluginBase {
      */
     toString(): string;
     protected exec(params: IExecCmdParams): Promise<any>;
-    protected _forceRefUpdate(ref: Reference): void;
 }
 export declare class Reference extends Query {
-    private _parent;
     private _key;
-    constructor(params: IQueryParams);
+    private _parent;
+    private _rootRef;
+    constructor(params: IReferenceParams, _opts?: InternalOpts);
+    readonly root: Reference;
     readonly parent: Reference;
     readonly key: string;
     /**
@@ -129,15 +135,15 @@ export declare class Reference extends Query {
     /**
      * Reference.update
      */
-    update(values: any, onComplete?: (error?: any) => void): Promise<void>;
+    update(values: object, onComplete?: (error?: any) => void): Promise<void>;
 }
 export declare class ThenableReference extends Reference {
     resolve: any;
     reject: any;
-    constructor(params: IQueryParams);
+    constructor(params: IQueryParams, _opts: InternalOpts);
     then(onResolve?: (value?: any) => any, onReject?: (error: any) => any): Promise<any>;
 }
-declare class DataSnapshot {
+export declare class DataSnapshot {
     _nativeResults: any;
     private _ref;
     private _key;

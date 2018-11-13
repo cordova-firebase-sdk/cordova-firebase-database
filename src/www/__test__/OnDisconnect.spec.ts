@@ -8,13 +8,13 @@ describe("[OnDisconnect]", () => {
     execCmd.mockClear();
   });
 
-  it ("should have correct properties.", () => {
+  it("should have correct properties.", () => {
     const _: OnDisconnect = new OnDisconnect("pluginName");
     expect(_.id.includes("_OnDisconnect")).toBe(true);
     expect(_.pluginName).toEqual("pluginName");
   });
 
-  it ("cancel() should involve native code with correct parameters.", (done) => {
+  it("cancel() should involve native code with correct parameters.", (done) => {
     const _: OnDisconnect = new OnDisconnect("dummyPluginName");
     _._privateInit();
 
@@ -32,7 +32,7 @@ describe("[OnDisconnect]", () => {
     })
   });
 
-  it ("remove() should involve native code with correct parameters.", (done) => {
+  it("remove() should involve native code with correct parameters.", (done) => {
     const _: OnDisconnect = new OnDisconnect("dummyPluginName");
     _._privateInit();
 
@@ -49,7 +49,7 @@ describe("[OnDisconnect]", () => {
     })
   });
 
-  it ("set() should involve native code with correct parameters.", (done) => {
+  it("set() should involve native code with correct parameters.", (done) => {
     const _: OnDisconnect = new OnDisconnect("dummyPluginName");
     _._privateInit();
 
@@ -69,7 +69,7 @@ describe("[OnDisconnect]", () => {
     })
   });
 
-  it ("setWithPriority() should involve native code with correct parameters.", (done) => {
+  it("setWithPriority() should involve native code with correct parameters.", (done) => {
     const _: OnDisconnect = new OnDisconnect("dummyPluginName");
     _._privateInit();
 
@@ -91,7 +91,7 @@ describe("[OnDisconnect]", () => {
     })
   });
 
-  it ("update() should involve native code with correct parameters.", (done) => {
+  it("update() should involve native code with correct parameters.", (done) => {
     const _: OnDisconnect = new OnDisconnect("dummyPluginName");
     _._privateInit();
 

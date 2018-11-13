@@ -5,7 +5,5 @@ export const setPlatformId = (pId: string): void => {
 };
 
 export const exec = jest.fn((onSuccess, onError, pluginName, methodName, args): void => {
-  setTimeout(() => {
-    onSuccess();
-  }, 0);
+  onSuccess();
 });

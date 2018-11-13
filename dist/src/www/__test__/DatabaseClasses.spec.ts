@@ -47,13 +47,13 @@ describe("[Reference]", () => {
   });
 
   describe(".child()", () => {
-    it("should create child reference", () => {
+    it ("should create child reference", () => {
 
       const ref: Reference = commonDb.ref("parent");
       const child: Reference = ref.child("child");
       expect(child.toString()).toBe("https://dummy.firebaseio.com/parent/child");
     });
-    it("should receive 'nativeEvent'", (done) => {
+    it ("should receive 'nativeEvent'", (done) => {
 
       const ref: Reference = commonDb.ref("parent");
       const child: Reference = ref.child("child");
@@ -88,21 +88,20 @@ describe("[Reference]", () => {
     });
   });
   describe(".onDisconnect()", () => {
-    it("should create collect onDisconnect", () => {
+    it ("should create collect onDisconnect", () => {
       const ref: Reference = commonDb.ref("");
       expect(ref.onDisconnect().id.split("_")[1]).toBe("OnDisconnect");
     });
   });
   describe(".push()", () => {
-    it("should create ThenableReference", (done) => {
+    it ("should create ThenableReference", () => {
       const ref: Reference = commonDb.ref("");
       const thenableRef: ThenableReference = ref.push();
       thenableRef.then((result: any) => {
-        expect(ref.id.split("_")[1]).toBe("queryOrReference");
-        done();
+        expect(ref.id.split("_")[1]).toBe("Reference");
       });
     });
-    it("should involve native side with correct parameters", () => {
+    it ("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const thenableRef: ThenableReference = ref.push("value");
       expect(exec).toHaveBeenCalled();
@@ -110,7 +109,7 @@ describe("[Reference]", () => {
     });
   });
   describe(".remove()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it ("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
       ref.remove().then(() => {
         expect(execCmd).toHaveBeenCalled();
@@ -120,7 +119,7 @@ describe("[Reference]", () => {
     });
   });
   describe(".set()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it ("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
       ref.set("value").then(() => {
         expect(execCmd).toHaveBeenCalled();
@@ -131,7 +130,7 @@ describe("[Reference]", () => {
     });
   });
   describe(".setPriority()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it ("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
       ref.setPriority("high").then(() => {
         expect(execCmd).toHaveBeenCalled();
@@ -142,7 +141,7 @@ describe("[Reference]", () => {
     });
   });
   describe(".setWithPriority()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it ("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
       ref.setWithPriority("dummyValue", "high").then(() => {
         expect(execCmd).toHaveBeenCalled();
@@ -154,7 +153,7 @@ describe("[Reference]", () => {
     });
   });
   // describe(".transaction()", () => {
-  //   it("should involve `transactionUpdate` correctly", (done) => {
+  //   it ("should involve `transactionUpdate` correctly", (done) => {
   //
   //     const ref: Reference = commonDb.ref("");
   //     console.log("dbId", commonDb.id);
@@ -187,7 +186,7 @@ describe("[Reference]", () => {
   //   });
   // });
   describe(".update()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it ("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
       const values: any = {
         hello: "world",
@@ -219,19 +218,16 @@ describe("[Query]", () => {
   });
 
   describe("endAt", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const value: any = {
         hello: "world",
       };
       const query: Query = ref.endAt(value, "key");
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
+      expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
     });
     it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
       const ref: Reference = commonDb.ref("");
@@ -256,57 +252,49 @@ describe("[Query]", () => {
     });
   });
   describe("equalTo", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const value: any = {
         hello: "world",
       };
       const query: Query = ref.equalTo(value, "key");
-
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
+      expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
     });
   });
   describe("limitToFirst", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const value: any = {
         hello: "world",
       };
-      const query: Query = ref.limitToFirst(3);
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].limit).toEqual(3);
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        done();
-      }, 5);
+      const query: Query = ref.limitToFirst(value, "key");
+      expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
+      expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
     });
   });
   describe("limitToLast", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const value: any = {
         hello: "world",
       };
-      const query: Query = ref.limitToLast(3);
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].limit).toEqual(3);
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        done();
-      }, 5);
+      const query: Query = ref.limitToLast(value, "key");
+      expect(execCmd.mock.calls[0][0].args[0].key).toEqual("key");
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
+      expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(value)));
     });
   });
   describe("on()", () => {
     it("should work correctly", (done) => {
       const ref: Reference = commonDb.ref("");
       const value: any = { hello: "world" };
-      const query: Query = ref.limitToLast(3);
+      const query: Query = ref.limitToLast(value, "key");
       const _onSpy = jest.spyOn(query, "_on");
 
       query.on("value", (snapshot: DataSnapshot): void => {
@@ -340,7 +328,7 @@ describe("[Query]", () => {
 
       const ref: Reference = commonDb.ref("");
       const value: any = { hello: "world" };
-      const query: Query = ref.limitToLast(3);
+      const query: Query = ref.limitToLast(value, "key");
       const _onSpy = jest.spyOn(query, "_on");
 
       query.once("value", (snapshot: DataSnapshot): void => {
@@ -380,60 +368,45 @@ describe("[Query]", () => {
     });
   });
   describe("orderByChild()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const query: Query = ref.orderByChild("children");
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].path).toEqual("children");
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].path).toEqual("children");
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
     });
   });
   describe("orderByKey()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const query: Query = ref.orderByKey();
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
     });
   });
   describe("orderByPriority()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const query: Query = ref.orderByPriority();
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
     });
   });
   describe("orderByValue()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const query: Query = ref.orderByValue();
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
     });
   });
   describe("startAt()", () => {
-    it("should involve native side with correct parameters", (done) => {
+    it("should involve native side with correct parameters", () => {
       const ref: Reference = commonDb.ref("");
       const query: Query = ref.startAt(3);
-      setTimeout(() => {
-        expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
-        expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
-        expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(3)));
-        done();
-      }, 5);
+      expect(execCmd.mock.calls[0][0].args[0].queryId).toBe(query.id);
+      expect(execCmd.mock.calls[0][0].args[0].targetId).toBe(ref.id);
+      expect(execCmd.mock.calls[0][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(3)));
     });
   });
 });

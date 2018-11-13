@@ -9,9 +9,20 @@ declare const Promise: any;
 interface IQueryParams {
   key?: string;
   url: string;
-  ref: Reference;
   parent?: Reference;
   pluginName: string;
+  ref?: Reference;
+}
+interface IReferenceParams {
+  key?: string;
+  url: string;
+  parent?: Reference;
+  pluginName: string;
+}
+
+interface InternalOpts {
+  noInit?: boolean;
+  root: Reference;
 }
 
 export type CANCEL_CALLBACK = (error: any) => void;
@@ -19,6 +30,9 @@ export type CANCEL_CALLBACK = (error: any) => void;
 export type ON_CALLBACK = (snapshot: DataSnapshot, key: string) => void;
 
 export class Query extends PluginBase {
+
+
+  protected _ref: Reference;
 
   private _url: string;
 
@@ -28,12 +42,13 @@ export class Query extends PluginBase {
 
   private _pluginName: string;
 
-  private _ref: Reference;
-
-  constructor(params: IQueryParams) {
+  constructor(params: IQueryParams, _opts?: InternalOpts) {
     super("queryOrReference");
     this._pluginName = params.pluginName;
     this._ref = params.ref;
+
+    params.url = params.url.replace(/\/+/g, "/");
+    params.url = params.url.replace(/https:\//, "https://");
     this._url = params.url;
 
     // Bubbling native events
@@ -41,6 +56,22 @@ export class Query extends PluginBase {
       this._trigger.call(this, data.listenerId, data);
     });
 
+    if (_opts && !_opts.noInit) {
+      this._queue._one("insert_at", (): void => {
+        if (this._isReady) {
+          return;
+        }
+        exec(() => {
+          this._isReady = true;
+          this._queue._trigger("insert_at");
+        }, (error) => {
+          console.error(error);
+        }, this.pluginName, "database_ref", [{
+          id: this.id,
+          path: this.url.replace(/^.+firebaseio.com\//i, ""),
+        }]);
+      });
+    }
 
     this._queue._on("insert_at", (): void => {
       if (!this._isReady) {
@@ -71,16 +102,6 @@ export class Query extends PluginBase {
     return this._url;
   }
 
-  /**
-   * @hidden
-   * Internal methods. Don't use it from your code
-   */
-  public _privateInit(): void {
-    if (!this._isReady) {
-      this._isReady = true;
-      this._queue._trigger("insert_at");
-    }
-  }
 
   /**
    * Query.endAt
@@ -105,9 +126,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_endAt",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -136,9 +157,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_equalTo",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -155,7 +176,7 @@ export class Query extends PluginBase {
   /**
    * Query.limitToFirst
    */
-  public limitToFirst(value: any, key: string): Query {
+  public limitToFirst(limit: number): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -168,16 +189,15 @@ export class Query extends PluginBase {
 
     this.exec({
       args: [{
-        key,
+        limit,
         queryId: query.id,
         targetId: this.id,
-        value: LZString.compressToBase64(JSON.stringify(value)),
       }],
       context: this,
       methodName: "query_limitToFirst",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -187,7 +207,7 @@ export class Query extends PluginBase {
   /**
    * Query.limitToLast
    */
-  public limitToLast(value: any, key: string): Query {
+  public limitToLast(limit: number): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -200,16 +220,15 @@ export class Query extends PluginBase {
 
     this.exec({
       args: [{
-        key,
+        limit,
         queryId: query.id,
         targetId: this.id,
-        value: LZString.compressToBase64(JSON.stringify(value)),
       }],
       context: this,
       methodName: "query_limitToLast",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -243,8 +262,7 @@ export class Query extends PluginBase {
     if (typeof callback === "function") {
       targetListeners = this._listeners.filter((info: any): boolean => {
         return info.callback === callback &&
-          info.eventType === eventType &&
-          info.context === context_;
+          info.eventType === eventType;
       });
     } else if (eventType) {
       targetListeners = this._listeners.filter((info: any): boolean => {
@@ -253,6 +271,12 @@ export class Query extends PluginBase {
     } else {
       targetListeners = this._listeners;
     }
+    this._listeners = this._listeners.filter((info: any): boolean => {
+      return targetListeners.indexOf(info) === -1;
+    });
+    targetListeners.forEach((info: any): void => {
+      this._off(info.listenerId);
+    });
 
     this.exec({
       args: [{
@@ -303,7 +327,7 @@ export class Query extends PluginBase {
     });
 
     // Receive data from native side at once,
-    this._on(listenerId, (params: any): void => {
+    this._on(listenerId, (params: INativeEventParams): void => {
       if (params.eventType === "cancelled") {
         // permission error or something
         throw new Error(LZString.decompressFromBase64(params.args[0]));
@@ -411,9 +435,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByChild",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -423,7 +447,7 @@ export class Query extends PluginBase {
   /**
    * Query.orderByKey
    */
-  public orderByKey(path: string): Query {
+  public orderByKey(): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -441,9 +465,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByKey",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -453,7 +477,7 @@ export class Query extends PluginBase {
   /**
    * Query.orderByPriority
    */
-  public orderByPriority(path: string): Query {
+  public orderByPriority(): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -471,9 +495,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByPriority",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -482,7 +506,7 @@ export class Query extends PluginBase {
   /**
    * Query.orderByValue
    */
-  public orderByValue(path: string): Query {
+  public orderByValue(): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -500,9 +524,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_orderByValue",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -531,9 +555,9 @@ export class Query extends PluginBase {
       }],
       context: this,
       methodName: "query_startAt",
-    })
-    .then((): void => {
-      query._privateInit();
+    // })
+    // .then((): void => {
+    //   query._privateInit();
     });
 
     return query;
@@ -560,26 +584,39 @@ export class Query extends PluginBase {
       this._queue._push(params);
     });
   }
-
-  protected _forceRefUpdate(ref: Reference): void {
-    this._ref = ref;
-  }
-
 }
 
 
 export class Reference extends Query {
 
-  private _parent: Reference;
   private _key: string;
+  private _parent: Reference;
+  private _rootRef: Reference;
 
-  constructor(params: IQueryParams) {
-    super(params);
+  constructor(params: IReferenceParams, _opts?: InternalOpts) {
+    super(params, _opts);
     this._parent = params.parent;
     this._key = params.key;
-    this._forceRefUpdate(this);
+
+    this._rootRef = this;
+    if (_opts && _opts.root) {
+      this._rootRef = _opts.root;
+    }
+
+    // Bubbling native events
+    const parentRef: Reference = this._parent || this._rootRef;
+    if (parentRef && parentRef !== this) {
+      parentRef._on("nativeEvent", (data: INativeEventParams): void => {
+        this._trigger.call(this, "nativeEvent", data);
+      });
+    }
+
+
   }
 
+  public get root(): Reference {
+    return this._rootRef;
+  }
   public get parent(): Reference {
     return this._parent;
   }
@@ -593,39 +630,45 @@ export class Reference extends Query {
    */
   public child(path: string): Reference {
 
-    let key: string = null;
-    if (path && typeof path === "string") {
-      path = path.replace(/\/$/, "");
-      key = path.replace(/^.*\//, "") || this.key;
-    } else {
+    if (typeof path !== "string") {
       throw new Error("Reference.child failed: Was called with 0 arguments. Expects at least 1.");
     }
+    if (path === "" || /[\.#$\[\]]/.test(path)) {
+      throw new Error([
+        "First argument was an invalid path = \"" + path + "\".",
+        "Paths must be non-empty strings and can't contain \".\", \"#\", \"$\", \"[\", or \"]\"",
+      ].join(" "));
+    }
+
+    path = path.replace(/\/$/, "");
+    const key: string = path.replace(/^.*\//, "") || this.key;
 
     const reference: Reference = new Reference({
       key,
       parent: this,
       pluginName: this.pluginName,
-      ref: null,
       url: this.url + "/" + path,
+    }, {
+      root: this._rootRef,
     });
+    //
+    // this._on("nativeEvent", (eventData: INativeEventParams) => {
+    //   reference._trigger.call(reference, "nativeEvent", eventData);
+    // });
 
-    this._on("nativeEvent", (eventData: INativeEventParams) => {
-      reference._trigger.call(reference, "nativeEvent", eventData);
-    });
-
-    this.exec({
-      args: [{
-        childId: reference.id,
-        path,
-        targetId: this.id,
-      }],
-      context: this,
-      methodName: "reference_child",
-      pluginName: this.pluginName,
-    })
-    .then((): void => {
-      reference._privateInit();
-    });
+    // this.exec({
+    //   args: [{
+    //     childId: reference.id,
+    //     path,
+    //     targetId: this.id,
+    //   }],
+    //   context: this,
+    //   methodName: "reference_child",
+    //   pluginName: this.pluginName,
+    // // })
+    // // .then((): void => {
+    // //   reference._privateInit();
+    // });
 
     return reference;
   }
@@ -660,37 +703,31 @@ export class Reference extends Query {
     const reference: ThenableReference = new ThenableReference({
       key: this.key,
       pluginName: this.pluginName,
-      ref: this,
       url: this.url,
+    }, {
+      noInit: true,
+      root: this.root,
     });
 
-    this.exec({
-      args: [{
-        newId: reference.id,
-        targetId: this.id,
-        value: LZString.compressToBase64(JSON.stringify(value)),
-      }],
-      context: this,
-      methodName: "reference_push",
-      pluginName: this.pluginName,
-    })
-    .then((result: any): void => {
-      reference._privateInit();
-
+    exec((result: any): void => {
       if (typeof reference.resolve === "function") {
         Promise.resolve(result).then(reference.resolve);
       }
       if (typeof onComplete === "function") {
         onComplete.call(this);
       }
-    }).catch((error: any): void => {
+    }, (error: any): void => {
       if (typeof reference.reject === "function") {
         Promise.reject(error).then(reference.reject);
       }
       if (typeof onComplete === "function") {
         onComplete.call(this, error);
       }
-    });
+    }, this.pluginName, "reference_push", [{
+      newId: reference.id,
+      targetId: this.id,
+      value: LZString.compressToBase64(JSON.stringify(value)),
+    }]);
 
     return reference;
   }
@@ -766,7 +803,7 @@ export class Reference extends Query {
     return new Promise((resolve: () => void, reject: (error: any) => void) => {
       this.exec({
         args: [{
-          priority: LZString.compressToBase64(JSON.stringify(priority)),
+          priority,
           targetId: this.id,
         }],
         context: this,
@@ -797,7 +834,7 @@ export class Reference extends Query {
     return new Promise((resolve: () => void, reject: (error: any) => void): void => {
       this.exec({
         args: [{
-          priority: LZString.compressToBase64(JSON.stringify(newPriority)),
+          priority: newPriority,
           targetId: this.id,
           value: LZString.compressToBase64(JSON.stringify(newVal)),
         }],
@@ -831,6 +868,7 @@ export class Reference extends Query {
     const transactionId: string = Math.floor(Date.now() * Math.random()) + "_transaction";
     const eventName: string = this.pluginName + "-" + this.id + "-" + transactionId;
 
+
     if (cordova.platformId === "browser") {
       // ------------------------
       //       Browser
@@ -839,7 +877,7 @@ export class Reference extends Query {
         (resolve: any, reject: any): void => {
 
           const proxy: any = require("cordova/exec/proxy");
-          const fbDbPlugin: any = proxy.get(this.pluginName);
+          const fbDbPlugin: any = (proxy.get(this.pluginName, "getSelf"))();
           const ref: any = fbDbPlugin._get(this.id);
           ref.transaction(transactionUpdate, (error: any, committed: boolean, snapshot: any): Promise<any> => {
             if (error) {
@@ -848,7 +886,7 @@ export class Reference extends Query {
               const dataSnapshot: DataSnapshot = new DataSnapshot(this, {
                 exists: snapshot.exists(),
                 exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-                getPriority: LZString.compressToBase64(snapshot.getPriority()),
+                getPriority: snapshot.getPriority(),
                 key: snapshot.key,
                 numChildren: snapshot.numChildren(),
                 val: LZString.compressToBase64(JSON.stringify(snapshot.val())),
@@ -924,7 +962,7 @@ export class Reference extends Query {
   /**
    * Reference.update
    */
-  public update(values: any, onComplete?: (error?: any) => void): Promise<void> {
+  public update(values: object, onComplete?: (error?: any) => void): Promise<void> {
 
     if (!values || typeof values !== "object") {
       throw new Error("values must contain key-value");
@@ -962,8 +1000,9 @@ export class ThenableReference extends Reference {
   public resolve: any;
   public reject: any;
 
-  constructor(params: IQueryParams) {
-    super(params);
+  constructor(params: IQueryParams, _opts: InternalOpts) {
+    super(params, _opts);
+    this._isReady = true;
   }
 
   public then(
@@ -996,7 +1035,7 @@ export class ThenableReference extends Reference {
 
 
 
-class DataSnapshot {
+export class DataSnapshot {
 
   public _nativeResults: any;
   private _ref: Reference;

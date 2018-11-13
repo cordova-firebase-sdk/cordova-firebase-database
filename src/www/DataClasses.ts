@@ -56,23 +56,6 @@ export class Query extends PluginBase {
       this._trigger.call(this, data.listenerId, data);
     });
 
-    if (_opts && !_opts.noInit) {
-      this._queue._one("insert_at", (): void => {
-        if (this._isReady) {
-          return;
-        }
-        exec(() => {
-          this._isReady = true;
-          this._queue._trigger("insert_at");
-        }, (error) => {
-          console.error(error);
-        }, this.pluginName, "database_ref", [{
-          id: this.id,
-          path: this.url.replace(/^.+firebaseio.com\//i, ""),
-        }]);
-      });
-    }
-
     this._queue._on("insert_at", (): void => {
       if (!this._isReady) {
         return;
@@ -87,6 +70,20 @@ export class Query extends PluginBase {
         this._queue._trigger("insert_at");
       }
     });
+
+    if (_opts && !_opts.noInit) {
+      this._queue._one("insert_at", (): void => {
+        exec(() => {
+          this._isReady = true;
+          this._queue._trigger("insert_at");
+        }, (error) => {
+          console.error(error);
+        }, this.pluginName, "database_ref", [{
+          id: this.id,
+          path: this.url.replace(/^.+firebaseio.com\//i, ""),
+        }]);
+      });
+    }
 
   }
 
@@ -176,7 +173,7 @@ export class Query extends PluginBase {
   /**
    * Query.limitToFirst
    */
-  public limitToFirst(value: any, key: string): Query {
+  public limitToFirst(limit: number): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -189,10 +186,9 @@ export class Query extends PluginBase {
 
     this.exec({
       args: [{
-        key,
+        limit,
         queryId: query.id,
         targetId: this.id,
-        value: LZString.compressToBase64(JSON.stringify(value)),
       }],
       context: this,
       methodName: "query_limitToFirst",
@@ -208,7 +204,7 @@ export class Query extends PluginBase {
   /**
    * Query.limitToLast
    */
-  public limitToLast(value: any, key: string): Query {
+  public limitToLast(limit: number): Query {
 
     const query: Query = new Query({
       pluginName: this.pluginName,
@@ -221,10 +217,9 @@ export class Query extends PluginBase {
 
     this.exec({
       args: [{
-        key,
+        limit,
         queryId: query.id,
         targetId: this.id,
-        value: LZString.compressToBase64(JSON.stringify(value)),
       }],
       context: this,
       methodName: "query_limitToLast",
@@ -741,6 +736,7 @@ export class Reference extends Query {
   public remove(onComplete?: (error?: any) => void): Promise<void> {
 
     return new Promise((resolve: () => void, reject: (error: any) => void) => {
+
       this.exec({
         args: [{
           targetId: this.id,

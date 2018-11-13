@@ -5,9 +5,15 @@ export declare class Database extends PluginBase {
     private _app;
     private _options;
     private _url;
+    private _rootRef;
     constructor(app: App, options: IAppInitializeOptions);
     readonly app: App;
     readonly url: string;
+    /**
+     * @hidden
+     * This method is for `Reference.transcation` implementation
+     */
+    getSelf(): Database;
     /**
      * Database.goOffline
      */
