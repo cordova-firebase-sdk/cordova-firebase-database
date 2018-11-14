@@ -15,38 +15,38 @@ branches:
 
 matrix:
   include:
-  #- os: linux
-  #  env: PLATFORM="only jest test"
-  #  language: node_js
-  #  node_js: "${NODE_VERSION}"
-  #  script:
-  #    - npm test
-  - env: CORDOVA_PLATFORM="android" CORDOVA_VERSION="8.0.0"
-    os: linux
+  - os: linux
+    env: PLATFORM="only jest test"
+    language: node_js
     node_js: "${NODE_VERSION}"
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-        - tools
-        - android-${ANDROID_API}
-        - platform-tools
-        # The BuildTools version used by your project
-        - build-tools-${ANDROID_BUILD_TOOLS}
-        # Additional components
-        - extra-android-m2repository
-        - extra-google-m2repository
-        - sys-img-armeabi-v7a-android-${ANDROID_API}
-      licenses:
-        - ".+"
-    before_install:
-      - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
-        && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
-        install ${NODE_VERSION} > /dev/null
-    before_script:
-      - npm -g install cordova cordova-paramedic
     script:
-      - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
+      - npm test
+  #- env: CORDOVA_PLATFORM="android" CORDOVA_VERSION="8.0.0"
+  #  os: linux
+  #  node_js: "${NODE_VERSION}"
+  #  language: android
+  #  jdk: oraclejdk8
+  #  android:
+  #    components:
+  #      - tools
+  #      - android-${ANDROID_API}
+  #      - platform-tools
+  #      # The BuildTools version used by your project
+  #      - build-tools-${ANDROID_BUILD_TOOLS}
+  #      # Additional components
+  #      - extra-android-m2repository
+  #      - extra-google-m2repository
+  #      - sys-img-armeabi-v7a-android-${ANDROID_API}
+  #    licenses:
+  #      - ".+"
+  #  before_install:
+  #    - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+  #      && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+  #      install ${NODE_VERSION} > /dev/null
+  #  before_script:
+  #    - npm -g install cordova cordova-paramedic
+  #  script:
+  #    - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
 
 install:
   - node --version
