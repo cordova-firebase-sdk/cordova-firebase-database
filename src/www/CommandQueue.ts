@@ -10,25 +10,24 @@ declare let Promise: any;
 export interface IExecCmdParams {
 
   /**
+   * parameters for native side
+   */
+  args?: Array<any>;
+
+  /**
    * Plugin's context
    */
   context: PluginBase;
 
   /**
    * Plugin's name in native side.
-   * If omit this, context.id is used.
    */
-  pluginName?: string;
+  pluginName: string;
 
   /**
    * Execute method name
    */
   methodName: string;
-
-  /**
-   * parameters for native side
-   */
-  args?: Array<any>;
 
   /**
    * synchronize options
@@ -38,7 +37,6 @@ export interface IExecCmdParams {
     remove?: boolean;
   };
 
-  [key: string]: any;
 }
 
 const commandQueue: Array<any> = [];
@@ -57,7 +55,6 @@ window.addEventListener("unload", (): void => {
 export const execCmd = (params: IExecCmdParams): Promise<any> => {
   params.execOptions = params.execOptions || {};
   params.args = params.args || [];
-  params.pluginName = params.pluginName || params.context.id;
 
   // If the instance has been removed, do not execute any methods on it
   // except remove function itself.

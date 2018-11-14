@@ -227,6 +227,39 @@ class FirebaseDatabasePlugin extends index_1.BaseClass {
             onError(e);
         }
     }
+    reference_transaction(onSuccess, onError, args) {
+        onSuccess = onSuccess || STUB_SUCCESS;
+        onError = onError || STUB_ERROR;
+        try {
+            const options = args[0];
+            const ref = this._get(options.targetId);
+            ref.transaction(options.transactionUpdate, (error, committed, snapshot) => {
+                if (error) {
+                    onError(error);
+                }
+                else {
+                    let snapshotStr = null;
+                    if (snapshot) {
+                        snapshotStr = index_1.LZString.compressToBase64(JSON.stringify({
+                            exists: snapshot.exists(),
+                            exportVal: index_1.LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
+                            getPriority: snapshot.getPriority(),
+                            key: snapshot.key,
+                            numChildren: snapshot.numChildren(),
+                            val: index_1.LZString.compressToBase64(JSON.stringify(snapshot.val())),
+                        }));
+                    }
+                    onSuccess({
+                        committed,
+                        snapshot: snapshotStr,
+                    });
+                }
+            }, options.applyLocally);
+        }
+        catch (e) {
+            onError(e);
+        }
+    }
     reference_update(onSuccess, onError, args) {
         onSuccess = onSuccess || STUB_SUCCESS;
         onError = onError || STUB_ERROR;

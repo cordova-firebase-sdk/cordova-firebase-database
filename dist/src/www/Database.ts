@@ -10,10 +10,6 @@ import { execCmd, IExecCmdParams } from "./CommandQueue";
 import { Reference } from "./DataClasses";
 import { INativeEventParams } from "./INativeEventParams";
 
-
-declare let Promise: any;
-declare let window: any;
-
 export class Database extends PluginBase {
 
   protected _queue: BaseArrayClass = new BaseArrayClass();
@@ -50,6 +46,7 @@ export class Database extends PluginBase {
       pluginName: this.id,
       url: this._url,
     }, {
+      exec: this.exec,
       root: null,
     });
 
@@ -75,7 +72,7 @@ export class Database extends PluginBase {
 
     // Create one new instance in native side.
     this._one("fireAppReady", (): void => {
-      const onSuccess = (result?: any): void => {
+      const onSuccess = (): void => {
         this._isReady = true;
         this._queue._trigger("insert_at");
         this._trigger("ready");
@@ -122,6 +119,7 @@ export class Database extends PluginBase {
         sync: true,
       },
       methodName: "goOffline",
+      pluginName: this.id,
     });
   }
 
@@ -135,6 +133,7 @@ export class Database extends PluginBase {
         sync: true,
       },
       methodName: "goOnline",
+      pluginName: this.id,
     });
   }
 
@@ -174,7 +173,7 @@ export class Database extends PluginBase {
     let currentPath: string = "";
     let newRef: Reference;
 
-    const refs: Array<Reference> = (path.split(/\//)).map((pathStep: string) => {
+    const refs: Array<Reference> = (path.split(/\//)).map((pathStep: string): Reference => {
 
       currentUrl += "/" + pathStep;
       currentPath += (currentPath ? "/" : "") + pathStep;
@@ -185,6 +184,7 @@ export class Database extends PluginBase {
         pluginName: this.id,
         url: currentUrl,
       }, {
+        exec: this.exec.bind(this),
         root: this._rootRef,
       });
 
@@ -231,10 +231,17 @@ export class Database extends PluginBase {
 
 
   private exec(params: IExecCmdParams): Promise<any> {
-    return new Promise((resolve: (result: any) => void, reject: (error: any) => void) => {
-      params.resolve = resolve;
-      params.reject = reject;
-      this._queue._push(params);
+
+    return new Promise((resolve: (result: any) => void, reject: (error: any) => void): void => {
+      this._queue._push({
+        args: params.args,
+        context: this,
+        execOptions: params.execOptions,
+        methodName: params.methodName,
+        pluginName: params.pluginName,
+        reject,
+        resolve,
+      });
     });
   }
 
@@ -244,37 +251,38 @@ export class Database extends PluginBase {
 
 class SecretDatabaseManager {
 
-  public _databases: any = {};
+  public _databasesByName: any = {};
+  public _databasesById: any = {};
 
 }
 
-if (window.cordova && window.cordova.version) {
+if ((window as any).cordova && (window as any).cordova.version) {
   const manager: SecretDatabaseManager = new SecretDatabaseManager();
 
-  Object.defineProperty(window.plugin.firebase, "database", {
+  Object.defineProperty((window as any).plugin.firebase, "database", {
     value: (app?: App): Database => {
       if (!app) {
         // Obtains default app
-        app = window.plugin.firebase.app();
+        app = (window as any).plugin.firebase.app();
       }
 
       // If database is created for the app, returns it.
       // Otherwise, create a new instance.
-      let database: Database = manager._databases[app.name];
+      let database: Database = manager._databasesByName[app.name];
       if (!database) {
         database = new Database(app, app.options);
-        manager._databases[app.name] = database;
+        manager._databasesByName[app.name] = database;
+        manager._databasesById[database.id] = database;
       }
       return database;
     },
   });
 
-  Object.defineProperty(window.plugin.firebase.database, "_nativeCallback", {
+  Object.defineProperty((window as any).plugin.firebase.database, "_nativeCallback", {
     enumerable: false,
     value: (dbId: string, listenerId: string, eventType: string, args: Array<any>): void => {
 
-      const dbInstance = window.plugin.firebase.database._DBs[dbId];
-
+      const dbInstance: Database = manager._databasesById[dbId];
       if (dbInstance) {
         dbInstance._trigger("nativeEvent", {
           args,

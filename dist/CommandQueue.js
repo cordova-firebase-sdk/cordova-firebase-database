@@ -17,7 +17,6 @@ window.addEventListener("unload", () => {
 exports.execCmd = (params) => {
     params.execOptions = params.execOptions || {};
     params.args = params.args || [];
-    params.pluginName = params.pluginName || params.context.id;
     // If the instance has been removed, do not execute any methods on it
     // except remove function itself.
     if (params.context.isRemoved && params.execOptions.remove) {

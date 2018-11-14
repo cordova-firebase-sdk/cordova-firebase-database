@@ -18,7 +18,9 @@ module.exports = {
     "node_modules/*"
   ],
   globals: {
-    cordova: {},
+    cordova: {
+      platformId: "browser",
+    },
     firebase: {},
     window: {},
   },

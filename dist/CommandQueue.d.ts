@@ -4,22 +4,21 @@ import { PluginBase } from "cordova-firebase-core/index";
  */
 export interface IExecCmdParams {
     /**
+     * parameters for native side
+     */
+    args?: Array<any>;
+    /**
      * Plugin's context
      */
     context: PluginBase;
     /**
      * Plugin's name in native side.
-     * If omit this, context.id is used.
      */
-    pluginName?: string;
+    pluginName: string;
     /**
      * Execute method name
      */
     methodName: string;
-    /**
-     * parameters for native side
-     */
-    args?: Array<any>;
     /**
      * synchronize options
      */
@@ -27,6 +26,5 @@ export interface IExecCmdParams {
         sync?: boolean;
         remove?: boolean;
     };
-    [key: string]: any;
 }
 export declare const execCmd: (params: IExecCmdParams) => Promise<any>;

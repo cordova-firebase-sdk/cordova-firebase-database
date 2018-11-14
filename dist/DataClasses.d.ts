@@ -15,8 +15,9 @@ interface IReferenceParams {
     pluginName: string;
 }
 interface InternalOpts {
+    exec: (params: IExecCmdParams) => Promise<any>;
     noInit?: boolean;
-    root: Reference;
+    root?: Reference;
 }
 export declare type CANCEL_CALLBACK = (error: any) => void;
 export declare type ON_CALLBACK = (snapshot: DataSnapshot, key: string) => void;
@@ -26,7 +27,7 @@ export declare class Query extends PluginBase {
     private _queue;
     private _listeners;
     private _pluginName;
-    constructor(params: IQueryParams, _opts?: InternalOpts);
+    constructor(params: IQueryParams, _opts: InternalOpts);
     readonly pluginName: string;
     readonly ref: Reference;
     readonly url: string;

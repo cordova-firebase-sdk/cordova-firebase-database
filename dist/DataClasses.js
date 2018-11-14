@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const cordova_1 = require("cordova");
 const index_1 = require("cordova-firebase-core/index");
-const CommandQueue_1 = require("./CommandQueue");
 const OnDisconnect_1 = require("./OnDisconnect");
 class Query extends index_1.PluginBase {
     constructor(params, _opts) {
@@ -14,26 +13,13 @@ class Query extends index_1.PluginBase {
         params.url = params.url.replace(/\/+/g, "/");
         params.url = params.url.replace(/https:\//, "https://");
         this._url = params.url;
+        if (!_opts || !_opts.exec) {
+            throw new Error("_opts must be provided.");
+        }
         // Bubbling native events
         this._on("nativeEvent", (data) => {
             this._trigger.call(this, data.listenerId, data);
         });
-        if (_opts && !_opts.noInit) {
-            this._queue._one("insert_at", () => {
-                if (this._isReady) {
-                    return;
-                }
-                cordova_1.exec(() => {
-                    this._isReady = true;
-                    this._queue._trigger("insert_at");
-                }, (error) => {
-                    console.error(error);
-                }, this.pluginName, "database_ref", [{
-                        id: this.id,
-                        path: this.url.replace(/^.+firebaseio.com\//i, ""),
-                    }]);
-            });
-        }
         this._queue._on("insert_at", () => {
             if (!this._isReady) {
                 return;
@@ -41,13 +27,29 @@ class Query extends index_1.PluginBase {
             if (this._queue._getLength() > 0) {
                 const cmd = this._queue._removeAt(0, true);
                 if (cmd && cmd.context && cmd.methodName) {
-                    CommandQueue_1.execCmd(cmd).then(cmd.resolve).catch(cmd.reject);
+                    _opts.exec(cmd).then(cmd.resolve).catch(cmd.reject);
                 }
             }
             if (this._queue._getLength() > 0) {
                 this._queue._trigger("insert_at");
             }
         });
+        if (!_opts.noInit) {
+            this._queue._one("insert_at", () => {
+                _opts.exec({
+                    args: [{
+                            id: this.id,
+                            path: this.url.replace(/^.+firebaseio.com\//i, ""),
+                        }],
+                    context: this,
+                    methodName: "database_ref",
+                    pluginName: this.pluginName,
+                }).then(() => {
+                    this._isReady = true;
+                    this._queue._trigger("insert_at");
+                });
+            });
+        }
     }
     get pluginName() {
         return this._pluginName;
@@ -66,6 +68,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -79,6 +83,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_endAt",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -90,6 +95,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -103,6 +110,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_equalTo",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -120,6 +128,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -132,6 +142,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_limitToFirst",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -143,6 +154,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -155,6 +168,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_limitToLast",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -317,6 +331,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -329,6 +345,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByChild",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -340,6 +357,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -351,6 +370,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByKey",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -362,6 +382,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -373,6 +395,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByPriority",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -384,6 +407,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -395,6 +420,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_orderByValue",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -406,6 +432,8 @@ class Query extends index_1.PluginBase {
             pluginName: this.pluginName,
             ref: this.ref,
             url: this.url,
+        }, {
+            exec: this.exec.bind(this),
         });
         this._on("nativeEvent", (eventData) => {
             query._trigger.call(query, "nativeEvent", eventData);
@@ -419,6 +447,7 @@ class Query extends index_1.PluginBase {
                 }],
             context: this,
             methodName: "query_startAt",
+            pluginName: this.pluginName,
         });
         return query;
     }
@@ -436,9 +465,15 @@ class Query extends index_1.PluginBase {
     }
     exec(params) {
         return new Promise((resolve, reject) => {
-            params.resolve = resolve;
-            params.reject = reject;
-            this._queue._push(params);
+            this._queue._push({
+                args: params.args,
+                context: this,
+                execOptions: params.execOptions,
+                methodName: params.methodName,
+                pluginName: params.pluginName,
+                reject,
+                resolve,
+            });
         });
     }
 }
@@ -490,6 +525,7 @@ class Reference extends Query {
             pluginName: this.pluginName,
             url: this.url + "/" + path,
         }, {
+            exec: this.exec.bind(this),
             root: this._rootRef,
         });
         //
@@ -539,6 +575,7 @@ class Reference extends Query {
             pluginName: this.pluginName,
             url: this.url,
         }, {
+            exec: this.exec.bind(this),
             noInit: true,
             root: this.root,
         });
@@ -681,58 +718,35 @@ class Reference extends Query {
     transaction(transactionUpdate, onComplete, applyLocally) {
         const transactionId = Math.floor(Date.now() * Math.random()) + "_transaction";
         const eventName = this.pluginName + "-" + this.id + "-" + transactionId;
+        const nativeParams = {
+            applyLocally,
+            eventName,
+            hashCode: this.hashCode,
+            pluginName: this.pluginName,
+            targetId: this.id,
+            transactionId,
+        };
         if (cordova.platformId === "browser") {
             // ------------------------
             //       Browser
             // ------------------------
-            return new Promise((resolve, reject) => {
-                const proxy = require("cordova/exec/proxy");
-                const fbDbPlugin = (proxy.get(this.pluginName, "getSelf"))();
-                const ref = fbDbPlugin._get(this.id);
-                ref.transaction(transactionUpdate, (error, committed, snapshot) => {
-                    if (error) {
-                        onComplete(error, false);
-                    }
-                    else {
-                        const dataSnapshot = new DataSnapshot(this, {
-                            exists: snapshot.exists(),
-                            exportVal: index_1.LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-                            getPriority: snapshot.getPriority(),
-                            key: snapshot.key,
-                            numChildren: snapshot.numChildren(),
-                            val: index_1.LZString.compressToBase64(JSON.stringify(snapshot.val())),
-                        });
-                        if (typeof onComplete === "function") {
-                            onComplete(null, committed, dataSnapshot);
-                        }
-                        return Promise.resolve({
-                            committed,
-                            snapshot: dataSnapshot,
-                        });
-                    }
-                }, applyLocally);
+            nativeParams.transactionUpdate = transactionUpdate;
+        }
+        else {
+            // ------------------------
+            //    Android, iOS
+            // ------------------------
+            const onNativeCallback = (...args) => {
+                const newValue = transactionUpdate.call(this, JSON.parse(index_1.LZString.decompressFromBase64(args[0])));
+                cordova_1.exec(null, null, this.pluginName, "reference_onTransactionCallback", [transactionId, index_1.LZString.compressToBase64(JSON.stringify(newValue))]);
+            };
+            document.addEventListener(eventName, onNativeCallback, {
+                once: true,
             });
         }
-        // ------------------------
-        //    Android, iOS
-        // ------------------------
-        const onNativeCallback = (...args) => {
-            const newValue = transactionUpdate.call(this, JSON.parse(index_1.LZString.decompressFromBase64(args[0])));
-            cordova_1.exec(null, null, this.pluginName, "reference_onTransactionCallback", [transactionId, index_1.LZString.compressToBase64(JSON.stringify(newValue))]);
-        };
-        document.addEventListener(eventName, onNativeCallback, {
-            once: true,
-        });
         return new Promise((resolve, reject) => {
             this.exec({
-                args: [{
-                        applyLocally,
-                        eventName,
-                        hashCode: this.hashCode,
-                        pluginName: this.pluginName,
-                        targetId: this.id,
-                        transactionId,
-                    }],
+                args: [nativeParams],
                 context: this,
                 execOptions: {
                     sync: true,

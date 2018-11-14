@@ -2,10 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("cordova-firebase-core/index");
 const FirebaseDatabasePlugin_1 = require("./FirebaseDatabasePlugin");
-class CordovaFirebaseDatabase extends index_1.BaseClass {
-    constructor() {
-        super();
-    }
+class CordovaFirebaseDatabase {
     newInstance(resolve, reject, args) {
         index_1.loadJsPromise({
             package: "firebase.database",
@@ -29,6 +26,7 @@ class CordovaFirebaseDatabase extends index_1.BaseClass {
             // console.log("--->[browser] CordovaFirebaseDatabase.newInstance() : " + options.id);
             // Create Database plugin instance
             const instance = new FirebaseDatabasePlugin_1.FirebaseDatabasePlugin(options.id, database);
+            // Register as browser plugin
             const dummyObj = {};
             const keys = Object.getOwnPropertyNames(FirebaseDatabasePlugin_1.FirebaseDatabasePlugin.prototype)
                 .filter((p) => {

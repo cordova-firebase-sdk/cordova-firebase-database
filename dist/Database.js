@@ -29,6 +29,7 @@ class Database extends index_1.PluginBase {
             pluginName: this.id,
             url: this._url,
         }, {
+            exec: this.exec,
             root: null,
         });
         // Bubbling native events
@@ -51,7 +52,7 @@ class Database extends index_1.PluginBase {
         });
         // Create one new instance in native side.
         this._one("fireAppReady", () => {
-            const onSuccess = (result) => {
+            const onSuccess = () => {
                 this._isReady = true;
                 this._queue._trigger("insert_at");
                 this._trigger("ready");
@@ -90,6 +91,7 @@ class Database extends index_1.PluginBase {
                 sync: true,
             },
             methodName: "goOffline",
+            pluginName: this.id,
         });
     }
     /**
@@ -102,6 +104,7 @@ class Database extends index_1.PluginBase {
                 sync: true,
             },
             methodName: "goOnline",
+            pluginName: this.id,
         });
     }
     /**
@@ -144,6 +147,7 @@ class Database extends index_1.PluginBase {
                 pluginName: this.id,
                 url: currentUrl,
             }, {
+                exec: this.exec.bind(this),
                 root: this._rootRef,
             });
             reference = newRef;
@@ -178,16 +182,23 @@ class Database extends index_1.PluginBase {
     }
     exec(params) {
         return new Promise((resolve, reject) => {
-            params.resolve = resolve;
-            params.reject = reject;
-            this._queue._push(params);
+            this._queue._push({
+                args: params.args,
+                context: this,
+                execOptions: params.execOptions,
+                methodName: params.methodName,
+                pluginName: params.pluginName,
+                reject,
+                resolve,
+            });
         });
     }
 }
 exports.Database = Database;
 class SecretDatabaseManager {
     constructor() {
-        this._databases = {};
+        this._databasesByName = {};
+        this._databasesById = {};
     }
 }
 if (window.cordova && window.cordova.version) {
@@ -200,10 +211,11 @@ if (window.cordova && window.cordova.version) {
             }
             // If database is created for the app, returns it.
             // Otherwise, create a new instance.
-            let database = manager._databases[app.name];
+            let database = manager._databasesByName[app.name];
             if (!database) {
                 database = new Database(app, app.options);
-                manager._databases[app.name] = database;
+                manager._databasesByName[app.name] = database;
+                manager._databasesById[database.id] = database;
             }
             return database;
         },
@@ -211,7 +223,7 @@ if (window.cordova && window.cordova.version) {
     Object.defineProperty(window.plugin.firebase.database, "_nativeCallback", {
         enumerable: false,
         value: (dbId, listenerId, eventType, args) => {
-            const dbInstance = window.plugin.firebase.database._DBs[dbId];
+            const dbInstance = manager._databasesById[dbId];
             if (dbInstance) {
                 dbInstance._trigger("nativeEvent", {
                     args,

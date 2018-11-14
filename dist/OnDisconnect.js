@@ -164,9 +164,15 @@ class OnDisconnect extends index_1.PluginBase {
     }
     exec(params) {
         return new Promise((resolve, reject) => {
-            params.resolve = resolve;
-            params.reject = reject;
-            this._queue._push(params);
+            this._queue._push({
+                args: params.args,
+                context: params.context,
+                execOptions: params.execOptions,
+                methodName: params.methodName,
+                pluginName: params.pluginName,
+                reject,
+                resolve,
+            });
         });
     }
 }

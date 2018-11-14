@@ -5,5 +5,7 @@ exports.setPlatformId = (pId) => {
     exports.platformId = pId;
 };
 exports.exec = jest.fn((onSuccess, onError, pluginName, methodName, args) => {
-    onSuccess();
+    setTimeout(() => {
+        onSuccess();
+    }, 0);
 });

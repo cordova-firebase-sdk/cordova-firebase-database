@@ -11,16 +11,26 @@
     ]
   },
   "scripts": {
-    "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src",
     "test:android": "cordova-paramedic --cleanUpAfterRun --verbose --platform android --plugin . --useTunnel",
     "test:browser": "cordova-paramedic --cleanUpAfterRun --verbose --platform browser --plugin . --useTunnel",
-    "build": "npm run tslint && rm -rf dist && npx tsc && cp -R package.json plugin.xml README.md src dist/",
+    "build": "npm run tslint && npm run test && rm -rf dist && npx tsc && cp -R package.json plugin.xml README.md src dist/",
     "test": "npm run jest",
     "tslint": "npx tslint --project .",
     "jest": "npm run tslint && npx jest",
     "jest:watch": "npx jest --watch",
     "tsdoc": "npx typedoc --options typedoc.js src/ts "
   },
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "files": [
+    "src/android/",
+    "src/ios/",
+    "*.d.ts",
+    "*.js",
+    "plugin.xml",
+    "package.json",
+    "README.md"
+  ],
   "keywords": [
     "ecosystem:cordova",
     "cordova-android",
@@ -36,7 +46,6 @@
     "cordova-js": "^4.2.4",
     "cordova-paramedic": "git+https://github.com/apache/cordova-paramedic.git",
     "es6-promise": "^4.2.5",
-    "eslint": "^3.19.0",
     "jest": "^23.6.0",
     "request": "^2.88.0",
     "ts-jest": "^23.10.4",

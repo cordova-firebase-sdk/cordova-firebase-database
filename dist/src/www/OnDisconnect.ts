@@ -187,9 +187,15 @@ export class OnDisconnect extends PluginBase {
 
   private exec(params: IExecCmdParams): Promise<any> {
     return new Promise((resolve: (result: any) => void, reject: (error: any) => void) => {
-      params.resolve = resolve;
-      params.reject = reject;
-      this._queue._push(params);
+      this._queue._push({
+        args: params.args,
+        context: params.context,
+        execOptions: params.execOptions,
+        methodName: params.methodName,
+        pluginName: params.pluginName,
+        reject,
+        resolve,
+      });
     });
   }
 

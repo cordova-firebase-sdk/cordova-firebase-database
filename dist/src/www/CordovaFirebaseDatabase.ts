@@ -1,13 +1,7 @@
-import { BaseClass, loadJsPromise } from "cordova-firebase-core/index";
+import { loadJsPromise } from "cordova-firebase-core/index";
 import { FirebaseDatabasePlugin } from "./FirebaseDatabasePlugin";
 
-declare let window: any;
-
-export class CordovaFirebaseDatabase extends BaseClass {
-
-  constructor() {
-    super();
-  }
+export class CordovaFirebaseDatabase {
 
   public newInstance(resolve: () => void, reject: (error: any) => void, args: Array<any>): void {
     loadJsPromise({
@@ -24,17 +18,19 @@ export class CordovaFirebaseDatabase extends BaseClass {
       const options: any = args[0] || {};
 
       // Get the application instance
-      let apps: Array<any> = window.firebase.apps.slice(0);
+      let apps: Array<any> = (window as any).firebase.apps.slice(0);
       apps = apps.filter((app: any): boolean => {
         return app.name === options.appName;
       });
 
       // Get the Database service for a specific app
-      const database: any = window.firebase.database(apps[0]);
+      const database: any = (window as any).firebase.database(apps[0]);
       // console.log("--->[browser] CordovaFirebaseDatabase.newInstance() : " + options.id);
 
       // Create Database plugin instance
       const instance: FirebaseDatabasePlugin = new FirebaseDatabasePlugin(options.id, database);
+
+      // Register as browser plugin
       const dummyObj: any = {};
       const keys: Array<string> = Object.getOwnPropertyNames(FirebaseDatabasePlugin.prototype)
                                         .filter((p: string): boolean => {

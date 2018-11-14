@@ -28,6 +28,7 @@ export declare class FirebaseDatabasePlugin extends BaseClass {
     reference_set(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void;
     reference_setPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void;
     reference_setWithPriority(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void;
+    reference_transaction(onSuccess: (result: any) => void, onError: (error: Error) => void, args: Array<any>): void;
     reference_update(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void;
     query_endAt(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void;
     query_equalTo(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void;

@@ -1,13 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin id="cordova-firebase-database" version="0.0.3" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>cordova-firebase-database</name>
-  <js-module name="CommandQueue" src="CommandQueue.js" />
-  <js-module name="cordova-firebase-database" src="CordovaFirebaseDatabase.js">
+  <js-module name="index" src="index.js" >
     <runs />
   </js-module>
+  <js-module name="CommandQueue" src="CommandQueue.js" />
   <js-module name="Database" src="Database.js" />
   <js-module name="DataClasses" src="DataClasses.js" />
-  <js-module name="FirebaseDatabasePlugin" src="FirebaseDatabasePlugin.js" />
   <js-module name="INativeEventParams" src="INativeEventParams.js" />
   <js-module name="OnDisconnect" src="OnDisconnect.js" />
 
