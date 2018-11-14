@@ -15,12 +15,12 @@ branches:
 
 matrix:
   include:
-  - os: linux
-    env: PLATFORM="only jest test"
-    language: node_js
-    node_js: "${NODE_VERSION}"
-    script:
-      - npm test
+  #- os: linux
+  #  env: PLATFORM="only jest test"
+  #  language: node_js
+  #  node_js: "${NODE_VERSION}"
+  #  script:
+  #    - npm test
   - env: CORDOVA_PLATFORM="android" CORDOVA_VERSION="8.0.0"
     os: linux
     node_js: "${NODE_VERSION}"
@@ -43,6 +43,8 @@ matrix:
       - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
         && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
         install ${NODE_VERSION} > /dev/null
+    before_script:
+      - npm -g install cordova cordova-paramedic
     script:
       - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
 
