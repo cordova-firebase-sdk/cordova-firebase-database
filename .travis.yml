@@ -18,9 +18,7 @@ matrix:
   - os: linux
     env: PLATFORM="only jest test"
     language: node_js
-    node_js: '${NODE_VERSION}'
-    before_script:
-      - npm install /tmp/cordova-firebase-core/dist/
+    node_js: "${NODE_VERSION}"
     script:
       - npm test
 
@@ -36,5 +34,6 @@ install:
     cd cordova-firebase-core &&
     npm install &&
     npm run build &&
-    popd
+    popd &&
+    npm install /tmp/cordova-firebase-core/dist/
   - npm install && npm run build
