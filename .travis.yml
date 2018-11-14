@@ -16,7 +16,7 @@ branches:
 matrix:
   include:
   - os: linux
-    env: CORDOVA_PLATFORM="browser" CORDOVA_VERSION="8.0.0"
+    env: PLATFORM="only jest test"
     language: node_js
     node_js: '${NODE_VERSION}'
     before_script:
