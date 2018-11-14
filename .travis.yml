@@ -39,6 +39,10 @@ matrix:
         - sys-img-armeabi-v7a-android-${ANDROID_API}
       licenses:
         - ".+"
+    before_install:
+      - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
+        && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm
+        install ${NODE_VERSION} > /dev/null
     script:
       - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
 
