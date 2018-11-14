@@ -1,7 +1,5 @@
 [![](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database.svg?branch=master)](https://travis-ci.org/cordova-firebase-sdk/cordova-firebase-database)
 
-**THIS PLUGIN IS NOT READY TO SHIP. DO NOT USE THIS PLUGIN IN YOUR APP YET.**
-
 # cordova-firebase-database
 
 `cordova-firebase-database` provides `much similar API` as the original [firebase realtime database API](https://firebase.google.com/docs/database/web/start?hl=en).
@@ -14,8 +12,8 @@ For example, this is the original usage of `firebase database api`.
   // Set the configuration for your app
   // TODO: Replace with your project's config object
   var config = {
-    apiKey: "apiKey",
-    databaseURL: "https://databaseName.firebaseio.com"
+    apiKey: "<apiKey>",
+    databaseURL: "https://<databaseName>.firebaseio.com"
   };
   var app = firebase.initializeApp(config);
 

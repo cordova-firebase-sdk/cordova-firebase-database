@@ -371,7 +371,7 @@ export class Query extends PluginBase {
    * Query.once
    */
   public once(eventType: string,
-              callback: ON_CALLBACK,
+              callback?: ON_CALLBACK,
               failureCallbackOrContext?: object | CANCEL_CALLBACK,
               context?: any): Promise<void> {
 
