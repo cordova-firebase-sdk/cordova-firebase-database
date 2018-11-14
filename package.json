@@ -42,7 +42,6 @@
     "@types/es6-promise": "^3.3.0",
     "@types/jest": "^23.3.7",
     "cordova-js": "^4.2.4",
-    "cordova-paramedic": "git+https://github.com/apache/cordova-paramedic.git",
     "es6-promise": "^4.2.5",
     "jest": "^23.6.0",
     "request": "^2.88.0",
