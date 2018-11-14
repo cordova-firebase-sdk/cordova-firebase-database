@@ -31,7 +31,6 @@ install:
   - nvm install ${NODE_VERSION}
   - nvm use ${NODE_VERSION}
   - node --version
-  - cordova --version
   - pushd /tmp &&
     git clone https://github.com/cordova-firebase-sdk/cordova-firebase-core &&
     cd cordova-firebase-core &&
