@@ -13,8 +13,8 @@
   "scripts": {
     "test:android": "cordova-paramedic --cleanUpAfterRun --verbose --platform android --plugin . --useTunnel",
     "test:browser": "cordova-paramedic --cleanUpAfterRun --verbose --platform browser --plugin . --useTunnel",
-    "build": "npm run tslint && npm run test && rm -rf dist && npx tsc && cp -R package.json plugin.xml README.md src dist/",
-    "test": "npm run jest",
+    "build": "rm -rf dist && npx tsc && cp -R package.json plugin.xml README.md src dist/",
+    "test": "npm run tslint && npm run jest",
     "tslint": "npx tslint --project .",
     "jest": "npm run tslint && npx jest",
     "jest:watch": "npx jest --watch",
