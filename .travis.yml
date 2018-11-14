@@ -19,31 +19,10 @@ matrix:
     env: CORDOVA_PLATFORM="browser" CORDOVA_VERSION="8.0.0"
     language: node_js
     node_js: '${NODE_VERSION}'
+    before_script:
+      - npm install /tmp/cordova-firebase-core/dist/
     script:
       - npm test
-
-  - env: CORDOVA_PLATFORM="android" CORDOVA_VERSION="8.0.0"
-    os: linux
-    node_js: '${NODE_VERSION}'
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-        - tools
-        - android-${ANDROID_API}
-        - platform-tools
-        # The BuildTools version used by your project
-        - build-tools-${ANDROID_BUILD_TOOLS}
-        # The SDK version used to compile your project
-        - android-${ANDROID_API}
-        # Additional components
-        - extra-android-m2repository
-        - extra-google-m2repository
-        - sys-img-armeabi-v7a-android-${ANDROID_API}
-      licenses:
-        - ".+"
-    script:
-      - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
 
 install:
   #- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
@@ -52,14 +31,11 @@ install:
   - nvm install ${NODE_VERSION}
   - nvm use ${NODE_VERSION}
   - node --version
-  - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
-  - npm -g install https://github.com/apache/cordova-paramedic
   - cordova --version
   - pushd /tmp &&
     git clone https://github.com/cordova-firebase-sdk/cordova-firebase-core &&
     cd cordova-firebase-core &&
     npm install &&
     npm run build &&
-    popd &&
-    cordova plugin add /tmp/cordova-firebase-core/dist/
-  - npm install && npm run build && cordova plugin add dist/
+    popd
+  - npm install && npm run build

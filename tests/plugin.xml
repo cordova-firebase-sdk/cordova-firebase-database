@@ -8,6 +8,7 @@
     <license>Apache 2.0</license>
 
     <hook type="after_platform_add" src="after_plugin_install.js"/>
+    <dependency id="cordova-firebase-core" url="/tmp/cordova-firebase-core/dist"/>
 
     <js-module src="tests.js" name="tests">
     </js-module>
