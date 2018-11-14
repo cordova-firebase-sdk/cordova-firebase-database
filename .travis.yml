@@ -16,11 +16,13 @@ branches:
 matrix:
   include:
   - os: linux
-    env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="browser"
+    env: CORDOVA_PLATFORM="browser" CORDOVA_VERSION="8.0.0"
     language: node_js
     node_js: '${NODE_VERSION}'
+    script:
+      - npm test
 
-  - env: CORDOVA_VERSION="8.0.0" CORDOVA_PLATFORM="android"
+  - env: CORDOVA_PLATFORM="android" CORDOVA_VERSION="8.0.0"
     os: linux
     node_js: '${NODE_VERSION}'
     language: android
@@ -40,6 +42,8 @@ matrix:
         - sys-img-armeabi-v7a-android-${ANDROID_API}
       licenses:
         - ".+"
+    script:
+      - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
 
 install:
   #- rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm
@@ -51,12 +55,11 @@ install:
   - npm install -g cordova@${CORDOVA_VERSION} > /dev/null
   - npm -g install https://github.com/apache/cordova-paramedic
   - cordova --version
-  - git clone https://github.com/cordova-firebase-sdk/cordova-firebase-core
-  - pushd cordova-firebase-core && npm install && npm run build && cordova plugin add dist/ && popd
-  - npm install && npm run build
-  - cordova plugin add dist/
-
-
-script:
-  - npm test
-  - cordova-paramedic --cleanUpAfterRun --verbose --platform  ${CORDOVA_PLATFORM} --justBuild --plugin .
+  - pushd /tmp &&
+    git clone https://github.com/cordova-firebase-sdk/cordova-firebase-core &&
+    cd cordova-firebase-core &&
+    npm install &&
+    npm run build &&
+    popd &&
+    cordova plugin add /tmp/cordova-firebase-core/dist/
+  - npm install && npm run build && cordova plugin add dist/
