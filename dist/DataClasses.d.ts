@@ -62,7 +62,7 @@ export declare class Query extends PluginBase {
     /**
      * Query.once
      */
-    once(eventType: string, callback?: ON_CALLBACK, failureCallbackOrContext?: object | CANCEL_CALLBACK, context?: any): Promise<void>;
+    once(eventType: string, callback?: ON_CALLBACK, failureCallbackOrContext?: object | CANCEL_CALLBACK, context?: any): Promise<DataSnapshot>;
     /**
      * Query.orderByChild
      */

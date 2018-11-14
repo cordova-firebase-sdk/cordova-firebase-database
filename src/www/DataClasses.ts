@@ -373,7 +373,7 @@ export class Query extends PluginBase {
   public once(eventType: string,
               callback?: ON_CALLBACK,
               failureCallbackOrContext?: object | CANCEL_CALLBACK,
-              context?: any): Promise<void> {
+              context?: any): Promise<DataSnapshot> {
 
     let context_: any = this;
     if (context) {
@@ -401,7 +401,7 @@ export class Query extends PluginBase {
         if (key) {
           args.push(key);
         }
-        resolve.apply(context_, args);
+        resolve(snapshot);
 
         if (typeof callback === "function") {
           callback.apply(context_, args);

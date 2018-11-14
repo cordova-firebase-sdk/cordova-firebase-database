@@ -309,7 +309,7 @@ class Query extends index_1.PluginBase {
                 if (key) {
                     args.push(key);
                 }
-                resolve.apply(context_, args);
+                resolve(snapshot);
                 if (typeof callback === "function") {
                     callback.apply(context_, args);
                 }
