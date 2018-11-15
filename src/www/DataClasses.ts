@@ -394,26 +394,46 @@ export class Query extends PluginBase {
     }
 
     return new Promise((resolve: (...params: Array<any>) => void, reject: (error: any) => void): void => {
-      const listener: any = this.on(eventType, (snapshot: DataSnapshot, key: string): void => {
-        this.off(eventType, listener);
 
-        const args: Array<any> = [snapshot];
-        if (key) {
-          args.push(key);
-        }
-        resolve(snapshot);
+      const listenerId: string = this.id + "_" + eventType + Math.floor(Date.now() * Math.random());
+      this._listeners.push({
+        callback,
+        context: context_,
+        eventType,
+        listenerId,
+      });
 
-        if (typeof callback === "function") {
+      // Receive data from native side at once,
+      this._one(listenerId, (params: INativeEventParams): void => {
+        if (params.eventType === "cancelled") {
+          // permission error or something
+          throw new Error(LZString.decompressFromBase64(params.args[0]));
+        } else {
+          const snapshotValues: any = JSON.parse(LZString.decompressFromBase64(params.args[0]));
+          const prevChildKey: string = params.args[1];
+
+          const snapshot: DataSnapshot = new DataSnapshot(this.ref, snapshotValues);
+          const args: Array<any> = [snapshot];
+          if (prevChildKey) {
+            args.push(prevChildKey);
+          }
+
+          // Then trigger an event as eventType
           callback.apply(context_, args);
         }
-      }, (error: any): void => {
-        // cancelled
-        this.off(listener);
-        reject(error);
-        if (typeof failureCallbackOrContext === "function") {
-          failureCallbackOrContext.call(context_, error);
-        }
       });
+
+      this.exec({
+        args: [{
+          eventType,
+          listenerId,
+          targetId: this.id,
+        }],
+        context: this,
+        methodName: "query_once",
+        pluginName: this.pluginName,
+      });
+
     });
   }
 

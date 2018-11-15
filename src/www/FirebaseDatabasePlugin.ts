@@ -401,6 +401,40 @@ export class FirebaseDatabasePlugin extends BaseClass {
     }
   }
 
+  public query_once(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
+    onSuccess = onSuccess || STUB_SUCCESS;
+    onError = onError || STUB_ERROR;
+    try {
+      const options: any = args[0];
+      const refOrQuery: any = this._get(options.targetId);
+      const listener: any = refOrQuery.once(options.eventType, (snapshot: any, prevChildKey?: string): void => {
+        const snapshotValues: any = {
+          exists: snapshot.exists(),
+          exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
+          getPriority: LZString.compressToBase64(JSON.stringify(snapshot.getPriority())),
+          key: snapshot.key,
+          numChildren: snapshot.numChildren(),
+          val: LZString.compressToBase64(JSON.stringify(snapshot.val())),
+        };
+
+        const snapshotStr = LZString.compressToBase64(JSON.stringify(snapshotValues));
+
+        const args2 = [snapshotStr];
+        if (prevChildKey) {
+          args2.push(prevChildKey);
+        }
+
+        window.plugin.firebase.database._nativeCallback(this.id, options.listenerId, options.eventType, args2);
+      }, onError);
+
+      this._set(options.listenerId, listener);
+
+      onSuccess();
+    } catch (e) {
+      onError(e);
+    }
+  }
+
 
   public query_orderByChild(onSuccess: () => void, onError: (error: Error) => void, args: Array<any>): void {
     onSuccess = onSuccess || STUB_SUCCESS;

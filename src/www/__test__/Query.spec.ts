@@ -141,7 +141,7 @@ describe("[Query]", () => {
 
       ref.root._trigger("nativeEvent", {
         args: [LZString.compressToBase64(dummySnapshot)],
-        eventType: "values",
+        eventType: "value",
         listenerId: _onSpy.mock.calls[0][0],
       });
     });
@@ -156,7 +156,7 @@ describe("[Query]", () => {
       const ref: Reference = commonDb.ref("");
       const value: any = { hello: "world" };
       const query: Query = ref.limitToLast(3);
-      const _onSpy = jest.spyOn(query, "_on");
+      const _onSpy = jest.spyOn(query, "_one");
 
       query.once("value", (snapshot: DataSnapshot): void => {
         expect(snapshot.key).toEqual("key1");
@@ -184,12 +184,12 @@ describe("[Query]", () => {
 
       ref.root._trigger("nativeEvent", {
         args: [LZString.compressToBase64(dummySnapshot1)],
-        eventType: "values",
+        eventType: "value",
         listenerId: _onSpy.mock.calls[0][0],
       });
       ref.root._trigger("nativeEvent", {
         args: [LZString.compressToBase64(dummySnapshot2)],
-        eventType: "values",
+        eventType: "value",
         listenerId: _onSpy.mock.calls[0][0],
       });
     });
