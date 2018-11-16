@@ -6,4 +6,16 @@ exports[`[Database] .refFromURL should reject empty string 1`] = `"First argumen
 
 exports[`[Database] .refFromURL should reject if hostname does not match with the currend database 1`] = `"First argument must be with the current database"`;
 
+exports[`[Database] .refFromURL should reject if url is null 1`] = `"First argument must be string"`;
+
 exports[`[Database] .refFromURL should reject invalid url 1`] = `"First argument must be with the current database"`;
+
+exports[`[Database] .refFromURL should reject invalid url 2`] = `"First argument must be a valid firebase URL and the path can't contain \\".\\", \\"#\\", \\"$\\", \\"[\\", or \\"]\\"."`;
+
+exports[`[Database] constructor should catch Error if something happends in native side 1`] = `"Something happends!"`;
+
+exports[`[Database] constructor should throw Error if app is null 1`] = `"app must be FirebaseApp instance"`;
+
+exports[`[Database] constructor should throw Error if option does not contain 'databaseURL' 1`] = `"options.databaseURL must be passed"`;
+
+exports[`[Database] constructor should throw Error if option is null 1`] = `"options must be passed"`;

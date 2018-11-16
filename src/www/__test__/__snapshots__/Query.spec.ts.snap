@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[Query] constructor should reject if _opts is null 1`] = `"_opts must be provided."`;
+
+exports[`[Query] constructor should reject if params is null 1`] = `"params must be provided."`;
+
+exports[`[Query] constructor should reject if params.url is null 1`] = `"params.url must be provided."`;
+
+exports[`[Query] off() should throw Error if eventType is invalid 1`] = `"eventType must be one of 'value','child_added', 'child_moved', 'child_removed', or 'child_changed'."`;

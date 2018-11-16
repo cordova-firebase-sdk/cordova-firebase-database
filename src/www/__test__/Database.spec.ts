@@ -2,10 +2,14 @@ import { Database } from "../Database";
 import { App } from "cordova-firebase-core/index";
 import { exec } from "../__mocks__/cordova";
 import { execCmd } from "../__mocks__/CommandQueue";
+import { INativeEventParams } from "../INativeEventParams";
 
+declare let cordova: any;
 
 describe("[Database]", () => {
 
+  cordova.require = jest.fn();
+  cordova.define.moduleMap["cordova-firebase-database.Database"] = 1;
 
   const commonApp: App = new App("dummyApp", {
     hello: "world",
@@ -19,6 +23,7 @@ describe("[Database]", () => {
     // Clear all instances and calls to constructor and all methods:
     exec.mockClear();
     execCmd.mockClear();
+    cordova.require.mockClear();
   });
 
   describe("constructor", () => {
@@ -49,6 +54,135 @@ describe("[Database]", () => {
           done();
         });
       });
+    });
+
+    it("should catch Error if something happends in native side", () => {
+      exec.mockImplementationOnce(() => {
+        throw new Error("Something happends!");
+      });
+      expect(() => {
+        const app: App = new App("hello", {
+          hello: "world",
+          databaseURL: "https://dummy.firebaseio.com/"
+        });
+        const database: Database = app.database();
+      }).toThrowErrorMatchingSnapshot();
+    });
+
+
+    it("should throw Error if app is null", () => {
+      expect(() => {
+        new Database(null, null);
+      }).toThrowErrorMatchingSnapshot();
+    });
+
+    it("should throw Error if option is null", () => {
+      expect(() => {
+        const app: App = new App("hello", {
+          hello: "world",
+          databaseURL: "https://dummy.firebaseio.com/"
+        });
+        new Database(app, null);
+      }).toThrowErrorMatchingSnapshot();
+    });
+
+    it("should throw Error if option does not contain 'databaseURL'", () => {
+      expect(() => {
+        const app: App = new App("hello", {
+          hello: "world",
+          databaseURL: "https://dummy.firebaseio.com/"
+        });
+        new Database(app, {});
+      }).toThrowErrorMatchingSnapshot();
+    });
+
+    it("should 'nativeEvent' on rootRef if database receives 'nativeEvent'", (done) => {
+      const app: App = new App("hello", {
+        hello: "world",
+        databaseURL: "https://dummy.firebaseio.com/"
+      });
+      const database: Database = app.database();
+      database.ref().root._one("nativeEvent", (params: INativeEventParams) => {
+        expect(params.args[0]).toBe("Hello");
+        expect(params.eventType).toBe("test");
+        expect(params.listenerId).toBe("listenerId");
+        done();
+      });
+      database._trigger("nativeEvent", {
+        args: ["Hello"],
+        eventType: "test",
+        listenerId: "listenerId",
+      });
+    });
+    //
+    it("methods should work even if native side is not ready.", (done) => {
+
+      const app: App = new App("hello", {
+        hello: "world",
+        databaseURL: "https://dummy.firebaseio.com/"
+      });
+      const database: Database = app.database();
+
+      database.ref("users").set("myName").then(() => {
+        expect(execCmd).toHaveBeenCalledTimes(2);
+        expect(execCmd.mock.calls[0][0].methodName).toBe("database_ref");
+        expect(execCmd.mock.calls[1][0].methodName).toBe("reference_set");
+        done();
+      });
+      setTimeout(() => {
+        app._trigger("ready");
+      }, 10);
+    });
+    it("methods should work even if native side is not ready.", (done) => {
+
+      const app: App = new App("hello", {
+        hello: "world",
+        databaseURL: "https://dummy.firebaseio.com/"
+      });
+      const database: Database = app.database();
+      const ref1 = database.ref("users1");
+      const ref2 = database.refFromURL("https://dummy.firebaseio.com/users2");
+
+      ref1.set("value1");
+      ref2.set("value2");
+
+      app._trigger("ready");
+      setTimeout(() => {
+        expect(execCmd).toHaveBeenCalledTimes(4);
+        expect(execCmd.mock.calls[0][0].methodName).toBe("database_ref");
+        expect(execCmd.mock.calls[1][0].methodName).toBe("database_ref");
+        expect(execCmd.mock.calls[2][0].methodName).toBe("reference_set");
+        expect(execCmd.mock.calls[3][0].methodName).toBe("reference_set");
+        expect(ref1.toString()).toBe("https://dummy.firebaseio.com/users1");
+        expect(ref2.toString()).toBe("https://dummy.firebaseio.com/users2");
+        done();
+      }, 30);
+    });
+
+    it("window.plugin.firebase.database() should return the default database.", () => {
+      const app: App = (window as any).plugin.firebase.initializeApp({
+        databaseURL: "https://dummy.firebaseio.com/",
+      });
+      app._trigger("ready");
+
+      const database: Database = (window as any).plugin.firebase.database();
+      expect(database.app.name).toBe("[DEFAULT]");
+    });
+    it("should receive nativeEvent through _nativeCallback.", (done) => {
+
+      const database: Database = (window as any).plugin.firebase.database();
+      expect(database.app.name).toBe("[DEFAULT]");
+
+      database.ref()._one("listenerId", (params: INativeEventParams) => {
+        expect(params.eventType).toBe("testEvent");
+        expect(params.args[0]).toBe("HELLO WORLD");
+        done();
+      });
+      (window as any).plugin.firebase.database._nativeCallback(database.id, "listenerId", "testEvent", ["HELLO WORLD"]);
+    });
+    it("getSelf() should return the database itself", () => {
+      const database: Database = (window as any).plugin.firebase.database();
+      expect(database.getSelf()).toBe(database);
     });
   });
 
@@ -121,17 +255,27 @@ describe("[Database]", () => {
       expect(() => {
         commonDb.refFromURL("");
       }).toThrowErrorMatchingSnapshot();
-    })
+    });
 
     it("should reject invalid url", () => {
       expect(() => {
         commonDb.refFromURL("http://hello.com/users/../world/");
       }).toThrowErrorMatchingSnapshot();
-    })
+    });
+    it("should reject invalid url", () => {
+      expect(() => {
+        commonDb.refFromURL("https://dummy.firebaseio.com/users/#/world/");
+      }).toThrowErrorMatchingSnapshot();
+    });
     it("should reject if hostname does not match with the currend database", () => {
       expect(() => {
         commonDb.refFromURL("http://hello.com/users/../world/");
       }).toThrowErrorMatchingSnapshot();
-    })
+    });
+    it("should reject if url is null", () => {
+      expect(() => {
+        commonDb.refFromURL(null);
+      }).toThrowErrorMatchingSnapshot();
+    });
   });
 });

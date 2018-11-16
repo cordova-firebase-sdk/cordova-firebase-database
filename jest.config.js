@@ -18,11 +18,17 @@ module.exports = {
     "node_modules/*"
   ],
   globals: {
-    cordova: {
-      platformId: "browser",
-    },
     firebase: {},
-    window: {},
+    cordova: {
+      define: {
+        moduleMap: {}
+      },
+      require: () => {},
+      platformId: "browser",
+      version: "8.0.0"
+    },
+    window: {
+    }
   },
   moduleNameMapper: {
     "CommandQueue$": "<rootDir>/src/www/__mocks__/CommandQueue",

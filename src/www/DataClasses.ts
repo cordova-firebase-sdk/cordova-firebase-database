@@ -26,7 +26,7 @@ interface InternalOpts {
   root?: Reference;
 }
 
-export type CANCEL_CALLBACK = (error: any) => void;
+export type CANCEL_CALLBACK = (error?: any) => void;
 
 export type ON_CALLBACK = (snapshot: DataSnapshot, key: string) => void;
 
@@ -45,6 +45,13 @@ export class Query extends PluginBase {
 
   constructor(params: IQueryParams, _opts: InternalOpts) {
     super("queryOrReference");
+    if (!params) {
+      throw new Error("params must be provided.");
+    }
+    if (!params.url) {
+      throw new Error("params.url must be provided.");
+    }
+
     this._pluginName = params.pluginName;
     this._ref = params.ref;
 
@@ -248,30 +255,40 @@ export class Query extends PluginBase {
     callback?: (snapshot: DataSnapshot, key: string) => void,
     context?: any): void {
 
-    let context_: any = this;
-    if (!context) {
+    let context_: any = null;
+    if (context) {
       context_ = context;
     }
 
-    eventType = eventType || "";
-    eventType = eventType.toLowerCase();
-    if (["value", "child_added", "child_moved", "child_removed", "child_changed"].indexOf(eventType) === -1) {
-      const error: string = [
-        "eventType must be one of ",
-        "'value','child_added', 'child_moved', 'child_removed', or 'child_changed'.",
-      ].join("");
-      throw new Error(error);
+    if (eventType) {
+      eventType = eventType || "";
+      eventType = eventType.toLowerCase();
+      if (["value", "child_added", "child_moved", "child_removed", "child_changed"].indexOf(eventType) === -1) {
+        const error: string = [
+          "eventType must be one of ",
+          "'value','child_added', 'child_moved', 'child_removed', or 'child_changed'.",
+        ].join("");
+        throw new Error(error);
+      }
     }
 
     let targetListeners: Array<any> = [];
     if (typeof callback === "function") {
-      targetListeners = this._listeners.filter((info: any): boolean => {
-        return info.callback === callback &&
-          info.eventType === eventType;
-      });
+      if (context_) {
+        targetListeners = this._listeners.filter((info: any): boolean => {
+          return info.callback === callback &&
+            info.eventType === eventType &&
+            info.context === context_;
+        });
+      } else {
+        targetListeners = this._listeners.filter((info: any): boolean => {
+          return info.callback === callback &&
+            info.eventType === eventType;
+        });
+      }
     } else if (eventType) {
       targetListeners = this._listeners.filter((info: any): boolean => {
-        return info.callback === callback;
+        return info.eventType === eventType;
       });
     } else {
       targetListeners = this._listeners;
@@ -326,6 +343,7 @@ export class Query extends PluginBase {
     const listenerId: string = this.id + "_" + eventType + Math.floor(Date.now() * Math.random());
     this._listeners.push({
       callback,
+      cancelCallback: cancelCallbackOrContext,
       context: context_,
       eventType,
       listenerId,
@@ -335,7 +353,13 @@ export class Query extends PluginBase {
     this._on(listenerId, (params: INativeEventParams): void => {
       if (params.eventType === "cancelled") {
         // permission error or something
-        throw new Error(LZString.decompressFromBase64(params.args[0]));
+        this.off(eventType, callback, context_);
+        const error: Error = new Error(LZString.decompressFromBase64(params.args[0]));
+        if (typeof cancelCallbackOrContext === "function") {
+          cancelCallbackOrContext.call(context_, error);
+        } else {
+          throw error;
+        }
       } else {
         const snapshotValues: any = JSON.parse(LZString.decompressFromBase64(params.args[0]));
         const prevChildKey: string = params.args[1];
@@ -361,7 +385,7 @@ export class Query extends PluginBase {
       context: this,
       methodName: "query_on",
       pluginName: this.pluginName,
-    });
+    })
 
     return callback;
 
@@ -398,6 +422,7 @@ export class Query extends PluginBase {
       const listenerId: string = this.id + "_" + eventType + Math.floor(Date.now() * Math.random());
       this._listeners.push({
         callback,
+        cancelCallback: null,
         context: context_,
         eventType,
         listenerId,
@@ -407,7 +432,14 @@ export class Query extends PluginBase {
       this._one(listenerId, (params: INativeEventParams): void => {
         if (params.eventType === "cancelled") {
           // permission error or something
-          throw new Error(LZString.decompressFromBase64(params.args[0]));
+          const error: Error = new Error(LZString.decompressFromBase64(params.args[0]));
+
+          this.off(eventType, callback, context_);
+          if (typeof failureCallbackOrContext === "function") {
+            failureCallbackOrContext.call(context_, error);
+          } else {
+            throw error;
+          }
         } else {
           const snapshotValues: any = JSON.parse(LZString.decompressFromBase64(params.args[0]));
           const prevChildKey: string = params.args[1];

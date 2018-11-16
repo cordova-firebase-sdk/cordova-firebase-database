@@ -24,7 +24,7 @@ export class Database extends PluginBase {
 
   constructor(app: App, options: IAppInitializeOptions) {
     super("database");
-    if (!app) {
+    if (!app || !(app instanceof App)) {
       throw new Error("app must be FirebaseApp instance");
     }
     if (!options) {
@@ -104,7 +104,6 @@ export class Database extends PluginBase {
    * This method is for `Reference.transcation` implementation
    */
   public getSelf(): Database {
-    console.log("--->getSelf", this);
     return this;
   }
 

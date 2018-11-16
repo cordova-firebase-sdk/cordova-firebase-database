@@ -49,108 +49,108 @@ export class OnDisconnect extends PluginBase {
 
   public cancel(onComplete?: (error?: any) => void): Promise<void> {
 
-    return new Promise((resolve: () => void, reject: (error: any) => void): void => {
-      this.exec({
-        args: [{
-          targetId: this.id,
-        }],
-        context: this,
-        methodName: "onDisconnect_cancel",
-        pluginName: this.pluginName,
-      })
-      .then((): void => {
-        resolve();
-        if (typeof onComplete === "function") {
-          onComplete();
-        }
-      })
-      .catch((error: any) => {
-        reject(error);
-        if (typeof onComplete === "function") {
-          onComplete(error);
-        }
-      });
+    return this.exec({
+      args: [{
+        targetId: this.id,
+      }],
+      context: this,
+      methodName: "onDisconnect_cancel",
+      pluginName: this.pluginName,
+    })
+    .then((): any => {
+      if (typeof onComplete === "function") {
+        onComplete();
+      } else {
+        return Promise.resolve();
+      }
+    })
+    .catch((error: any): any => {
+      if (typeof onComplete === "function") {
+        onComplete(error);
+      } else {
+        return Promise.reject(error);
+      }
     });
   }
 
   public remove(onComplete?: (error?: any) => void): Promise<void> {
 
-    return new Promise((resolve: () => void, reject: (error: any) => void): void => {
-      this.exec({
-        args: [{
-          targetId: this.id,
-        }],
-        context: this,
-        methodName: "onDisconnect_remove",
-        pluginName: this.pluginName,
-      })
-      .then((): void => {
-        resolve();
-        if (typeof onComplete === "function") {
-          onComplete();
-        }
-      })
-      .catch((error: any) => {
-        reject(error);
-        if (typeof onComplete === "function") {
-          onComplete(error);
-        }
-      });
+    return this.exec({
+      args: [{
+        targetId: this.id,
+      }],
+      context: this,
+      methodName: "onDisconnect_remove",
+      pluginName: this.pluginName,
+    })
+    .then((): any => {
+      if (typeof onComplete === "function") {
+        onComplete();
+      } else {
+        return Promise.resolve();
+      }
+    })
+    .catch((error: any): any => {
+      if (typeof onComplete === "function") {
+        onComplete(error);
+      } else {
+        return Promise.reject(error);
+      }
     });
   }
 
   public set(value: any, onComplete?: (error?: any) => void): Promise<void> {
 
-    return new Promise((resolve: () => void, reject: (error: any) => void): void => {
-      this.exec({
-        args: [{
-          targetId: this.id,
-          value: LZString.compressToBase64(JSON.stringify(value)),
-        }],
-        context: this,
-        methodName: "onDisconnect_set",
-        pluginName: this.pluginName,
-      })
-      .then((): void => {
-        resolve();
-        if (typeof onComplete === "function") {
-          onComplete();
-        }
-      })
-      .catch((error: any) => {
-        reject(error);
-        if (typeof onComplete === "function") {
-          onComplete(error);
-        }
-      });
+    return this.exec({
+      args: [{
+        targetId: this.id,
+        value: LZString.compressToBase64(JSON.stringify(value)),
+      }],
+      context: this,
+      methodName: "onDisconnect_set",
+      pluginName: this.pluginName,
+    })
+    .then((): any => {
+      if (typeof onComplete === "function") {
+        onComplete();
+      } else {
+        return Promise.resolve();
+      }
+    })
+    .catch((error: any): any => {
+      if (typeof onComplete === "function") {
+        onComplete(error);
+      } else {
+        return Promise.reject(error);
+      }
     });
   }
 
   public setWithPriority(value: any, property: string | number, onComplete?: (error?: any) => void): Promise<void> {
 
-    return new Promise((resolve: () => void, reject: (error: any) => void): void => {
-      this.exec({
-        args: [{
-          priority: LZString.compressToBase64(JSON.stringify(property)),
-          targetId: this.id,
-          value: LZString.compressToBase64(JSON.stringify(value)),
-        }],
-        context: this,
-        methodName: "onDisconnect_setWithPriority",
-        pluginName: this.pluginName,
-      })
-      .then((): void => {
-        resolve();
-        if (typeof onComplete === "function") {
-          onComplete();
-        }
-      })
-      .catch((error: any) => {
-        reject(error);
-        if (typeof onComplete === "function") {
-          onComplete(error);
-        }
-      });
+    return this.exec({
+      args: [{
+        priority: LZString.compressToBase64(JSON.stringify(property)),
+        targetId: this.id,
+        value: LZString.compressToBase64(JSON.stringify(value)),
+      }],
+      context: this,
+      methodName: "onDisconnect_setWithPriority",
+      pluginName: this.pluginName,
+    })
+    .then((): any => {
+      if (typeof onComplete === "function") {
+        onComplete();
+      } else {
+        return Promise.resolve();
+      }
+    })
+    .catch((error: any): any => {
+      if (typeof onComplete === "function") {
+        onComplete(error);
+      } else {
+        return Promise.reject(error);
+      }
     });
   }
 
@@ -160,28 +160,28 @@ export class OnDisconnect extends PluginBase {
       throw new Error("values must be key-value object");
     }
 
-    return new Promise((resolve: () => void, reject: (error: any) => void): void => {
-      this.exec({
-        args: [{
-          targetId: this.id,
-          values: LZString.compressToBase64(JSON.stringify(values)),
-        }],
-        context: this,
-        methodName: "onDisconnect_update",
-        pluginName: this.pluginName,
-      })
-      .then((): void => {
-        resolve();
-        if (typeof onComplete === "function") {
-          onComplete.call(this);
-        }
-      })
-      .catch((error: any): void => {
-        reject(error);
-        if (typeof onComplete === "function") {
-          onComplete.call(this, error);
-        }
-      });
+    return this.exec({
+      args: [{
+        targetId: this.id,
+        values: LZString.compressToBase64(JSON.stringify(values)),
+      }],
+      context: this,
+      methodName: "onDisconnect_update",
+      pluginName: this.pluginName,
+    })
+    .then((): any => {
+      if (typeof onComplete === "function") {
+        onComplete();
+      } else {
+        return Promise.resolve();
+      }
+    })
+    .catch((error: any): any => {
+      if (typeof onComplete === "function") {
+        onComplete(error);
+      } else {
+        return Promise.reject(error);
+      }
     });
   }
 

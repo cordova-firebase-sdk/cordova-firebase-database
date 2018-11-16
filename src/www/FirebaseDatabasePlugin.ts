@@ -108,7 +108,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
       const options: any = args[0];
       const onDisconnect: any = this._get(options.targetId);
       const value: any = JSON.parse(LZString.decompressFromBase64(options.value));
-      const priority: any = JSON.parse(LZString.decompressFromBase64(options.priority));
+      const priority: any = options.priority;
       onDisconnect.setWithPriority(value, priority).then(onSuccess).catch(onError);
     } catch (e) {
       onError(e);
@@ -218,7 +218,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
     try {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
-      ref.setPriority(JSON.parse(LZString.decompressFromBase64(options.priority)))
+      ref.setPriority(options.priority)
           .then(onSuccess).catch(onError);
     } catch (e) {
       onError(e);
@@ -232,7 +232,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
       const options: any = args[0];
       const ref: any = this._get(options.targetId);
       const data: any = JSON.parse(LZString.decompressFromBase64(options.data));
-      const priority: any = JSON.parse(LZString.decompressFromBase64(options.priority));
+      const priority: any = options.priority;
       ref.setWithPriority(data, priority)
           .then(onSuccess).catch(onError);
     } catch (e) {
@@ -377,7 +377,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
         const snapshotValues: any = {
           exists: snapshot.exists(),
           exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-          getPriority: LZString.compressToBase64(JSON.stringify(snapshot.getPriority())),
+          getPriority: snapshot.getPriority(),
           key: snapshot.key,
           numChildren: snapshot.numChildren(),
           val: LZString.compressToBase64(JSON.stringify(snapshot.val())),
@@ -411,7 +411,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
         const snapshotValues: any = {
           exists: snapshot.exists(),
           exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
-          getPriority: LZString.compressToBase64(JSON.stringify(snapshot.getPriority())),
+          getPriority: snapshot.getPriority(),
           key: snapshot.key,
           numChildren: snapshot.numChildren(),
           val: LZString.compressToBase64(JSON.stringify(snapshot.val())),

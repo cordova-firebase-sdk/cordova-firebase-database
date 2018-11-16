@@ -22,6 +22,32 @@ describe("[Query]", () => {
     execCmd.mockClear();
   });
 
+  describe("constructor", () => {
+    it("should reject if params is null", () => {
+      expect(() => {
+        new Query(null, {
+          exec: null,
+        });
+      }).toThrowErrorMatchingSnapshot();
+    });
+    it("should reject if params.url is null", () => {
+      expect(() => {
+        new Query({
+          url: null,
+          pluginName: null,
+        }, null);
+      }).toThrowErrorMatchingSnapshot();
+    });
+    it("should reject if _opts is null", () => {
+      expect(() => {
+        new Query({
+          url: "https://",
+          pluginName: "",
+        }, null);
+      }).toThrowErrorMatchingSnapshot();
+    });
+
+  });
   describe("endAt", () => {
     it("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
@@ -83,6 +109,13 @@ describe("[Query]", () => {
       }, 5);
     });
   });
+  describe("isEqual", () => {
+    it("should be true", () => {
+      const ref1: Reference = commonDb.ref("users");
+      const ref2: Reference = commonDb.ref("users");
+      expect(ref1.isEqual(ref2)).toBe(true);
+    });
+  });
   describe("limitToFirst", () => {
     it("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
@@ -117,6 +150,146 @@ describe("[Query]", () => {
       }, 5);
     });
   });
+
+  describe("off()", () => {
+    it("should work correctly", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+      const _onSpy = jest.spyOn(query, "_on");
+      let triggerred: boolean = false;
+
+      const listener = query.on("value", (snapshot: DataSnapshot): void => {
+        triggerred = true;
+      });
+      query.off("value", listener);
+
+      const dummySnapshot: string = JSON.stringify({
+        exists: true,
+        exportVal: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+        getPriority: "high",
+        key: "key",
+        numChildren: 0,
+        val: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+      });
+
+      ref.root._trigger("nativeEvent", {
+        args: [LZString.compressToBase64(dummySnapshot)],
+        eventType: "value",
+        listenerId: _onSpy.mock.calls[0][0],
+      });
+      setTimeout(() => {
+        expect(triggerred).toBe(false);
+        done();
+      }, 5);
+    });
+    it("should work correctly when context is specified", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+      const _onSpy = jest.spyOn(query, "_on");
+      let triggerred: boolean = false;
+
+      const listener = query.on("value", (snapshot: DataSnapshot): void => {
+        triggerred = true;
+      });
+      query.off("value", listener, query);
+
+      const dummySnapshot: string = JSON.stringify({
+        exists: true,
+        exportVal: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+        getPriority: "high",
+        key: "key",
+        numChildren: 0,
+        val: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+      });
+
+      ref.root._trigger("nativeEvent", {
+        args: [LZString.compressToBase64(dummySnapshot)],
+        eventType: "value",
+        listenerId: _onSpy.mock.calls[0][0],
+      });
+      setTimeout(() => {
+        expect(triggerred).toBe(false);
+        done();
+      }, 5);
+    });
+    it("should work correctly even if listener is omitted", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+      const _onSpy = jest.spyOn(query, "_on");
+      let triggerred: boolean = false;
+
+      const listener = query.on("value", (snapshot: DataSnapshot): void => {
+        triggerred = true;
+      });
+      query.off("value");
+
+      const dummySnapshot: string = JSON.stringify({
+        exists: true,
+        exportVal: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+        getPriority: "high",
+        key: "key",
+        numChildren: 0,
+        val: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+      });
+
+      ref.root._trigger("nativeEvent", {
+        args: [LZString.compressToBase64(dummySnapshot)],
+        eventType: "value",
+        listenerId: _onSpy.mock.calls[0][0],
+      });
+      setTimeout(() => {
+        expect(triggerred).toBe(false);
+        done();
+      }, 5);
+    });
+    it("should work correctly even if eventType and listener are omitted", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+      const _onSpy = jest.spyOn(query, "_on");
+      let triggerred: boolean = false;
+
+      const listener = query.on("value", (snapshot: DataSnapshot): void => {
+        triggerred = true;
+      });
+      query.off();
+
+      const dummySnapshot: string = JSON.stringify({
+        exists: true,
+        exportVal: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+        getPriority: "high",
+        key: "key",
+        numChildren: 0,
+        val: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+      });
+
+      ref.root._trigger("nativeEvent", {
+        args: [LZString.compressToBase64(dummySnapshot)],
+        eventType: "value",
+        listenerId: _onSpy.mock.calls[0][0],
+      });
+      setTimeout(() => {
+        expect(triggerred).toBe(false);
+        done();
+      }, 5);
+    });
+    it("should throw Error if eventType is invalid", () => {
+      const ref: Reference = commonDb.ref("");
+      const query: Query = ref.limitToLast(3);
+      let triggerred: boolean = false;
+
+      const listener = query.on("value", (snapshot: DataSnapshot): void => {
+        triggerred = true;
+      });
+      expect(() => {
+        query.off("invalidEvent", listener);
+      }).toThrowErrorMatchingSnapshot();
+
+    });
+  });
   describe("on()", () => {
     it("should work correctly", (done) => {
       const ref: Reference = commonDb.ref("");
@@ -145,13 +318,28 @@ describe("[Query]", () => {
         listenerId: _onSpy.mock.calls[0][0],
       });
     });
+    it.only("should work correctly when cancelCallback is provided", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+      const _onSpy = jest.spyOn(query, "_on");
+      let triggerred: boolean = false;
+
+      execCmd.mockImplementationOnce(() => {
+        console.log("--->mock");
+        throw new Error("Something happends!")
+      });
+
+      query.on("value", (snapshot: DataSnapshot) => {
+        triggerred = true;
+      }, (error?: any) => {
+        expect(error).toThrowErrorMatchingSnapshot();
+        done();
+      }, query);
+    });
   });
   describe("once()", () => {
     it("should work correctly", (done) => {
-      //----------------------------------------------
-      // Since once() uses on() and off() internally,
-      // skip the test for off() method.
-      //----------------------------------------------
 
       const ref: Reference = commonDb.ref("");
       const value: any = { hello: "world" };

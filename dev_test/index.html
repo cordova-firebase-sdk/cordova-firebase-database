@@ -14,9 +14,15 @@
 
   var database = firebase.database();
   var ref = database.ref("parent"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
-  var grandChildRef = ref.child("./test"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
+  var grandChildRef = ref.child("google/user01/hello"); //database.refFromURL("https://geofire-test-34492.firebaseio.com/users/test?awrewqar=www");
   console.log(grandChildRef.toString());
   console.log(grandChildRef.parent.toString());
+  grandChildRef.update({
+    "message": "hello",
+  });
+  grandChildRef.on("value", (snapshot) => {
+    console.log(snapshot.val());
+  });
 </script>
 </head>
 <body>
