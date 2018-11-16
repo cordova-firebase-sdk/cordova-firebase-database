@@ -74,20 +74,41 @@ public class CordovaFirebaseDatabase extends CordovaPlugin {
 
             JSONObject options = args.getJSONObject(0);
             String instanceId = options.getString("id");
-            String appName = options.getString("appName");
+            String appId = options.getString("appId");
 
             // TODO: create app using options
             // FirebaseOptions.Builder builder = new FirebaseOptions.Builder();
             // FirebaseOptions appOptions = builder.build();
             // FirebaseApp app = FirebaseApp.initializeApp(context, appOptions, name);
 
+            Iterator<PluginEntry> iterator = pluginManager.getPluginEntries().iterator();
+            CordovaFirebaseCore firebaseCorePlugin = null;
+            PluginEntry entry;
+            while (iterator.hasNext()) {
+                entry = iterator.next();
+                if (entry.service.equals("CordovaFirebaseCore") && entry.plugin instanceof CordovaFirebaseCore) {
+                    firebaseCorePlugin = (CordovaFirebaseCore) entry.plugin;
+                    break;
+                }
+            }
 
-
-            // Get the FirebaseApp
-            FirebaseApp app = FirebaseApp.getInstance(appName);
+            // Get the FirebaseApp instance based on appId variable.
+            // (should be hold)
+            FirebaseApp app = null;
+            if (firebaseCorePlugin != null) {
+                entry = firebaseCorePlugin.plugins.get(appId);
+                FirebaseAppPlugin appPlugin = (FirebaseAppPlugin)entry.plugin;
+                app = appPlugin.app;
+            }
 
             // Create an instance of FirebaseDatabase
-            FirebaseDatabase database = FirebaseDatabase.getInstance(app);
+            FirebaseDatabase database;
+            if (app != null) {
+                database = FirebaseDatabase.getInstance(app);
+            } else {
+                // just in case
+                database = FirebaseDatabase.getInstance();
+            }
             try {
               database.setPersistenceEnabled(true);
             } catch (Exception e) {
