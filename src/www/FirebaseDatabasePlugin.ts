@@ -373,7 +373,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
     try {
       const options: any = args[0];
       const refOrQuery: any = this._get(options.targetId);
-      const listener: any = refOrQuery.on(options.eventType, (snapshot: any, prevChildKey?: string): void => {
+      const callback = (snapshot: any, prevChildKey?: string): void => {
         const snapshotValues: any = {
           exists: snapshot.exists(),
           exportVal: LZString.compressToBase64(JSON.stringify(snapshot.exportVal())),
@@ -391,7 +391,17 @@ export class FirebaseDatabasePlugin extends BaseClass {
         }
 
         window.plugin.firebase.database._nativeCallback(this.id, options.listenerId, options.eventType, args2);
-      });
+      };
+
+      const cancelCallback = (error: Error): void => {
+
+        const args2 = [
+          LZString.compressToBase64(JSON.stringify(error.getMessage()))
+        ];
+        window.plugin.firebase.database._nativeCallback(this.id, options.listenerId, "cancelled", args2);
+      };
+
+      const listener: any = refOrQuery.on(options.eventType, callback, cancelCallback);
 
       this._set(options.listenerId, listener);
 

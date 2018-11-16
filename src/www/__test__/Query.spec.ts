@@ -325,9 +325,16 @@ describe("[Query]", () => {
       const _onSpy = jest.spyOn(query, "_on");
       let triggerred: boolean = false;
 
-      execCmd.mockImplementationOnce(() => {
-        console.log("--->mock");
-        throw new Error("Something happends!")
+      execCmd.mockImplementationOnce((params) => {
+        if (params.methodName !== "query_on") {
+          return Promise.resolve(params);
+        }
+        const _nativeCallback = (window as any).plugin.firebase.database._nativeCallback;
+
+        //_nativeCallback(query.id, params.args[0].id);
+        console.log(params);
+
+        return Promise.resolve(params);
       });
 
       query.on("value", (snapshot: DataSnapshot) => {
