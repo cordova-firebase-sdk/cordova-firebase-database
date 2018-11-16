@@ -4,6 +4,7 @@ import { DataSnapshot, Query, Reference } from "../DataClasses";
 import { INativeEventParams } from "../INativeEventParams";
 import { exec } from "../__mocks__/cordova";
 import { execCmd } from "../__mocks__/CommandQueue";
+import { IExecCmdParams } from "../CommandQueue";
 const proxy = require("cordova/exec/proxy");
 
 describe("[Query]", () => {
@@ -318,24 +319,58 @@ describe("[Query]", () => {
         listenerId: _onSpy.mock.calls[0][0],
       });
     });
-    it.only("should work correctly when cancelCallback is provided", (done) => {
+    it("should work correctly with context", (done) => {
       const ref: Reference = commonDb.ref("");
       const value: any = { hello: "world" };
       const query: Query = ref.limitToLast(3);
       const _onSpy = jest.spyOn(query, "_on");
+
+      query.on("value", (snapshot: DataSnapshot): void => {
+        expect(snapshot.key).toEqual("key");
+        expect(snapshot.getPriority()).toEqual("high");
+        done();
+      }, query);
+
+      const dummySnapshot: string = JSON.stringify({
+        exists: true,
+        exportVal: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+        getPriority: "high",
+        key: "key",
+        numChildren: 0,
+        val: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+      });
+
+      ref.root._trigger("nativeEvent", {
+        args: [LZString.compressToBase64(dummySnapshot)],
+        eventType: "value",
+        listenerId: _onSpy.mock.calls[0][0],
+      });
+    });
+    it("should work correctly when cancelCallback is provided", (done) => {
       let triggerred: boolean = false;
 
-      execCmd.mockImplementationOnce((params) => {
-        console.log(params.methodName);
-        // if (params.methodName !== "query_on") {
-        //   return Promise.resolve(params);
-        // }
-        // const _nativeCallback = (window as any).plugin.firebase.database._nativeCallback;
-        //
-        // //_nativeCallback(query.id, params.args[0].id);
-        // console.log(params);
+      // Don't use Query class like this.
+      // This is just for test.
+      const query: Query = new Query({
+        pluginName: "dummy",
+        ref: commonDb.ref().root,
+        url: commonDb.ref().toString(),
+      }, {
+        exec: (params: IExecCmdParams) => {
+          if (params.methodName !== "query_on") {
+            return Promise.resolve();
+          }
 
-        return Promise.resolve(params);
+          query._trigger("nativeEvent", {
+            args: [
+              LZString.compressToBase64("Something happends!"),
+            ],
+            eventType: "cancelled",
+            listenerId: params.args[0].listenerId,
+          });
+
+          return Promise.resolve();
+        },
       });
 
       query.on("value", (snapshot: DataSnapshot) => {
@@ -344,6 +379,39 @@ describe("[Query]", () => {
         expect(error).toThrowErrorMatchingSnapshot();
         done();
       }, query);
+    });
+    it.only("should throw error when cancelled if cancelCallback is not provided", () => {
+
+      expect(() => {
+        let triggerred: boolean = false;
+        // Don't use Query class like this.
+        // This is just for test.
+        const query: Query = new Query({
+          pluginName: "dummy",
+          ref: commonDb.ref().root,
+          url: commonDb.ref().toString(),
+        }, {
+          exec: (params: IExecCmdParams) => {
+            if (params.methodName !== "query_on") {
+              return Promise.resolve();
+            }
+
+            query._trigger("nativeEvent", {
+              args: [
+                LZString.compressToBase64("Something happends!"),
+              ],
+              eventType: "cancelled",
+              listenerId: params.args[0].listenerId,
+            });
+
+            return Promise.resolve();
+          },
+        });
+
+        query.on("value", (snapshot: DataSnapshot) => {
+          triggerred = true;
+        });
+      }).toThrowErrorMatchingSnapshot();
     });
   });
   describe("once()", () => {
