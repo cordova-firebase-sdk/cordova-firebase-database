@@ -396,7 +396,7 @@ export class FirebaseDatabasePlugin extends BaseClass {
       const cancelCallback = (error: Error): void => {
 
         const args2 = [
-          LZString.compressToBase64(JSON.stringify(error.getMessage()))
+          LZString.compressToBase64(JSON.stringify(error.message))
         ];
         window.plugin.firebase.database._nativeCallback(this.id, options.listenerId, "cancelled", args2);
       };
