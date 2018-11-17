@@ -314,10 +314,23 @@ describe("[Query]", () => {
       });
 
       ref.root._trigger("nativeEvent", {
-        args: [LZString.compressToBase64(dummySnapshot)],
+        args: [
+          LZString.compressToBase64(dummySnapshot),
+          "prevChildKey",
+        ],
         eventType: "value",
         listenerId: _onSpy.mock.calls[0][0],
       });
+    });
+    it("should reject error if eventType is not supportted", () => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+
+      expect(() => {
+        query.on("invalidEvent", (snapshot: DataSnapshot): void => {});
+      }).toThrowErrorMatchingSnapshot();
+
     });
     it("should work correctly with context", (done) => {
       const ref: Reference = commonDb.ref("");
@@ -379,39 +392,6 @@ describe("[Query]", () => {
         expect(error).toThrowErrorMatchingSnapshot();
         done();
       }, query);
-    });
-    it.only("should throw error when cancelled if cancelCallback is not provided", () => {
-
-      expect(() => {
-        let triggerred: boolean = false;
-        // Don't use Query class like this.
-        // This is just for test.
-        const query: Query = new Query({
-          pluginName: "dummy",
-          ref: commonDb.ref().root,
-          url: commonDb.ref().toString(),
-        }, {
-          exec: (params: IExecCmdParams) => {
-            if (params.methodName !== "query_on") {
-              return Promise.resolve();
-            }
-
-            query._trigger("nativeEvent", {
-              args: [
-                LZString.compressToBase64("Something happends!"),
-              ],
-              eventType: "cancelled",
-              listenerId: params.args[0].listenerId,
-            });
-
-            return Promise.resolve();
-          },
-        });
-
-        query.on("value", (snapshot: DataSnapshot) => {
-          triggerred = true;
-        });
-      }).toThrowErrorMatchingSnapshot();
     });
   });
   describe("once()", () => {

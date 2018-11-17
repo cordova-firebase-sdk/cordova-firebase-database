@@ -8,4 +8,6 @@ exports[`[Query] constructor should reject if params.url is null 1`] = `"params.
 
 exports[`[Query] off() should throw Error if eventType is invalid 1`] = `"eventType must be one of 'value','child_added', 'child_moved', 'child_removed', or 'child_changed'."`;
 
+exports[`[Query] on() should reject error if eventType is not supportted 1`] = `"eventType must be one of 'value','child_added', 'child_moved', 'child_removed', or 'child_changed'."`;
+
 exports[`[Query] on() should work correctly when cancelCallback is provided 1`] = `"received is not a function"`;
