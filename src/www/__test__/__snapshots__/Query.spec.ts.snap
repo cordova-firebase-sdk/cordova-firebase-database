@@ -11,3 +11,7 @@ exports[`[Query] off() should throw Error if eventType is invalid 1`] = `"eventT
 exports[`[Query] on() should reject error if eventType is not supportted 1`] = `"eventType must be one of 'value','child_added', 'child_moved', 'child_removed', or 'child_changed'."`;
 
 exports[`[Query] on() should work correctly when cancelCallback is provided 1`] = `"received is not a function"`;
+
+exports[`[Query] once() should reject error if eventType is not supportted 1`] = `"eventType must be one of 'value','child_added', 'child_moved', 'child_removed', or 'child_changed'."`;
+
+exports[`[Query] once() should work correctly when failureCallbackOrContext is provided 1`] = `"received is not a function"`;

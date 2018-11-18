@@ -405,7 +405,7 @@ describe("[Query]", () => {
       query.once("value", (snapshot: DataSnapshot): void => {
         expect(snapshot.key).toEqual("key1");
         expect(snapshot.getPriority()).toEqual("high");
-        setTimeout(done, 0);
+        setTimeout(done, 10);
       });
 
       const dummySnapshot1: string = JSON.stringify({
@@ -427,17 +427,90 @@ describe("[Query]", () => {
       });
 
       ref.root._trigger("nativeEvent", {
-        args: [LZString.compressToBase64(dummySnapshot1)],
+        args: [LZString.compressToBase64(dummySnapshot1), "prevChildKey"],
         eventType: "value",
         listenerId: _onSpy.mock.calls[0][0],
       });
       ref.root._trigger("nativeEvent", {
-        args: [LZString.compressToBase64(dummySnapshot2)],
+        args: [LZString.compressToBase64(dummySnapshot2), "prevChildKey"],
         eventType: "value",
         listenerId: _onSpy.mock.calls[0][0],
       });
     });
+    it("should reject error if eventType is not supportted", () => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+
+      expect(() => {
+        query.once("invalidEvent", (snapshot: DataSnapshot): void => {});
+      }).toThrowErrorMatchingSnapshot();
+
+    });
+
+    it("should work correctly with context", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = { hello: "world" };
+      const query: Query = ref.limitToLast(3);
+      const _onSpy = jest.spyOn(query, "_one");
+
+      query.once("value", (snapshot: DataSnapshot): void => {
+        expect(snapshot.key).toEqual("key");
+        expect(snapshot.getPriority()).toEqual("high");
+        done();
+      }, query);
+
+      const dummySnapshot: string = JSON.stringify({
+        exists: true,
+        exportVal: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+        getPriority: "high",
+        key: "key",
+        numChildren: 0,
+        val: LZString.compressToBase64(JSON.stringify({ hello: "world" })),
+      });
+
+      ref.root._trigger("nativeEvent", {
+        args: [LZString.compressToBase64(dummySnapshot)],
+        eventType: "value",
+        listenerId: _onSpy.mock.calls[0][0],
+      });
+    });
+    it("should work correctly when failureCallbackOrContext is provided", (done) => {
+      let triggerred: boolean = false;
+
+      // Don't use Query class like this.
+      // This is just for test.
+      const query: Query = new Query({
+        pluginName: "dummy",
+        ref: commonDb.ref().root,
+        url: commonDb.ref().toString(),
+      }, {
+        exec: (params: IExecCmdParams) => {
+          if (params.methodName !== "query_once") {
+            return Promise.resolve();
+          }
+
+          query._trigger("nativeEvent", {
+            args: [
+              LZString.compressToBase64("Something happends!"),
+            ],
+            eventType: "cancelled",
+            listenerId: params.args[0].listenerId,
+          });
+
+          return Promise.resolve();
+        },
+      });
+
+      query.once("value", (snapshot: DataSnapshot) => {
+        triggerred = true;
+      }, (error?: any) => {
+        expect(error).toThrowErrorMatchingSnapshot();
+        done();
+      }, query);
+    });
   });
+
   describe("orderByChild()", () => {
     it("should involve native side with correct parameters", (done) => {
       const ref: Reference = commonDb.ref("");
@@ -450,6 +523,28 @@ describe("[Query]", () => {
         expect(execCmd.mock.calls[1][0].args[0].targetId).toBe(ref.id);
         done();
       }, 5);
+    });
+
+    it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = {
+        hello: "world",
+      };
+      const query: Query = ref.orderByChild("children");
+
+      query._one("listenerId", (data: INativeEventParams): void => {
+        expect(data).toEqual({
+          args: ["0", "1"],
+          eventType: "eventType",
+          listenerId: "listenerId",
+        });
+        setTimeout(done, 0);
+      });
+      ref.root._trigger("nativeEvent", {
+        args: ["0", "1"],
+        eventType: "eventType",
+        listenerId: "listenerId",
+      });
     });
   });
   describe("orderByKey()", () => {
@@ -464,6 +559,27 @@ describe("[Query]", () => {
         done();
       }, 5);
     });
+    it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = {
+        hello: "world",
+      };
+      const query: Query = ref.orderByKey();
+
+      query._one("listenerId", (data: INativeEventParams): void => {
+        expect(data).toEqual({
+          args: ["0", "1"],
+          eventType: "eventType",
+          listenerId: "listenerId",
+        });
+        setTimeout(done, 0);
+      });
+      ref.root._trigger("nativeEvent", {
+        args: ["0", "1"],
+        eventType: "eventType",
+        listenerId: "listenerId",
+      });
+    });
   });
   describe("orderByPriority()", () => {
     it("should involve native side with correct parameters", (done) => {
@@ -476,6 +592,27 @@ describe("[Query]", () => {
         expect(execCmd.mock.calls[1][0].args[0].targetId).toBe(ref.id);
         done();
       }, 5);
+    });
+    it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = {
+        hello: "world",
+      };
+      const query: Query = ref.orderByPriority();
+
+      query._one("listenerId", (data: INativeEventParams): void => {
+        expect(data).toEqual({
+          args: ["0", "1"],
+          eventType: "eventType",
+          listenerId: "listenerId",
+        });
+        setTimeout(done, 0);
+      });
+      ref.root._trigger("nativeEvent", {
+        args: ["0", "1"],
+        eventType: "eventType",
+        listenerId: "listenerId",
+      });
     });
   });
   describe("orderByValue()", () => {
@@ -490,6 +627,27 @@ describe("[Query]", () => {
         done();
       }, 5);
     });
+    it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = {
+        hello: "world",
+      };
+      const query: Query = ref.orderByValue();
+
+      query._one("listenerId", (data: INativeEventParams): void => {
+        expect(data).toEqual({
+          args: ["0", "1"],
+          eventType: "eventType",
+          listenerId: "listenerId",
+        });
+        setTimeout(done, 0);
+      });
+      ref.root._trigger("nativeEvent", {
+        args: ["0", "1"],
+        eventType: "eventType",
+        listenerId: "listenerId",
+      });
+    });
   });
   describe("startAt()", () => {
     it("should involve native side with correct parameters", (done) => {
@@ -503,6 +661,27 @@ describe("[Query]", () => {
         expect(execCmd.mock.calls[1][0].args[0].value).toBe(LZString.compressToBase64(JSON.stringify(3)));
         done();
       }, 5);
+    });
+    it("should fire `listenerId` event if query receive 'nativeEvent'", (done) => {
+      const ref: Reference = commonDb.ref("");
+      const value: any = {
+        hello: "world",
+      };
+      const query: Query = ref.startAt(3);
+
+      query._one("listenerId", (data: INativeEventParams): void => {
+        expect(data).toEqual({
+          args: ["0", "1"],
+          eventType: "eventType",
+          listenerId: "listenerId",
+        });
+        setTimeout(done, 0);
+      });
+      ref.root._trigger("nativeEvent", {
+        args: ["0", "1"],
+        eventType: "eventType",
+        listenerId: "listenerId",
+      });
     });
   });
 });

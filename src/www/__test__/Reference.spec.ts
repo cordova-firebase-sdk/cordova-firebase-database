@@ -86,6 +86,12 @@ describe("[Reference]", () => {
         ref.child("users/../test");
       }).toThrowErrorMatchingSnapshot();
     });
+    it("should reject null", () => {
+      expect(() => {
+        const ref: Reference = commonDb.ref("parent");
+        ref.child(null);
+      }).toThrowErrorMatchingSnapshot();
+    });
   });
   describe(".onDisconnect()", () => {
     it("should create collect onDisconnect", () => {
@@ -107,6 +113,33 @@ describe("[Reference]", () => {
       const thenableRef: ThenableReference = ref.push("value");
       expect(exec).toHaveBeenCalled();
       expect(exec.mock.calls[0][4][0].newId).toBe(thenableRef.id);
+    });
+    it("should receive onComplete with resolve", (done) => {
+      let count: number = 0;
+      const ref: Reference = commonDb.ref("");
+      ref.push(() => {
+        count++;
+      })
+      .then(() => {
+        count++;
+        expect(count).toBe(2);
+        done();
+      })
+    });
+    it.only("should receive error on both onComplete and catch", (done) => {
+      let count: number = 0;
+      const ref: Reference = commonDb.ref("");
+      exec.mockImplementationOnce((onSuccess, onError) => {
+        onError(new Error("something happends"));
+      });
+
+      ref.push(null, (error: Error) => {
+        expect(error).toEqual(new Error("something happends"));
+      })
+      .then(null, (error: Error) => {
+        expect(error).toEqual(new Error("something happends"));
+        done();
+      });
     });
   });
   describe(".remove()", () => {

@@ -774,19 +774,24 @@ export class Reference extends Query {
       root: this.root,
     });
 
+    if (typeof value === "function") {
+      onComplete = value;
+      value = null;
+    }
+
     exec((result: any): void => {
-      if (typeof reference.resolve === "function") {
-        Promise.resolve(result).then(reference.resolve);
-      }
       if (typeof onComplete === "function") {
         onComplete.call(this);
       }
-    }, (error: any): void => {
-      if (typeof reference.reject === "function") {
-        Promise.reject(error).then(reference.reject);
+      if (typeof reference.resolve === "function") {
+        Promise.resolve(result).then(reference.resolve);
       }
+    }, (error: any): void => {
       if (typeof onComplete === "function") {
         onComplete.call(this, error);
+      }
+      if (typeof reference.reject === "function") {
+        Promise.reject(error).then(reference.reject);
       }
     }, this.pluginName, "reference_push", [{
       newId: reference.id,
