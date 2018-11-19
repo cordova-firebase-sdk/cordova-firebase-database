@@ -134,9 +134,11 @@ describe("[Reference]", () => {
       });
 
       ref.push(null, (error: Error) => {
+        console.log("--->138");
         expect(error).toEqual(new Error("something happends"));
       })
       .then(null, (error: Error) => {
+        console.log("--->142");
         expect(error).toEqual(new Error("something happends"));
         done();
       });

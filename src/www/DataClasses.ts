@@ -1055,10 +1055,10 @@ export class ThenableReference extends Reference {
     return (new Promise(
       (_resolve: (result: any) => void, _reject: (error: any) => void): void => {
         this.resolve = (result?: any) => {
-          _resolve.call(self, result);
+          _resolve(result);
         };
         this.reject = (error: any) => {
-          _reject.call(self, error);
+          _reject(error);
         };
       }))
       .then((...result: Array<any>): void => {
